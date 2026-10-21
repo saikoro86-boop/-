@@ -4,3 +4,6 @@ dist/
 user_data/
 *.log
 drafts/
+songs/
+*.mp4
+*.chapters.txt
