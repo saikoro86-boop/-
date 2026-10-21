@@ -2,7 +2,9 @@
 """曲フォルダ + 画像 -> 長尺BGM動画(mp4)と、説明欄用のチャプター一覧を作る。
 
 使い方:
-  python3 build_video.py <songs_dir> <image> [-o out.mp4] [--shuffle] [--fade 3]
+  python3 build_video.py <songs_dir> <image> [-o out.mp4] [--shuffle] [--fade 3] [--minutes 60]
+
+--minutes: 曲が足りないとき、曲を繰り返して指定した長さ(分)以上にする
 """
 import argparse
 import random
@@ -34,6 +36,7 @@ def main() -> int:
     ap.add_argument("-o", "--output", type=Path, default=Path("output.mp4"))
     ap.add_argument("--shuffle", action="store_true", help="曲順をランダムにする")
     ap.add_argument("--fade", type=float, default=3.0, help="曲ごとのフェード秒数(0で無し)")
+    ap.add_argument("--minutes", type=float, default=0, help="この長さ(分)になるまで曲を繰り返す")
     args = ap.parse_args()
 
     songs = sorted(p for p in args.songs_dir.iterdir() if p.suffix.lower() in EXTS)
@@ -43,14 +46,25 @@ def main() -> int:
     if not args.image.exists():
         print(f"画像が見つかりません: {args.image}", file=sys.stderr)
         return 1
+    durations = {s: duration(s) for s in songs}
+    one_round = sum(durations.values())
     if args.shuffle:
         random.shuffle(songs)
+    if args.minutes > 0:
+        order, total = [], 0.0
+        while total < args.minutes * 60:
+            batch = songs[:]
+            if args.shuffle:
+                random.shuffle(batch)
+            order += batch
+            total += one_round
+        songs = order
 
     with tempfile.TemporaryDirectory() as tmp:
         tmpdir = Path(tmp)
         parts, chapters, t = [], [], 0.0
         for i, song in enumerate(songs, 1):
-            dur = duration(song)
+            dur = durations[song]
             chapters.append(f"{ts(t)} {song.stem}")
             t += dur
             part = tmpdir / f"{i:03d}.wav"
