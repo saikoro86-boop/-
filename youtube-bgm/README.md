@@ -5,7 +5,7 @@
 ## 流れ
 1. `prompts.md` のスタイルを Suno (Custom / Instrumental オン) に貼って約30曲生成
 2. 聴いて良い曲だけ `songs/<テーマ名>/` にダウンロード(ファイル名は曲名にすると説明欄のチャプターに出ます)
-3. 画像を1枚用意(商用利用OKの画像生成か自作)
+3. 画像を1枚用意: `python3 youtube-bgm/make_cover.py "雨の日のLofi" -o cover.png --theme rain`(テーマ: rain/cafe/night/morning/sleep。要 pillow)
 4. 動画化:
    ```
    python3 youtube-bgm/build_video.py songs/rain-lofi cover.png -o rain-lofi.mp4 --shuffle
