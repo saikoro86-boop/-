@@ -63,7 +63,10 @@ def main() -> int:
             parts.append(part)
 
         listfile = tmpdir / "list.txt"
-        listfile.write_text("".join(f"file '{p}'\n" for p in parts))
+        # ffmpeg は UTF-8 で読むので明示する(Windows の既定は cp932)。パスは / 区切りにする
+        listfile.write_text(
+            "".join("file '{}'\n".format(p.as_posix().replace("'", "'\\''")) for p in parts),
+            encoding="utf-8")
 
         subprocess.check_call(
             ["ffmpeg", "-y", "-loglevel", "error", "-stats",
