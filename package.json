@@ -16,7 +16,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
     "dotenv": "^16.4.5",
-    "puppeteer": "^23.9.0",
+    "puppeteer": "^25.15.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "twitter-api-v2": "^1.29.1",

@@ -16,7 +16,7 @@ export async function waitAndType(
   const { timeoutMs = 15000, typeDelayMs = 50 } = options ?? {};
 
   await page.waitForSelector(selector, { visible: true, timeout: timeoutMs });
-  await page.click(selector, { clickCount: 3 }); // 既存の値を選択状態にしてから上書き
+  await page.click(selector, { count: 3 }); // 既存の値を選択状態にしてから上書き
   await page.type(selector, text, { delay: typeDelayMs });
 
   await randomDelay();
