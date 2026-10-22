@@ -37,4 +37,4 @@ if ! is_patched; then
   echo "export PATH=\"$dir/bin:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-PUPPETEER_SKIP_DOWNLOAD=1 npm install --no-audit --no-fund
+PUPPETEER_SKIP_DOWNLOAD=1 npm install --no-save --no-audit --no-fund
