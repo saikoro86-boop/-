@@ -14,9 +14,10 @@ function sleep(ms: number): Promise<void> {
 }
 
 /** Meta系API(Threads / Instagram)への POST。エラー時は API のメッセージをそのまま投げる */
-async function graphPost(url: string, params: Record<string, string>): Promise<{ id: string }> {
+export async function graphPost(url: string, params: Record<string, string>): Promise<{ id: string }> {
   const res = await fetch(`${url}?${new URLSearchParams(params)}`, { method: "POST" });
-  const body = (await res.json()) as { id?: string; error?: { message?: string } };
+  // プロキシ障害などでJSON以外が返っても、ステータスが分かるエラーにする
+  const body = (await res.json().catch(() => ({}))) as { id?: string; error?: { message?: string } };
   if (!res.ok || !body.id) {
     throw new Error(`${res.status} ${body.error?.message ?? JSON.stringify(body)}`);
   }
@@ -91,14 +92,21 @@ async function postToInstagram(draft: Draft): Promise<string> {
   });
 
   // コンテナの処理が終わるまで待つ(最大約1分)
+  let finished = false;
   for (let i = 0; i < 12; i++) {
     const res = await fetch(
       `${graphBase}/${container.id}?${new URLSearchParams({ fields: "status_code", access_token: accessToken })}`
     );
     const { status_code } = (await res.json()) as { status_code?: string };
-    if (status_code === "FINISHED") break;
+    if (status_code === "FINISHED") {
+      finished = true;
+      break;
+    }
     if (status_code === "ERROR") throw new Error("Instagram 側で画像の処理に失敗しました");
     await sleep(5_000);
+  }
+  if (!finished) {
+    throw new Error("Instagram 側の画像処理が1分以内に完了しませんでした。時間をおいて再度 approve してください");
   }
 
   const published = await graphPost(`${graphBase}/${userId}/media_publish`, {
