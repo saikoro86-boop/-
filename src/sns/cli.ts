@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { generatePosts } from "./generate";
-import { publishers, xWeightedLength } from "./publishers";
+import { assertEditable, lengthWarning } from "./rules";
+import { publishers } from "./publishers";
 import { loadDrafts, newId, saveDrafts } from "./store";
 import { PLATFORMS, type Draft, type DraftStatus, type Platform } from "./types";
 
@@ -38,22 +39,6 @@ function parseArgs(args: string[]): { positional: string[]; options: Record<stri
   return { positional, options };
 }
 
-function lengthWarning(draft: Draft): string | undefined {
-  if (draft.platform === "x" && xWeightedLength(draft.text) > 280) {
-    return `X の上限(280)を超えています: ${xWeightedLength(draft.text)}`;
-  }
-  if (draft.platform === "threads" && [...draft.text].length > 500) {
-    return `Threads の上限(500文字)を超えています: ${[...draft.text].length}`;
-  }
-  if (draft.platform === "instagram" && [...draft.text].length > 2200) {
-    return `Instagram の上限(2200文字)を超えています: ${[...draft.text].length}`;
-  }
-  if (draft.platform === "instagram" && !draft.imageUrl) {
-    return "Instagram は画像が必須です(--image で指定)";
-  }
-  return undefined;
-}
-
 function printDraft(draft: Draft): void {
   const when = draft.scheduledAt ? new Date(draft.scheduledAt).toLocaleString("ja-JP") : "承認後すぐ";
   console.log(`\n[${draft.id}] ${draft.platform} / ${draft.status} / 予約: ${when}`);
@@ -84,6 +69,10 @@ async function draftCommand(positional: string[], options: Record<string, string
     const date = new Date(options.at);
     if (Number.isNaN(date.getTime())) throw new Error(`日時の形式が正しくありません: ${options.at}`);
     scheduledAt = date.toISOString();
+  }
+
+  if (options.image !== undefined && !/^https?:\/\//.test(options.image)) {
+    throw new Error(`--image には http(s) の画像URLを指定してください: ${options.image}`);
   }
 
   console.log("投稿文を作成中...");
@@ -176,6 +165,7 @@ async function main(): Promise<void> {
       if (!text) throw new Error("新しい本文を指定してください");
       const drafts = loadDrafts();
       const draft = findDraft(drafts, id);
+      assertEditable(draft);
       draft.text = text;
       draft.status = "pending"; // 編集したら承認し直す
       saveDrafts(drafts);
