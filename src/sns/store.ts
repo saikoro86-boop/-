@@ -6,7 +6,18 @@ const STORE_PATH = process.env.SNS_DRAFTS_PATH ?? "./drafts/drafts.json";
 
 export function loadDrafts(): Draft[] {
   if (!fs.existsSync(STORE_PATH)) return [];
-  return JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as Draft[];
+  let data: unknown;
+  try {
+    data = JSON.parse(fs.readFileSync(STORE_PATH, "utf-8"));
+  } catch (error) {
+    // 壊れたファイルを空配列として扱うと、次の保存で既存の下書きを失うので止める
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`下書きファイル ${STORE_PATH} を読み込めません(JSONが壊れています): ${reason}`);
+  }
+  if (!Array.isArray(data)) {
+    throw new Error(`下書きファイル ${STORE_PATH} の形式が正しくありません(配列ではありません)`);
+  }
+  return data as Draft[];
 }
 
 export function saveDrafts(drafts: Draft[]): void {

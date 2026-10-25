@@ -32,3 +32,15 @@ test("saveDrafts/loadDrafts: ディレクトリを作成して往復でき、一
 test("newId: プラットフォーム名をプレフィックスに持つ", () => {
   assert.match(newId("threads"), /^threads-[0-9a-f]+$/);
 });
+
+test("loadDrafts: JSONが壊れていれば内容を上書きせずエラーにする", () => {
+  const broken = "{ not json";
+  fs.writeFileSync(process.env.SNS_DRAFTS_PATH!, broken);
+  assert.throws(() => loadDrafts(), /読み込めません/);
+  assert.equal(fs.readFileSync(process.env.SNS_DRAFTS_PATH!, "utf-8"), broken);
+});
+
+test("loadDrafts: 配列以外のJSONはエラーにする", () => {
+  fs.writeFileSync(process.env.SNS_DRAFTS_PATH!, "{}");
+  assert.throws(() => loadDrafts(), /配列ではありません/);
+});
