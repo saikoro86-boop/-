@@ -41,17 +41,60 @@ export function xWeightedLength(text: string): number {
   return length;
 }
 
-async function postToX(draft: Draft): Promise<string> {
-  if (draft.imageUrl) {
-    throw new Error("X への画像付き投稿はまだ未対応です。imageUrl を外すか、手動で投稿してください");
+const X_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const X_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** X に添付できる画像かを検証する。問題があれば分かりやすいメッセージで例外を投げる */
+export function validateXImage(contentType: string | null, byteLength: number): string {
+  const mimeType = (contentType ?? "").split(";")[0].trim().toLowerCase();
+  if (!X_IMAGE_TYPES.includes(mimeType)) {
+    throw new Error(
+      `X に添付できない画像形式です(${mimeType || "不明"})。JPEG / PNG / GIF / WebP を指定してください`
+    );
   }
+  if (byteLength === 0) {
+    throw new Error("画像が空です。--image のURLを確認してください");
+  }
+  if (byteLength > X_IMAGE_MAX_BYTES) {
+    throw new Error(
+      `画像サイズが大きすぎます(${(byteLength / 1024 / 1024).toFixed(1)}MB)。5MB 以下にしてください`
+    );
+  }
+  return mimeType;
+}
+
+async function fetchImageForX(imageUrl: string): Promise<{ data: Buffer; mimeType: string }> {
+  if (!/^https?:\/\//i.test(imageUrl)) {
+    throw new Error(`画像URLは http(s) で始まる必要があります: ${imageUrl}`);
+  }
+  let res: Response;
+  try {
+    res = await fetch(imageUrl);
+  } catch (err) {
+    throw new Error(`画像を取得できませんでした: ${imageUrl} (${err instanceof Error ? err.message : err})`);
+  }
+  if (!res.ok) {
+    throw new Error(`画像を取得できませんでした: ${imageUrl} (HTTP ${res.status})`);
+  }
+  const data = Buffer.from(await res.arrayBuffer());
+  const mimeType = validateXImage(res.headers.get("content-type"), data.byteLength);
+  return { data, mimeType };
+}
+
+async function postToX(draft: Draft): Promise<string> {
   const client = new TwitterApi({
     appKey: requireEnv("X_API_KEY"),
     appSecret: requireEnv("X_API_SECRET"),
     accessToken: requireEnv("X_ACCESS_TOKEN"),
     accessSecret: requireEnv("X_ACCESS_SECRET"),
   });
-  const { data } = await client.v2.tweet(draft.text);
+  if (!draft.imageUrl) {
+    const { data } = await client.v2.tweet(draft.text);
+    return data.id;
+  }
+  const image = await fetchImageForX(draft.imageUrl);
+  const mediaId = await client.v1.uploadMedia(image.data, { mimeType: image.mimeType });
+  const { data } = await client.v2.tweet(draft.text, { media: { media_ids: [mediaId] } });
   return data.id;
 }
 
