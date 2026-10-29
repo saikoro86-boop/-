@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.tests.json",
     "sns": "ts-node src/sns/cli.ts",
     "test": "node --require ts-node/register --test tests/*.test.ts"
   },
