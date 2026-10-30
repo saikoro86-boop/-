@@ -57,4 +57,4 @@ npm run sns -- publish [--dry-run]                              # 投稿時刻�
 - 文字数上限: X は 280(全角は 2 として換算)、Threads は 500 文字、Instagram は 2200 文字。超えると承認できません。
 - Instagram は画像が必須です(`--image` に公開 URL を指定)。
 - X への画像付き投稿は未対応です。
-- 下書きは `drafts/` に保存されます(`.gitignore` 済み)。
+- 下書きは `drafts/` に保存されます(`.gitignore` 済み)。保存先は `SNS_DRAFTS_PATH`、ブランドガイドの場所は `SNS_BRAND_PATH` で変更できます(`.env.example` 参照)。
