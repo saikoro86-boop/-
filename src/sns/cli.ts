@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { parseArgs, parsePlatforms } from "./args";
 import { generatePosts } from "./generate";
 import { publishers, xWeightedLength } from "./publishers";
 import { loadDrafts, newId, saveDrafts } from "./store";
@@ -16,27 +17,6 @@ const USAGE = `使い方:
 例:
   npm run sns -- draft "10/10から秋の新メニュー3種を販売開始" --image https://example.com/menu.jpg --at "2026-10-10T09:00+09:00"
 `;
-
-/** --name value 形式のオプションと、それ以外の引数に分ける */
-function parseArgs(args: string[]): { positional: string[]; options: Record<string, string> } {
-  const positional: string[] = [];
-  const options: Record<string, string> = {};
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg.startsWith("--")) {
-      const next = args[i + 1];
-      if (next === undefined || next.startsWith("--")) {
-        options[arg.slice(2)] = "true";
-      } else {
-        options[arg.slice(2)] = next;
-        i++;
-      }
-    } else {
-      positional.push(arg);
-    }
-  }
-  return { positional, options };
-}
 
 function lengthWarning(draft: Draft): string | undefined {
   if (draft.platform === "x" && xWeightedLength(draft.text) > 280) {
@@ -74,10 +54,7 @@ async function draftCommand(positional: string[], options: Record<string, string
   const theme = positional[0];
   if (!theme) throw new Error("テーマを指定してください\n\n" + USAGE);
 
-  const platforms = (options.platforms?.split(",") ?? [...PLATFORMS]) as Platform[];
-  for (const p of platforms) {
-    if (!PLATFORMS.includes(p)) throw new Error(`未対応の媒体です: ${p}`);
-  }
+  const platforms = parsePlatforms(options.platforms);
 
   let scheduledAt: string | undefined;
   if (options.at) {
