@@ -2,6 +2,7 @@ import "dotenv/config";
 import { generatePosts } from "./generate";
 import { publishers, xWeightedLength } from "./publishers";
 import { loadDrafts, newId, saveDrafts } from "./store";
+import { parseStatusFilter } from "./status";
 import { PLATFORMS, type Draft, type DraftStatus, type Platform } from "./types";
 
 const USAGE = `使い方:
@@ -163,7 +164,7 @@ async function main(): Promise<void> {
     case "draft":
       return draftCommand(positional, options);
     case "list": {
-      const status = positional[0];
+      const status = parseStatusFilter(positional[0]);
       const drafts = loadDrafts().filter((d) => !status || d.status === status);
       if (drafts.length === 0) console.log("該当する下書きはありません");
       drafts.forEach(printDraft);
