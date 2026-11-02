@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { applyEdit } from "./edit";
 import { generatePosts } from "./generate";
 import { publishers, xWeightedLength } from "./publishers";
 import { loadDrafts, newId, saveDrafts } from "./store";
@@ -176,8 +177,7 @@ async function main(): Promise<void> {
       if (!text) throw new Error("新しい本文を指定してください");
       const drafts = loadDrafts();
       const draft = findDraft(drafts, id);
-      draft.text = text;
-      draft.status = "pending"; // 編集したら承認し直す
+      applyEdit(draft, text);
       saveDrafts(drafts);
       printDraft(draft);
       return;
