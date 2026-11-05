@@ -170,10 +170,11 @@ async function main(): Promise<void> {
       return;
     }
     case "show":
+      if (!positional[0]) throw new Error("ID を指定してください");
       return printDraft(findDraft(loadDrafts(), positional[0]));
     case "edit": {
       const [id, text] = positional;
-      if (!text) throw new Error("新しい本文を指定してください");
+      if (!id || !text) throw new Error("新しい本文を指定してください");
       const drafts = loadDrafts();
       const draft = findDraft(drafts, id);
       draft.text = text;
@@ -188,8 +189,14 @@ async function main(): Promise<void> {
       return setStatus(positional, "rejected");
     case "publish":
       return publishCommand(options["dry-run"] === "true");
-    default:
+    case undefined:
+    case "help":
+    case "--help":
       console.log(USAGE);
+      return;
+    default:
+      // タイプミスを成功扱いにしない(スクリプトや cron から検知できるように)
+      throw new Error(`未対応のコマンドです: ${command}\n\n${USAGE}`);
   }
 }
 
