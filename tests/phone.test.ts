@@ -45,7 +45,9 @@ test("奈良市: 施設ごとに、公式ページ掲載の窓口が当たる(�
   // 施設自身の番号が確認できないものは、窓口の番号で代用し、未確認と表示する
   assert.equal(tel("奈良市平城第一コート"), "0742-34-4862"); // 担当課: スポーツ振興課
   assert.equal(findContact(c, "奈良市平城第一コート")?.unconfirmed, true);
-  assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, true); // 青山コートの窓口(使用料の支払い先)。施設自身の番号は未確認
+  assert.equal(tel("奈良市佐保山コート"), "0742-34-4862"); // 平城と同じ担当課。施設自身の番号は未確認
+  assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, true);
+  assert.equal(findContact(c, "奈良市青山コート")?.unconfirmed, undefined); // 青山は、青山自身の番号だけ(他施設の窓口にはしない)
   assert.equal(tel("二名公民館"), undefined);
   assert.equal(tel("京西公民館"), undefined);
   assert.equal(tel("サン・アクティブ奈良（勤労者総合福祉センター）"), undefined);
