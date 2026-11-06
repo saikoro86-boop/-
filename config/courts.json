@@ -1,8 +1,53 @@
 {
   "sites": [
-    { "id": "nara-city", "name": "奈良市", "type": "kashikan", "url": "https://k6.p-kashikan.jp/nara-city/index.php" },
-    { "id": "ikoma-city", "name": "生駒市", "type": "kashikan", "url": "https://k5.p-kashikan.jp/ikoma-city/index.php" }
+    {
+      "id": "nara-city",
+      "name": "奈良市",
+      "type": "kashikan",
+      "url": "https://k6.p-kashikan.jp/nara-city/index.php"
+    },
+    {
+      "id": "ikoma-city",
+      "name": "生駒市",
+      "type": "kashikan",
+      "url": "https://k5.p-kashikan.jp/ikoma-city/index.php"
+    },
+    {
+      "id": "kizugawa-city",
+      "name": "木津川市",
+      "type": "link",
+      "entryUrl": "https://info-shisetsu.pref.kyoto.lg.jp/access_system/",
+      "note": "京都府・市町村共同公共施設案内予約システム。普段使う空き状況ページのURLが分かれば entryUrl を差し替える",
+      "facilities": [
+        {
+          "name": "兜谷公園",
+          "hint": "テニスコートA/B"
+        },
+        {
+          "name": "木津川台公園",
+          "hint": "テニスコートA/B/C"
+        },
+        {
+          "name": "梅美台公園",
+          "hint": "テニスコートA/B"
+        },
+        {
+          "name": "城址公園",
+          "hint": "テニスコートA/B/C"
+        },
+        {
+          "name": "塚穴公園",
+          "hint": "テニスコートA/B"
+        }
+      ]
+    }
   ],
-  "purpose": { "type": "7", "codes": ["035", "036"] },
+  "purpose": {
+    "type": "7",
+    "codes": [
+      "035",
+      "036"
+    ]
+  },
   "days": 30
 }

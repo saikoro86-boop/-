@@ -33,6 +33,8 @@
   .court > span:first-child { flex:1 1 40%; }
   .times { flex:1 1 60%; display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; }
   .t { background:var(--chip); color:var(--accent); border-radius:6px; padding:1px 8px; font-size:13px; font-weight:600; }
+  .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
+  .card.link .city + h2 + .city { margin:2px 0 0; }
   .empty, .err { text-align:center; color:var(--sub); padding:32px 0; }
   .err { color:#c0392b; font-size:13px; }
 </style>
@@ -53,7 +55,35 @@ const $ = (id) => document.getElementById(id);
 const WD = ["日","月","火","水","木","金","土"];
 const ZONES = { "all":["すべて",0,24], "am":["午前",0,12], "pm":["午後",12,17], "ev":["夜",17,24] };
 const st = { date:null, city:"all", zone:"all" };
-let data = { slots:[], sites:[], errors:[] };
+let data = { slots:[], sites:[], links:[], errors:[] };
+let imported = null; // ユーザーが自分のブラウザで取り込んだ空き(この端末だけに保存)
+const IMPORT_KEY = "courtImport";
+const STALE_MS = 24 * 3600e3;
+
+// 取り込みデータの検証。#hash は誰でも書き換えられるので、型と範囲を確かめてから使う
+function validateImport(x) {
+  if (!x || x.source !== "import" || !Array.isArray(x.slots) || x.slots.length > 5000) return null;
+  const slots = [];
+  for (const s of x.slots) {
+    if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s.date) || typeof s.site !== "string" || typeof s.facility !== "string" || typeof s.court !== "string") continue;
+    if (!(s.start >= 0 && s.end <= 30 && s.start < s.end)) continue;
+    slots.push({ date:s.date, site:s.site.slice(0, 30), facility:s.facility.slice(0, 60), court:s.court.slice(0, 60), start:+s.start, end:+s.end });
+  }
+  const t = Date.parse(x.importedAt);
+  return slots.length && !isNaN(t) ? { source:"import", importedAt:new Date(t).toISOString(), slots } : null;
+}
+function loadImport() {
+  // ブックマークレットが #import=<base64> で渡してくる
+  const m = location.hash.match(/^#import=([A-Za-z0-9+/=_-]+)$/);
+  if (m) {
+    try {
+      const imp = validateImport(JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/"))))));
+      if (imp) localStorage.setItem(IMPORT_KEY, JSON.stringify(imp));
+    } catch {}
+    history.replaceState(null, "", location.pathname + location.search); // URL からデータを消す
+  }
+  try { return validateImport(JSON.parse(localStorage.getItem(IMPORT_KEY) || "null")); } catch { return null; }
+}
 
 const hm = (h) => { const m = Math.round((h % 1) * 60); return Math.floor(h) + (m ? ":" + String(m).padStart(2,"0") : ""); };
 
@@ -73,10 +103,12 @@ function render() {
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
   for (const d of dates) {
-    const dt = new Date(d + "T00:00:00+09:00"), w = dt.getDay();
+    // 端末のタイムゾーンに左右されないよう、日付文字列から直接作る
+    const [yy, mm, dd] = d.split("-").map(Number);
+    const dt = new Date(Date.UTC(yy, mm - 1, dd)), w = dt.getUTCDay();
     const b = document.createElement("button");
     b.className = "day " + (w === 6 ? "sat" : w === 0 ? "sun" : "");
-    b.innerHTML = `<small>${WD[w]}</small><b>${dt.getMonth()+1}/${dt.getDate()}</b>`;
+    b.innerHTML = `<small>${WD[w]}</small><b>${dt.getUTCMonth()+1}/${dt.getUTCDate()}</b>`;
     b.setAttribute("aria-pressed", st.date === d);
     b.onclick = () => { st.date = d; render(); };
     $("days").appendChild(b);
@@ -121,6 +153,33 @@ function render() {
     }
     list.appendChild(card);
   }
+  // 自動取得できない地域は、公式サイトへのリンクを出す
+  for (const l of (data.links || [])) {
+    if (st.city !== "all" && st.city !== l.name) continue;
+    const card = document.createElement("section");
+    card.className = "card link";
+    const head = document.createElement("div"); head.className = "city"; head.textContent = l.name + "(自動取得なし)";
+    const h2 = document.createElement("h2"); h2.textContent = "公式サイトで空きを確認";
+    card.append(head, h2);
+    if (l.facilities && l.facilities.length) {
+      const p = document.createElement("div"); p.className = "city";
+      p.textContent = l.facilities.map(f => f.name + (f.hint ? "(" + f.hint + ")" : "")).join(" / ");
+      card.appendChild(p);
+    }
+    const a = document.createElement("a");
+    a.href = l.entryUrl; a.target = "_blank"; a.rel = "noopener noreferrer"; a.className = "btn";
+    a.textContent = "予約サイトを開く ↗";
+    card.appendChild(a);
+    if (imported && imported.slots.some(s => s.site === l.name)) {
+      const t = new Date(imported.importedAt);
+      const stale = Date.now() - t.getTime() > STALE_MS;
+      const n = document.createElement("div");
+      n.className = "city";
+      n.textContent = `この端末で取り込み済み: ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}` + (stale ? "(古い可能性があります)" : "");
+      card.appendChild(n);
+    }
+    list.appendChild(card);
+  }
   if (data.errors.length) {
     const e = document.createElement("div"); e.className = "err";
     e.textContent = `取得に失敗した日があります(${data.errors.length}件)。空き表示が不完全な可能性があります。`;
@@ -128,8 +187,18 @@ function render() {
   }
 }
 
+// アプリを開いたまま取り込みが来た場合(ハッシュだけが変わる)も読み直す
+window.addEventListener("hashchange", () => { if (/^#import=/.test(location.hash)) location.reload(); });
+
 fetch("data.json", { cache:"no-cache" }).then(r => r.json()).then(d => {
   data = d;
+  data.links = data.links || [];
+  imported = loadImport();
+  if (imported) {
+    const today = new Date(Date.now() + 9*3600e3).toISOString().slice(0, 10);
+    data.slots = data.slots.concat(imported.slots.filter(s => s.date >= today));
+    for (const s of imported.slots) if (!data.sites.includes(s.site)) data.sites.push(s.site);
+  }
   const t = new Date(d.updatedAt);
   $("updated").textContent = `最終更新 ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
   render();

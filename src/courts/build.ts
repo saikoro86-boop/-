@@ -6,8 +6,18 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 
+interface LinkSite {
+  id: string;
+  name: string;
+  type: "link";
+  entryUrl: string;
+  note?: string;
+  facilities: { name: string; hint?: string }[];
+}
+type Site = (KashikanSite & { type: "kashikan" }) | LinkSite;
+
 interface Config {
-  sites: (KashikanSite & { type: string })[];
+  sites: Site[];
   purpose: { type: string; codes: string[] };
   days: number;
 }
@@ -30,6 +40,7 @@ async function main() {
   const errors: string[] = [];
   const today = new Date();
   for (const site of cfg.sites) {
+    if (site.type !== "kashikan") continue; // link 型は自動取得しない(公式サイトへ案内するだけ)
     for (let i = 0; i < cfg.days; i++) {
       const date = jst(new Date(today.getTime() + i * 86400e3));
       try {
@@ -47,7 +58,13 @@ async function main() {
   mkdirSync("public", { recursive: true });
   writeFileSync(
     "public/data.json",
-    JSON.stringify({ updatedAt: new Date().toISOString(), sites: cfg.sites.map((s) => s.name), slots, errors }),
+    JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      sites: cfg.sites.map((s) => s.name),
+      links: cfg.sites.filter((s): s is LinkSite => s.type === "link"),
+      slots,
+      errors,
+    }),
   );
   console.log(`空き ${slots.length} 件 / エラー ${errors.length} 件 -> public/data.json`);
   if (errors.length) console.log(errors.slice(0, 5).join("\n"));

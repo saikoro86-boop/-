@@ -9,7 +9,7 @@ async function main() {
     process.exit(1);
   }
   const cfg = JSON.parse(readFileSync("config/courts.json", "utf-8"));
-  for (const site of cfg.sites.filter((s: { name: string }) => !filter || s.name.includes(filter))) {
+  for (const site of cfg.sites.filter((s: { name: string; type: string }) => s.type === "kashikan" && (!filter || s.name.includes(filter)))) {
     console.log(`\n■ ${site.name} ${date}`);
     let n = 0;
     for (const c of (await fetchDay(site, date, cfg.purpose)).filter(isTennisCourt)) {
