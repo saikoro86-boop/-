@@ -45,9 +45,60 @@
       "id": "yamatokoriyama-city",
       "name": "大和郡山市",
       "type": "nsa",
-      "facilityId": "a0nJ30000006tEoIAI",
-      "buildingId": "a0hJ30000005nP6IAI",
-      "note": "奈良スーパーアプリ(ゲスト)。大和郡山市総合公園施設(矢田山テニスコート)"
+      "note": "奈良スーパーアプリ(ゲスト)",
+      "targets": [
+        {
+          "facilityId": "a0nJ30000006tEoIAI",
+          "buildingId": "a0hJ30000005nP6IAI",
+          "note": "大和郡山市総合公園施設(矢田山テニスコート)"
+        },
+        {
+          "facilityId": "a0nJ30000006tErIAI",
+          "buildingId": "a0hJ30000005nPCIAY",
+          "note": "まほろば健康パーク"
+        }
+      ]
+    },
+    {
+      "id": "asuka-village",
+      "name": "明日香村",
+      "type": "nsa",
+      "note": "奈良スーパーアプリ(ゲスト)",
+      "targets": [
+        {
+          "facilityId": "a0nJ30000006rohIAA",
+          "buildingId": "a0hJ30000005lM0IAI",
+          "note": "ワタキューテニスパーク明日香 南コート(1〜8番)"
+        },
+        {
+          "facilityId": "a0nJ30000006rohIAA",
+          "buildingId": "a0hJ30000005lM1IAI",
+          "note": "同 中コート(9〜12番)"
+        },
+        {
+          "facilityId": "a0nJ30000006rohIAA",
+          "buildingId": "a0hJ30000005lM2IAI",
+          "note": "同 北コート(13〜20番)"
+        },
+        {
+          "facilityId": "a0nJ30000006rohIAA",
+          "buildingId": "a0hJ30000005lM3IAI",
+          "note": "同 中央コート(21〜28番)"
+        }
+      ]
+    },
+    {
+      "id": "kashiba-city",
+      "name": "香芝市",
+      "type": "nsa",
+      "note": "奈良スーパーアプリ(ゲスト)",
+      "targets": [
+        {
+          "facilityId": "a0nJ3000006hh2UIAQ",
+          "buildingId": "a0hJ30000007KkpIAE",
+          "note": "香芝健民テニスコート"
+        }
+      ]
     }
   ],
   "purpose": {

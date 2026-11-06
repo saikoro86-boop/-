@@ -60,7 +60,12 @@ export interface NsaItem {
 
 export interface NaraSuperAppResponse {
   returnValue: {
-    buildingRecord: { Id: string; Name: string; FRE_FacilitiesId__c: string };
+    buildingRecord: {
+      Id: string;
+      Name: string; // 建物名
+      FRE_FacilitiesId__c: string;
+      FRE_FacilitiesId__r?: { Name: string }; // 施設名(あれば建物名より優先)
+    };
     equResultList: NsaEquipment[];
     isInquiryOnly: boolean;
     rsvItemResultList: NsaItem[];
@@ -127,7 +132,7 @@ export function parseNaraSuperApp(raw: NaraSuperAppResponse, date: string): Cour
         mark: reserved.has(s.Id) ? "×" : "○",
       }))
       .sort((a, b) => a.start - b.start);
-    if (slots.length) out.push({ facility: norm(buildingRecord.Name), court: norm(eq.Name), slots });
+    if (slots.length) out.push({ facility: norm(buildingRecord.FRE_FacilitiesId__r?.Name ?? buildingRecord.Name), court: norm(eq.Name), slots });
   }
   return out;
 }

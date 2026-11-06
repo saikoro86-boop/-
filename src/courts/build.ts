@@ -20,8 +20,8 @@ interface NsaSite {
   id: string;
   name: string;
   type: "nsa";
-  facilityId: string;
-  buildingId: string;
+  /** 1つの地域に複数の施設・建物をまとめられる */
+  targets: { facilityId: string; buildingId: string; note?: string }[];
 }
 type Site = (KashikanSite & { type: "kashikan" }) | LinkSite | NsaSite;
 
@@ -41,20 +41,23 @@ async function main() {
   const today = new Date();
   for (const site of cfg.sites) {
     if (site.type === "nsa") {
-      // 1回のリクエストで全日付分が返る
-      try {
-        const raw = await fetchNaraSuperAppRaw(site.buildingId, site.facilityId);
-        const first = jst(today);
-        const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
-        for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
-          for (const c of parseNaraSuperApp(raw, date).filter(isTennisCourt)) {
-            for (const s of c.slots.filter(isOpen)) {
-              slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end });
+      // 施設(建物)ごとに1回のリクエストで全日付分が返る
+      const first = jst(today);
+      const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
+      for (const t of site.targets) {
+        try {
+          const raw = await fetchNaraSuperAppRaw(t.buildingId, t.facilityId);
+          for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
+            for (const c of parseNaraSuperApp(raw, date).filter(isTennisCourt)) {
+              for (const s of c.slots.filter(isOpen)) {
+                slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end });
+              }
             }
           }
+        } catch (e) {
+          errors.push(`${site.name} ${t.note ?? t.buildingId}: ${(e as Error).message}`);
         }
-      } catch (e) {
-        errors.push(`${site.name}: ${(e as Error).message}`);
+        await sleep(1500); // 先方に負荷をかけない
       }
       continue;
     }
