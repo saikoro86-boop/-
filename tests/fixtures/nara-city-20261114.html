@@ -1,0 +1,1309 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.6, shrink-to-fit=no, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content=yes>
+    <meta name="copyright" content="Copyright 2018-2026 PASTORALE CO., LTD.">
+    <meta name="keywords" content="施設予約システム,公共施設予約システム,公共施設">
+    <meta name="description" content="いつでも貸館は、公共施設予約システム・ 施設予約システムです。">
+    <link rel="shortcut icon" href="images/icons/favicon.ico" type="images/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icons/apple-touch-icon.png">
+    <title>奈良市公共施設予約システム</title>
+    <link rel="stylesheet" href="css/style.css?26001" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="script/common.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.css">
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+</head>
+
+<body>
+<div id="OuterWrapper">
+<!-- header top -->
+<div class="header-top">
+	<div class="header-logo">
+				<a class="trans logo-image" href="./">奈良市公共施設予約システム</a>
+	</div>
+	<div class="header-menu">
+		<div class="menu-button-themes" tabindex="0" onkeydown="keydownTheme(event);" onmouseenter="themeHoverOn();" onmouseleave="themeHoverOff();">
+			<i class="fa-solid fa-sliders fa-lg"></i>&nbsp;
+			<div class="themes-text">色・文字サイズ設定</div>&nbsp;
+			<i class="fa-solid fa-angle-right fa-rotate-90"></i>
+			<div class="themes-wrapper js-accordion">
+				<div class="themes-inner">
+					<div class="themes-heading">サイトの配色</div>
+					<ul class="color-list">
+						<li class="color-item is-current js-theme-button" data-theme="normal-theme"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="color-item-background is-standard"></div>
+							<div class="color-item-text">標準</div>
+						</li>
+						<li class="color-item js-theme-button" data-theme="dark-theme"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="color-item-background is-black"></div>
+							<div class="color-item-text">黒</div>
+						</li>
+						<li class="color-item js-theme-button" data-theme="light-theme"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="color-item-background is-white"></div>
+							<div class="color-item-text">白</div>
+						</li>
+					</ul>
+					<div class="themes-heading">文字サイズ</div>
+					<ul class="size-list">
+						<li class="size-item is-current js-size-button" data-size="normal-size"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="size-item-sample is-standard">あ</div>
+							<div class="size-item-text">標準</div>
+						</li>
+						<li class="size-item js-size-button" data-size="big-size"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="size-item-sample is-big">あ</div>
+							<div class="size-item-text">大</div>
+						</li>
+						<li class="size-item js-size-button" data-size="small-size"
+						tabindex="0" onfocus="themeFocus(this);" onblur="themeBlur(this);" onkeydown="themeKeydown(event, this);">
+							<div class="size-item-sample is-small">あ</div>
+							<div class="size-item-text">小</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+														<a class="menu-login" href="#" onclick="gotoPage('my_page');">
+					<span class="login-icon"><i class="fa-solid fa-right-to-bracket fa-xl"></i></span>
+					<span class="login-text">ログイン</span>
+				</a>
+							<div class="hamburger-button is-menu js-button-menu">
+			<div class="hamburger default">
+				<div class="hamburger-icon"><i class="fa-solid fa-bars fa-xl"></i></div>
+				<div class="hamburger-text">メニュー</div>
+			</div>
+			<div class="hamburger open">
+				<div class="hamburger-icon"><i class="fa-solid fa-xmark fa-xl"></i></div>
+				<div class="hamburger-text">閉じる</div>
+			</div>
+		</div>
+		<nav class="hamburger-menu js-navigation">
+			<div class="navigation-inner">
+				<div class="navigation-wrapper">
+					<ul class="navigation-list">
+						<li class="navigation-item" onclick="gotoPage('top');">
+							<a class="navigation-link" href="#">
+								<span class="navigation-link-icon"><i class="fa-solid fa-home"></i></span>
+								<span class="navigation-link-text">トップページ</span>
+							</a>
+						</li>
+						<li class="navigation-item" onclick="gotoPage('srch_sst');">
+							<a class="navigation-link" href="#">
+								<span class="navigation-link-icon"><i class="fa-regular fa-calendar-days fa-lg"></i></span>
+								<span class="navigation-link-text">空き状況の確認</span>
+							</a>
+						</li>
+													<li class="navigation-item" onclick="gotoPage('lot_schedule');">
+								<a class="navigation-link" href="#">
+									<span class="navigation-link-icon"><i class="fa-solid fa-building-flag fa-lg"></i></span>
+									<span class="navigation-link-text">抽選施設一覧</span>
+								</a>
+							</li>
+																																									<li class="navigation-item" onclick="gotoPage('instraction');">
+									<a class="navigation-link" href="#">
+										<span class="navigation-link-icon"><i class="fa-solid fa-book-open fa-lg"></i></span>
+										<span class="navigation-link-text">ご利用の手引き</span>
+									</a>
+								</li>
+																									</ul>
+				</div>
+			</div>
+		<!-- <nav class="hamburger-menu"> -->
+    <div class="menu-button-themes">
+        <div class="themes-wrapper">
+            <div class="themes-inner">
+                <div class="themes-color">
+                    <div class="themes-heading">サイトの配色</div>
+                    <ul class="color-list">
+                        <li class="color-item is-current js-theme-button" data-theme="normal-theme">
+                            <div class="color-item-background is-standard"></div>
+                            <div class="color-item-text">標準</div>
+                        </li>
+                        <li class="color-item js-theme-button" data-theme="dark-theme">
+                            <div class="color-item-background is-black"></div>
+                            <div class="color-item-text">黒</div>
+                        </li>
+                        <li class="color-item js-theme-button" data-theme="light-theme">
+                            <div class="color-item-background is-white"></div>
+                            <div class="color-item-text">白</div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="themes-size">
+                    <div class="themes-heading">文字サイズ</div>
+                    <ul class="size-list">
+                        <li class="size-item is-current js-size-button" data-size="normal-size">
+                            <div class="size-item-sample is-standard">あ</div>
+                            <div class="size-item-text">標準</div>
+                        </li>
+                        <li class="size-item js-size-button" data-size="big-size">
+                            <div class="size-item-sample is-big">あ</div>
+                            <div class="size-item-text">大</div>
+                        </li>
+                        <li class="size-item js-size-button" data-size="small-size">
+                            <div class="size-item-sample is-small">あ</div>
+                            <div class="size-item-text">小</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+<div class="overlay-menu js-overlay-menu"></div>	</div>
+</div>
+<script>
+	changeTheme();
+</script>
+<!-- page-navi -->
+<div class="header-navbar">
+	<nav class="header-navigation js-navigation">
+		<ul class="navigation-list">
+			<li class="navigation-item" onclick="gotoPage('top');">
+				<a class="navigation-link" href="#">
+					<span class="navigation-link-icon">
+						<i class="fa-solid fa-home"></i>
+						<span class="sr-only">トップページへ</span>
+					</span>
+				</a>
+			</li>
+			<li class="navigation-item" onclick="gotoPage('srch_sst');">
+				<a class="navigation-link" href="#">
+					<span class="navigation-link-icon"><i class="fa-regular fa-calendar-days"></i></span>
+					<span class="navigation-link-text">空き状況の確認</span>
+				</a>
+			</li>
+							<li class="navigation-item" onclick="gotoPage('lot_schedule');">
+					<a class="navigation-link" href="#">
+						<span class="navigation-link-icon"><i class="fa-solid fa-building-flag"></i></span>
+						<span class="navigation-link-text">抽選施設一覧</span>
+					</a>
+				</li>
+																							<li class="navigation-item" onclick="gotoPage('instraction');">
+						<a class="navigation-link" href="#">
+							<span class="navigation-link-icon"><i class="fa-solid fa-book-open"></i></span>
+							<span class="navigation-link-text">ご利用の手引き</span>
+						</a>
+					</li>
+													</ul>
+	</nav>
+</div>
+<!--/HEADER SECTION-->
+<!--MAIN CONTENTS-->
+<div class="section-content-header">
+	<h2 class="md01">目的で検索</h2>
+</div>
+<div id="MainC">
+	<p class="message"></p>
+<div id="tab-menu">
+	<a href="#" onclick="gotoPage('srch_sst');" class="tab off">施設の空き状況</a>
+	<a href="#" onclick="gotoPage('srch_stj');" class="tab off">期間の空き状況</a>
+	<a href="#" onclick="gotoPage('srch_mkt');" class="tab on">目的で検索</a>
+</div>
+<!--srch_mkt.tpl-->
+
+<script>
+var navi_date = ['20261106','20261113','20261115','20261107','20261121','20261014','20261214'];
+</script>
+
+<form name="forma" method="post" action="index.php"  id="mokuteki" >
+<input type="hidden" name="op" value="srch_mkt">
+<input type="hidden" name="UseYM" value="202611">
+<input type="hidden" name="UseDay" value="14">
+<div class="search-btn-area">
+	<label><input type="button" name="conditionBtn" onclick="$('#purpose-select-area').slideToggle();toggleShisetsuBtnName('検索条件変更 ▼');"><span id="ShisetsuBtn">検索条件変更 ▼</span></label>
+	<label><input type="button" name="calendarOpenBtn" onclick="$('#new_calendar').slideToggle();toggleCalendarOpenBtnName('カレンダーを開く ▼');"><span id="CalendarOpenBtn">カレンダーを開く ▼</span></label>
+	<label><input type="submit" name="searchBtn"><span id="reloadBtn">再読込・選択クリア</span></label>
+</div>
+<div id="new_calendar" style="display:none;margin-bottom:1em;"></div>
+<div id="purpose-select-area" style="display:none;">
+<div class="search-tabs">
+	<div class="search-tab">検索条件</div>
+</div>
+<div class="search-body">
+	<table style="margin:0 auto;">
+	<tr>
+	<th>利用目的</th>
+	<td>
+						<label><input type="radio" name="Type" value="6" onclick="make_mokuteki_menu(6);"><span class="search-label">屋内スポーツ</span></label>
+				<label><input type="radio" name="Type" value="7" onclick="make_mokuteki_menu(7);" checked><span class="search-label">屋外スポーツ</span></label>
+				<label><input type="radio" name="Type" value="8" onclick="make_mokuteki_menu(8);"><span class="search-label">武道等</span></label>
+				<label><input type="radio" name="Type" value="4" onclick="make_mokuteki_menu(4);"><span class="search-label">体操等</span></label>
+				<label><input type="radio" name="Type" value="1" onclick="make_mokuteki_menu(1);"><span class="search-label">イベント（公演、コンサート、発表会）</span></label>
+				<label><input type="radio" name="Type" value="33" onclick="make_mokuteki_menu(33);"><span class="search-label">教室</span></label>
+				<label><input type="radio" name="Type" value="34" onclick="make_mokuteki_menu(34);"><span class="search-label">音楽</span></label>
+				<label><input type="radio" name="Type" value="35" onclick="make_mokuteki_menu(35);"><span class="search-label">演劇</span></label>
+				<label><input type="radio" name="Type" value="36" onclick="make_mokuteki_menu(36);"><span class="search-label">舞踊・ダンス</span></label>
+				<label><input type="radio" name="Type" value="37" onclick="make_mokuteki_menu(37);"><span class="search-label">伝統芸能</span></label>
+				<label><input type="radio" name="Type" value="38" onclick="make_mokuteki_menu(38);"><span class="search-label">芸能・演芸</span></label>
+				<label><input type="radio" name="Type" value="39" onclick="make_mokuteki_menu(39);"><span class="search-label">美術</span></label>
+				<label><input type="radio" name="Type" value="40" onclick="make_mokuteki_menu(40);"><span class="search-label">映画</span></label>
+				<label><input type="radio" name="Type" value="41" onclick="make_mokuteki_menu(41);"><span class="search-label">生活文化（茶華道・料理・娯楽・手芸・工作等）</span></label>
+				<label><input type="radio" name="Type" value="42" onclick="make_mokuteki_menu(42);"><span class="search-label">文学</span></label>
+				<label><input type="radio" name="Type" value="43" onclick="make_mokuteki_menu(43);"><span class="search-label">会議・研修</span></label>
+				<label><input type="radio" name="Type" value="44" onclick="make_mokuteki_menu(44);"><span class="search-label">レクレーション・サークル</span></label>
+				<label><input type="radio" name="Type" value="45" onclick="make_mokuteki_menu(45);"><span class="search-label">子育て・地域活動・語学・パソコン・その他</span></label>
+					</td>
+	</tr>
+	<tr>
+	<th>利用目的内容</th>
+	<td>
+		<div id="MokutekiCode">
+				<label><input type="radio" name="MokutekiCode" value="030" onclick="makeShisetsuList();"><span class="search-label">硬式野球</span></label>
+				<label><input type="radio" name="MokutekiCode" value="031" onclick="makeShisetsuList();"><span class="search-label">軟式野球</span></label>
+				<label><input type="radio" name="MokutekiCode" value="032" onclick="makeShisetsuList();"><span class="search-label">ソフトボール</span></label>
+				<label><input type="radio" name="MokutekiCode" value="033" onclick="makeShisetsuList();"><span class="search-label">サッカー</span></label>
+				<label><input type="radio" name="MokutekiCode" value="034" onclick="makeShisetsuList();"><span class="search-label">陸上</span></label>
+				<label><input type="radio" name="MokutekiCode" value="035" onclick="makeShisetsuList();" checked><span class="search-label">硬式テニス</span></label>
+				<label><input type="radio" name="MokutekiCode" value="036" onclick="makeShisetsuList();"><span class="search-label">軟式テニス</span></label>
+				<label><input type="radio" name="MokutekiCode" value="101" onclick="makeShisetsuList();"><span class="search-label">ラグビー</span></label>
+				<label><input type="radio" name="MokutekiCode" value="102" onclick="makeShisetsuList();"><span class="search-label">グラウンドゴルフ</span></label>
+				<label><input type="radio" name="MokutekiCode" value="103" onclick="makeShisetsuList();"><span class="search-label">軽スポーツ</span></label>
+				</div>
+	</td>
+	</tr>
+	</table>
+	<div style="text-align:center;margin:0 auto">
+		<label>
+		<input type="checkbox" name="searchShisetsu" class="searchShisetsu"><span class="search-label">対象施設の一覧から選択</span>
+		</label>
+	</div>
+	<div style="text-align:center; margin: 1em;">
+		<button type="submit" name="searchBtn" class="icon-btn-01">
+			<i class="fa-solid fa-magnifying-glass"></i>&nbsp;検索
+		</button>
+	</div>
+</div>
+</div>
+
+<div id="kensaku_result">
+<input type="hidden" name="UseDate" value="20261114">
+<h3 style="margin-top:0.4em;text-align:center;">2026(令和 8)年11月14日 (土)&nbsp;&nbsp;&nbsp;&nbsp;硬式テニス</h3>
+<table style="max-width:804px;width:100%;margin:0.8em auto 0;" id="navi-wide">
+<tr>
+	<td style="width:100px;text-align:left;white-space:nowrap;"><a href="#" class="week-back" onclick="setNaviDate('20261107');"><i class="fa-solid fa-angles-left"></i>&nbsp;1週間前</a></td>
+	<td style="width:100px;text-align:left;white-space:nowrap;"><a href="#" class="day-back" onclick="setNaviDate('20261113');"><i class="fa-solid fa-angle-left"></i>&nbsp;1日前</a></td>
+	<td>&nbsp;</td>
+	<td style="width:100px;text-align:right;white-space:nowrap;"><a href="#" class="day-next" onclick="setNaviDate('20261115');">1日後&nbsp;<i class="fa-solid fa-angle-right"></i></a></td>
+	<td style="width:100px;text-align:right;white-space:nowrap;"><a href="#" class="week-next" onclick="setNaviDate('20261121');">1週間後&nbsp;<i class="fa-solid fa-angles-right"></i></a></td>
+</tr>
+</table>
+<table style="max-width:744px;width:100%;margin:0.6em auto 0;" id="navi-compact">
+<tr style="line-height:1.6em;">
+	<td colspan="3" class="btn-select-area">
+	<input type="radio" name="disp_span" value="0" id="span_day" checked><label for="span_day" class="select-bt-4">1日</label>
+	<input type="radio" name="disp_span" value="1" id="span_week"><label for="span_week" class="select-bt-4">1週間</label>
+	<input type="radio" name="disp_span" value="2" id="span_month"><label for="span_month" class="select-bt-4">1ヶ月</label>
+	</td>
+</tr>
+<tr style="line-height:2.2em;">
+	<td style="width:100px;text-align:left;white-space:nowrap;"><a href="#" onclick="setDispSpan(1);" class="day-back"><i class="fa-solid fa-angle-left"></i>&nbsp;前へ</a></td>
+	<td style="text-align:center;font-weight:bold;white-space:nowrap;"><a href="#" onclick="setNaviDate('20261106');" class="to-day">本日</a>
+	<td style="width:100px;text-align:right;white-space:nowrap;"><a href="#" onclick="setDispSpan(2);" class="day-next">次へ&nbsp;<i class="fa-solid fa-angle-right"></i></a></td>
+</tr>
+</table>
+<!-- Calendar -->
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市南部生涯スポーツセンター</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">球技場</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA</td>
+				<td id="007|003|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|003|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|003|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="007|003|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB</td>
+				<td id="007|004|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="007|004|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|004|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|004|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">多目的コートA</td>
+				<td id="007|005|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|005|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|005|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="007|005|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|005|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|005|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">多目的コートB</td>
+				<td id="007|006|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|006|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|006|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="007|006|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('007|006|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('007|006|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市柏木コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB</td>
+				<td id="010|002|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|002|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|002|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="010|002|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|002|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|002|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="010|003|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートD</td>
+				<td id="010|004|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートE</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="010|005|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|005|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|005|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートF</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="010|006|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('010|006|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('010|006|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市黒谷コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市平城第一コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="012|001|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('012|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('012|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市平城第二コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="013|001|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('013|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('013|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートD</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市青山コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市佐保山コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="015|001|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('015|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('015|001|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市鴻ノ池コート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートD(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートE(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートF(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートG(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートH(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートI(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートJ(クレーコート)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="016|010|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('016|010|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('016|010|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市西部生涯スポーツセンターコート</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートA(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートB(砂入り人工芝)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートC(クレーコート)</td>
+				<td id="017|003|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('017|003|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('017|003|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="017|003|ZZ|0|2|0#2026/11/14#1" style="width:199px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('017|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('017|003|ZZ|0|2|0', '2026/11/14', 1, '13001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートD(クレーコート)</td>
+				<td id="017|004|ZZ|0|2|0#2026/11/14#0" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('017|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('017|004|ZZ|0|2|0', '2026/11/14', 0, '09001200', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">コートE(クレーコート)</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">奈良市中央第二武道場</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">会議室</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+				<td id="019|002|ZZ|0|2|0#2026/11/14#2" style="width:149px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('019|002|ZZ|0|2|0', '2026/11/14', 2, '18002100', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('019|002|ZZ|0|2|0', '2026/11/14', 2, '18002100', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">サン・アクティブ奈良（勤労者総合福祉センター）</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">テニスコート西<br>(10人)</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">テニスコート東<br>(10人)</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:99px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">富雄公民館</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">テニスコート</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+				<td id="077|006|ZZ|0|2|0#2026/11/14#3" style="width:49px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('077|006|ZZ|0|2|0', '2026/11/14', 3, '12001300', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('077|006|ZZ|0|2|0', '2026/11/14', 3, '12001300', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+				<td id="077|006|ZZ|0|2|0#2026/11/14#7" style="width:49px;background-color:#d1fafa;cursor:pointer;" onmousedown="setAppStatus('077|006|ZZ|0|2|0', '2026/11/14', 7, '16001700', '#d1fafa', '#ff2c2c');" onmouseenter="setAppStatusMouseOver('077|006|ZZ|0|2|0', '2026/11/14', 7, '16001700', '#d1fafa', '#ff2c2c');"
+		tabindex="0" onfocus="elementFocus(this);" onblur="elementBlur(this);" onkeydown="elementKeydown(this,event);">
+	○</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">富雄南公民館</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">テニスコート</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="koma-area">
+<h3 style="margin-bottom:4px;">都祁生涯スポーツセンター</h3>
+<div class="SelectCalendarOuter">
+<div class="SelectCalendar" style="width:834px;">
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<th style="width:180px;" class="header">施設</th>
+	<th style="width:49px;">9</th>
+	<th style="width:49px;">10</th>
+	<th style="width:49px;">11</th>
+	<th style="width:49px;">12</th>
+	<th style="width:49px;">13</th>
+	<th style="width:49px;">14</th>
+	<th style="width:49px;">15</th>
+	<th style="width:49px;">16</th>
+	<th style="width:49px;">17</th>
+	<th style="width:49px;">18</th>
+	<th style="width:49px;">19</th>
+	<th style="width:49px;">20</th>
+	<th style="width:49px;">21</th>
+</tr>
+</table>
+<script>
+setFocusEnable();
+</script>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">庭球場A</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">庭球場B</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">庭球場C</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+<table class="koma-table" style="margin:0 auto;">
+<tr>
+	<td style="width:180px;" class="name">庭球場D</td>
+		<td style="width:149px;background-color:#ffe0c1;">×</td>
+		<td style="width:49px;background-color:#ffffff;">&nbsp;</td>
+		<td style="width:199px;background-color:#ffe0c1;">×</td>
+		<td style="width:249px;background-color:#ffffff;">&nbsp;</td>
+	</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="apply-btn-area">
+	<button type="submit" name="requestBtn" class="icon-btn-01" onclick="this.form.op.value='apply';">
+		<i class="fa-solid fa-cart-arrow-down"></i>&nbsp;申込トレイに入れる
+	</button>
+</div>
+<div style="text-align:center;margin:1em auto 0;">
+<table class="table-style tbl-color-3" style="vertical-align:top;display:inline-block;font-size:100%;">
+<tr>
+	<td style="width:30px;">●</td>
+	<td style="width:230px;">空き</td>
+</tr>
+<tr>
+	<td>×</td>
+	<td>予約済</td>
+</tr>
+<tr>
+	<td>-</td>
+	<td>受付期間外</td>
+</tr>
+</table>
+
+<table class="table-style tbl-color-3" style="vertical-align:middle;display:inline-block;font-size:100%;">
+<tr>
+	<td style="width:30px;background-color:#d1fafa;color:var(--color-black);">〇</td>
+	<td style="width:230px;">空き<br>(インターネット予約受付中)</td>
+</tr>
+<tr>
+	<td style="background-color:#ffe0c1;color:var(--color-black);">×</td>
+	<td>予約済<br>(インターネット予約受付中)</td>
+</tr>
+<tr>
+	<td style="background-color:#ffffff;"></td>
+	<td>インターネット予約不可</td>
+</tr>
+<tr>
+	<td style="background-color:#ffff66;"></td>
+	<td>抽選申込受付中</td>
+</tr>
+<tr>
+	<td style="background-color:#90ee90;"></td>
+	<td>休館・保守</td>
+</tr>
+</table>
+</div>
+</div>
+</form>
+
+<script>
+
+$(function() {
+	showCalendar(0, 0);
+
+	
+});
+
+</script>
+
+	</div>
+	<!--/MAIN CONTENTS-->
+
+	<!--FOOTER-->
+	<div id="Footer">
+				<div id ="tos">
+				<a href="index.php?op=tos" target="_blank" style="margin-right:1em;">利用規約</a>
+		<a href="index.php?op=privacy" target="_blank">個人情報保護方針</a>
+						<a href="index.php?op=sct" target="_blank" style="margin-left:1em;">特定商取引法に基づく表記</a>
+				</div>
+				<p></p>
+	</div>
+	<!--FOOTER-->
+</div>
+<!-- /OuterWrapper -->
+<form name="formx" method="post" action="index.php">
+	<input type="hidden" name="op" value="">
+</form>
+</body>
+</html>

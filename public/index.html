@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>テニスコート空き検索</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c1f24; --sub:#6a7280; --accent:#1f8a4c; --line:#e3e6ea; --chip:#e9f5ee; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171a; --card:#1d2126; --text:#eceff3; --sub:#9aa3af; --accent:#4cc27f; --line:#2c3238; --chip:#1f3a2b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system,"Hiragino Sans",sans-serif; }
+  header { padding:16px; }
+  h1 { margin:0; font-size:20px; }
+  #updated { color:var(--sub); font-size:12px; }
+  .bar { position:sticky; top:0; background:var(--bg); padding:8px 16px; border-bottom:1px solid var(--line); z-index:2; }
+  .row { display:flex; gap:8px; overflow-x:auto; padding:4px 0; scrollbar-width:none; }
+  .row::-webkit-scrollbar { display:none; }
+  button { font:inherit; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:999px; padding:6px 14px; white-space:nowrap; cursor:pointer; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .day { display:flex; flex-direction:column; align-items:center; min-width:54px; border-radius:12px; padding:6px 8px; line-height:1.25; }
+  .day small { font-size:11px; opacity:.8; }
+  .day b { font-size:12px; margin-top:2px; }
+  .sat small { color:#3b82f6; } .sun small { color:#ef4444; }
+  .day[aria-pressed="true"] small { color:#fff; }
+  main { padding:12px 16px 40px; display:grid; gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  .card h2 { margin:0 0 2px; font-size:16px; }
+  .city { color:var(--sub); font-size:12px; }
+  .court { display:flex; justify-content:space-between; gap:8px; padding:8px 0; border-top:1px solid var(--line); }
+  .court:first-of-type { border-top:0; }
+  .court > span:first-child { flex:1 1 40%; }
+  .times { flex:1 1 60%; display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; }
+  .t { background:var(--chip); color:var(--accent); border-radius:6px; padding:1px 8px; font-size:13px; font-weight:600; }
+  .empty, .err { text-align:center; color:var(--sub); padding:32px 0; }
+  .err { color:#c0392b; font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎾 テニスコート空き検索</h1>
+  <div id="updated">読み込み中…</div>
+</header>
+<div class="bar">
+  <div class="row" id="days"></div>
+  <div class="row" id="cities"></div>
+  <div class="row" id="zones"></div>
+</div>
+<main id="list"></main>
+<script>
+const $ = (id) => document.getElementById(id);
+const WD = ["日","月","火","水","木","金","土"];
+const ZONES = { "all":["すべて",0,24], "am":["午前",0,12], "pm":["午後",12,17], "ev":["夜",17,24] };
+const st = { date:null, city:"all", zone:"all" };
+let data = { slots:[], sites:[], errors:[] };
+
+const hm = (h) => { const m = Math.round((h % 1) * 60); return Math.floor(h) + (m ? ":" + String(m).padStart(2,"0") : ""); };
+
+function chips(el, items, key) {
+  el.innerHTML = "";
+  for (const [v, label] of items) {
+    const b = document.createElement("button");
+    b.textContent = label; b.setAttribute("aria-pressed", st[key] === v);
+    b.onclick = () => { st[key] = v; render(); };
+    el.appendChild(b);
+  }
+}
+
+function render() {
+  // 日付ストリップ(空きがある日にマーク)
+  const dates = [...new Set(data.slots.map(s => s.date))].sort();
+  if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
+  $("days").innerHTML = "";
+  for (const d of dates) {
+    const dt = new Date(d + "T00:00:00+09:00"), w = dt.getDay();
+    const b = document.createElement("button");
+    b.className = "day " + (w === 6 ? "sat" : w === 0 ? "sun" : "");
+    b.innerHTML = `<small>${WD[w]}</small><b>${dt.getMonth()+1}/${dt.getDate()}</b>`;
+    b.setAttribute("aria-pressed", st.date === d);
+    b.onclick = () => { st.date = d; render(); };
+    $("days").appendChild(b);
+  }
+  chips($("cities"), [["all","全エリア"], ...data.sites.map(s => [s, s])], "city");
+  chips($("zones"), Object.entries(ZONES).map(([k, v]) => [k, v[0]]), "zone");
+
+  const [, z0, z1] = ZONES[st.zone];
+  const hits = data.slots.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0);
+  const byFac = new Map();
+  for (const s of hits) {
+    const k = s.site + "|" + s.facility;
+    if (!byFac.has(k)) byFac.set(k, { site:s.site, facility:s.facility, courts:new Map() });
+    const c = byFac.get(k).courts;
+    if (!c.has(s.court)) c.set(s.court, []);
+    c.get(s.court).push(s);
+  }
+  const list = $("list");
+  list.innerHTML = "";
+  if (!byFac.size) list.innerHTML = '<div class="empty">この条件で空いているコートはありません</div>';
+  for (const f of byFac.values()) {
+    const card = document.createElement("section");
+    card.className = "card";
+    card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
+    card.querySelector("h2").textContent = f.facility;
+    for (const [court, ss] of f.courts) {
+      const row = document.createElement("div");
+      row.className = "court";
+      const name = document.createElement("span"); name.textContent = court;
+      const times = document.createElement("span"); times.className = "times";
+      // 連続する枠(9-10, 10-11 …)は 1 つにまとめる
+      const merged = [];
+      for (const s of ss.sort((a, b) => a.start - b.start)) {
+        const last = merged[merged.length - 1];
+        if (last && s.start <= last.end) last.end = Math.max(last.end, s.end);
+        else merged.push({ start: s.start, end: s.end });
+      }
+      for (const s of merged) {
+        const t = document.createElement("span"); t.className = "t"; t.textContent = `${hm(s.start)}–${hm(s.end)}`; times.appendChild(t);
+      }
+      row.append(name, times); card.appendChild(row);
+    }
+    list.appendChild(card);
+  }
+  if (data.errors.length) {
+    const e = document.createElement("div"); e.className = "err";
+    e.textContent = `取得に失敗した日があります(${data.errors.length}件)。空き表示が不完全な可能性があります。`;
+    list.appendChild(e);
+  }
+}
+
+fetch("data.json", { cache:"no-cache" }).then(r => r.json()).then(d => {
+  data = d;
+  const t = new Date(d.updatedAt);
+  $("updated").textContent = `最終更新 ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+  render();
+}).catch(() => { $("updated").textContent = "データを読み込めませんでした"; });
+</script>
+</body>
+</html>

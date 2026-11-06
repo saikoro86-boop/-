@@ -58,3 +58,20 @@ npm run sns -- publish [--dry-run]                              # 投稿時刻�
 - Instagram は画像が必須です(`--image` に公開 URL を指定)。
 - X への画像付き投稿は未対応です。
 - 下書きは `drafts/` に保存されます(`.gitignore` 済み)。
+
+## 3. テニスコート空き検索
+
+奈良市・生駒市(「いつでも貸館」方式の予約サイト)のテニスコート空き状況をまとめて調べ、スマホ向けページに表示します。ログインは不要です。
+
+```bash
+npm run courts -- 2026-11-14 [市名]   # 指定日の空きをコマンドで確認
+npm run courts:build                  # 今後30日分を public/data.json に出力
+```
+
+- `public/index.html` が画面です。`data.json` と同じ場所に置いて開きます(日付・エリア・時間帯で絞り込み)。
+- 対象サイトは `config/courts.json` で追加できます。同じ「いつでも貸館」方式の市なら URL を足すだけです。
+- `.github/workflows/courts.yml` が3時間ごとに取得して GitHub Pages に公開します。リポジトリの Settings → Pages で Source を「GitHub Actions」にしてください。
+- 空き状況の取得にはログインや予約操作を行いません。サーバに負荷をかけないよう、1リクエストごとに待ち時間を入れています。
+
+### 未対応
+- 木津川市(京都府共同システム)・奈良県営(奈良スーパーアプリ)・大和郡山市は未対応です。

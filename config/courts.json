@@ -1,0 +1,8 @@
+{
+  "sites": [
+    { "id": "nara-city", "name": "奈良市", "type": "kashikan", "url": "https://k6.p-kashikan.jp/nara-city/index.php" },
+    { "id": "ikoma-city", "name": "生駒市", "type": "kashikan", "url": "https://k5.p-kashikan.jp/ikoma-city/index.php" }
+  ],
+  "purpose": { "type": "7", "codes": ["035", "036"] },
+  "days": 30
+}
