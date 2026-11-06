@@ -17,6 +17,7 @@ import {
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 import { facilitiesWithMarks, findContact, type Contact } from "./phone";
+import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
 
 interface KashikanConfig extends KashikanSite {
   type: "kashikan";
@@ -80,6 +81,16 @@ async function main() {
   const first = jst(today);
   const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
   const discovered = new Set<string>(); // 自動で見つけた市町村(エリアのボタンに使う)
+  /** 空きがない施設・日の理由(空き枠がある日は入れない)。同じ施設の複数の建物は、空きに近い状態にまとめる */
+  const statusMap = new Map<string, { d: string; s: string; f: string; t: FacilityState; l?: string }>();
+  const setStatus = (site: string, facility: string, d: string, t: FacilityState, l?: string) => {
+    if (t === "open") return;
+    const k = `${site}|${facility}|${d}`;
+    const prev = statusMap.get(k);
+    if (!prev) statusMap.set(k, { d, s: site, f: facility, t, ...(l ? { l } : {}) });
+    else if (mergeStates(prev.t, t) === t && prev.t !== t) statusMap.set(k, { d, s: site, f: facility, t, ...(l ? { l } : {}) });
+  };
+  const rangeDates = Array.from({ length: cfg.days }, (_, i) => jst(new Date(today.getTime() + i * 86400e3)));
   /** 「エリア|施設名」→ その施設の予約サイトのURL(画面で、コート名・時間をタップしたときの行き先) */
   const facilityUrls: Record<string, string> = {};
 
@@ -87,6 +98,17 @@ async function main() {
   const addNsa = (area: string, raw: NaraSuperAppResponse) => {
     const { buildingRecord: b } = raw.returnValue;
     const url = nsaReservationUrl(b.FRE_FacilitiesId__c, b.Id);
+    const facility = (b.FRE_FacilitiesId__r?.Name ?? b.Name).normalize("NFKC").trim();
+    // アプリに枠が出ている最初の日〜最後の日(テニスコートの枠だけで数える)
+    const tennisDates = listNaraSuperAppDates(raw).filter((d) => parseNaraSuperApp(raw, d).some(isNsaTennisCourt));
+    const [firstSlot, lastSlot] = [tennisDates[0], tennisDates[tennisDates.length - 1]];
+    for (const date of rangeDates) {
+      const cs = parseNaraSuperApp(raw, date).filter(isNsaTennisCourt);
+      const hasSlots = cs.some((c) => c.slots.length > 0);
+      const hasOpen = cs.some((c) => c.slots.some(isOpen));
+      const t = nsaDayState({ hasOpen, hasSlots, inRange: !!firstSlot && date >= firstSlot && date <= lastSlot });
+      setStatus(area, facility, date, t, t === "closed" ? "休館日など" : undefined);
+    }
     for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
       for (const c of parseNaraSuperApp(raw, date).filter(isNsaTennisCourt)) {
         for (const s of c.slots.filter(isOpen)) {
@@ -155,6 +177,13 @@ async function main() {
             facilityUrls[`${site.name}|${c.facility}`] = site.url; // 施設ごとの直接URLは無いので、予約サイトのトップへ
           }
         }
+        // 施設ごとの状態(空きなし/休館など)。●の電話案内は下の phone で扱う
+        const byFac = new Map<string, typeof courts>();
+        for (const c of courts) byFac.set(c.facility, [...(byFac.get(c.facility) ?? []), c]);
+        for (const [facility, cs] of byFac) {
+          const st = kashikanFacilityState(cs, site.phoneMarks ?? []);
+          if (st && (st.state === "full" || st.state === "closed")) setStatus(site.name, facility, date, st.state, st.label);
+        }
         // 「●」などで空きが出ていない日は、空きなしとは区別して電話案内の対象にする
         for (const facility of facilitiesWithMarks(courts, site.phoneMarks ?? [])) {
           const c = findContact(site.contacts ?? [], facility);
@@ -192,6 +221,8 @@ async function main() {
       slots,
       facilityUrls,
       phone,
+      // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
+      status: [...statusMap.values()],
       errors,
     }),
   );

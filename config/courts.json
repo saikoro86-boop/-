@@ -4,7 +4,11 @@
       "id": "nara-city",
       "name": "奈良市",
       "type": "kashikan",
-      "url": "https://k6.p-kashikan.jp/nara-city/index.php"
+      "url": "https://k6.p-kashikan.jp/nara-city/index.php",
+      "phoneMarks": [
+        "●"
+      ],
+      "note": "「●」は凡例が不明。ネットでは空きが分からない扱い(電話番号は未登録)"
     },
     {
       "id": "ikoma-city",

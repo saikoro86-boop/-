@@ -47,6 +47,11 @@
   @media (prefers-color-scheme: dark) { .card.phone { border-color:#8a6a20; } .card.phone h2 { color:#f0c674; } }
   .phone-row { padding:8px 0; border-top:1px solid var(--line); }
   .phone-row:first-of-type { border-top:0; }
+  .card.none summary, .card.unpub summary { cursor:pointer; font-weight:700; }
+  .card.unpub { border-style:dashed; }
+  .reason-title { margin-bottom:6px; }
+  .reason-row { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-top:1px solid var(--line); font-size:14px; }
+  .reason-row small { color:var(--sub); white-space:nowrap; }
   .card.none h2 { color:var(--sub); font-weight:600; }
   .empty, .err { text-align:center; color:var(--sub); padding:32px 0; }
   .err { color:#c0392b; font-size:13px; }
@@ -141,7 +146,7 @@ function chips(el, items, key) {
 
 function render() {
   // 日付ストリップ(空きがある日にマーク)
-  const dates = [...new Set([...data.slots.map(s => s.date), ...(data.phone || []).map(p => p.date)])].sort();
+  const dates = [...new Set([...data.slots.map(s => s.date), ...(data.phone || []).map(p => p.date), ...(data.status || []).map(x => x.d)])].sort();
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
   for (const d of dates) {
@@ -249,23 +254,51 @@ function render() {
     list.appendChild(card);
   }
 
-  // 空きがないエリアは「空きなし」と表示する(取得できていて、空きも電話案内もないエリア)
-  const linkOnly = new Set((data.links || []).filter(l => !(imported && imported.slots.some(s => s.site === l.name))).map(l => l.name));
-  const noneAreas = (st.city === "all" ? data.sites : [st.city])
-    .filter(a => !linkOnly.has(a) && !hits.some(s => s.site === a) && !phoneBySite.has(a));
-  if (noneAreas.length) {
-    const card = document.createElement("section");
-    card.className = "card none";
-    const zone = st.zone === "all" ? "" : "(" + ZONES[st.zone][0] + ")";
-    const h2 = document.createElement("h2");
-    h2.textContent = "空きなし" + zone;
-    const p = document.createElement("div"); p.className = "city";
-    p.textContent = st.city === "all"
-      ? noneAreas.join("・") + ":この日は空いているコートがありません"
-      : noneAreas[0] + ":この日は空いているコートがありません";
-    card.append(h2, p);
-    list.appendChild(card);
+  // 空きがない施設は、理由ごとに分けて表示する
+  //  full=すべて予約済み / closed=休館・利用不可 / unpub=予約アプリにまだ枠が出ていない(分からない)
+  const key = (x) => x.s + "|" + x.f;
+  const phoneKeys = new Set([...phoneBySite].flatMap(([site, ns]) => ns.map(n => site + "|" + n.facility)));
+  const openInZone = new Set(hits.map(s => s.site + "|" + s.facility));
+  const openToday = new Set(data.slots.filter(s => s.date === st.date).map(s => s.site + "|" + s.facility));
+  const cityOk = (site) => st.city === "all" || site === st.city;
+  const reasons = { full: new Map(), closed: new Map(), unpub: new Map() };
+  for (const x of (data.status || [])) {
+    if (x.d !== st.date || !cityOk(x.s)) continue;
+    const k = key(x);
+    if (openInZone.has(k) || phoneKeys.has(k)) continue;                  // カード・電話案内で表示済み
+    reasons[openToday.has(k) ? "full" : x.t].set(k, { site: x.s, facility: x.f, label: x.l });
   }
+  // 他の時間帯には空きがあるが、選んだ時間帯にはない施設
+  for (const s of data.slots) {
+    if (s.date !== st.date || !cityOk(s.site)) continue;
+    const k = s.site + "|" + s.facility;
+    if (!openInZone.has(k)) reasons.full.set(k, { site: s.site, facility: s.facility });
+  }
+  const zoneNote = st.zone === "all" ? "" : "(" + ZONES[st.zone][0] + ")";
+  const reasonCard = (title, lead, items, cls) => {
+    if (!items.size) return;
+    const card = document.createElement("section");
+    card.className = "card " + cls;
+    const det = document.createElement("details");
+    det.open = st.city !== "all" || items.size <= 5;
+    const sum = document.createElement("summary");
+    sum.className = "reason-title"; sum.textContent = `${title}(${items.size}施設)`;
+    det.appendChild(sum);
+    if (lead) { const l = document.createElement("div"); l.className = "city"; l.textContent = lead; det.appendChild(l); }
+    for (const it of [...items.values()].sort((a, b) => a.site.localeCompare(b.site, "ja"))) {
+      const row = document.createElement("div"); row.className = "reason-row";
+      const url = urlFor(it.site, it.facility);
+      const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く") : document.createTextNode(it.facility);
+      const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
+      row.append(name, area);
+      det.appendChild(row);
+    }
+    card.appendChild(det);
+    list.appendChild(card);
+  };
+  reasonCard("まだ空きが公開されていません", "予約アプリに、この日の枠がまだ出ていません。空いているかどうかは、各施設の予約サイトで確認してください。", reasons.unpub, "unpub");
+  reasonCard("空きなし" + zoneNote, "", reasons.full, "none");
+  reasonCard("休館・利用不可", "", reasons.closed, "none");
 
   // 自動取得できない地域は、公式サイトへのリンクを出す
   for (const l of (data.links || [])) {
