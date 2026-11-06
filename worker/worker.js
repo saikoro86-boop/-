@@ -5,6 +5,13 @@
  *   画面のボタン → 中継役(合言葉・連続実行の確認) → GitHub Actions を起動
  */
 const ACTIVE = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
+/** COOLDOWN_SEC の読み取り。未設定・数字でない・負の値は、既定の600秒にする(0 は「待たない」として許可) */
+function parseCooldown(v, fallback = 600) {
+    if (v === undefined || v.trim() === "")
+        return fallback;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
 /** 直近の実行の状態から、新しく起動してよいかを決める(純粋関数) */
 function decideRefresh(last, nowMs, cooldownSec = 600) {
     if (!last)
@@ -12,6 +19,8 @@ function decideRefresh(last, nowMs, cooldownSec = 600) {
     if (ACTIVE.has(last.status))
         return { result: "running", since: last.created_at };
     const finished = Date.parse(last.updated_at);
+    if (Number.isNaN(finished))
+        return { result: "cooldown", waitSec: cooldownSec }; // 時刻が読めない時は、安全側に待たせる
     const wait = Math.ceil(cooldownSec - (nowMs - finished) / 1000);
     return wait > 0 ? { result: "cooldown", waitSec: wait } : { result: "go" };
 }
@@ -90,7 +99,7 @@ export default {
                     await new Promise((r) => setTimeout(r, 800)); // 総当たりを遅くする
                     return json({ error: "bad_passcode" }, 401, o);
                 }
-                const d = decideRefresh(await lastRun(env), Date.now(), Number(env.COOLDOWN_SEC ?? 600));
+                const d = decideRefresh(await lastRun(env), Date.now(), parseCooldown(env.COOLDOWN_SEC));
                 if (d.result !== "go")
                     return json(d, 200, o);
                 const res = await fetch(`https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`, { method: "POST", headers: { ...ghHeaders(env.GH_TOKEN), "content-type": "application/json" }, body: JSON.stringify({ ref: env.GH_REF }) });
