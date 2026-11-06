@@ -38,3 +38,14 @@ test("奈良市: 青山と鴻ノ池は個別の番号、ほかは青山コート
   assert.equal(findContact(nara.contacts, "奈良市柏木コート"), undefined);
   assert.equal(nara.fallbackContact.tel, "0742-26-2996");
 });
+
+test("生駒市: 全施設に個別の番号がある(TAC井出山はテニスコート管理事務所の番号で、プールの番号ではない)", () => {
+  const cfg = JSON.parse(readFileSync(__dirname + "/../config/courts.json", "utf-8"));
+  const ik = cfg.sites.find((s: any) => s.id === "ikoma-city");
+  const facilities = [
+    "山麓公園テニスコート", "生駒市体育協会滝寺S.C.（滝寺公園体育施設）", "生駒市体育協会高山S.C.（生駒北スポーツセンター）",
+    "生駒市体育協会総合S.C.（総合公園体育施設）", "むかいやま公園スポーツ施設", "イモ山公園スポーツ施設", "TAC井出山スポーツパーク（井出山体育施設）",
+  ];
+  for (const f of facilities) assert.ok(findContact(ik.contacts, f), f);
+  assert.equal(findContact(ik.contacts, "TAC井出山スポーツパーク（井出山体育施設）")?.tel, "0743-76-6091");
+});
