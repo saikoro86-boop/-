@@ -97,6 +97,10 @@ async function main() {
   /** 「エリア|施設名」→ 補足(体育館・競技場など、設備名に「テニス」を含まない施設) */
   const gymFacilities = new Set<string>(); // 設備名に「テニス」を含まない建物がある施設
   const namedFacilities = new Set<string>(); // 設備名に「テニス」を含む建物がある施設
+  /** 「エリア|施設名|コート名」→ 公式サイトの検索で使う目的コード(奈良市・生駒市) */
+  const courtCodes: Record<string, string> = {};
+  /** エリア → 公式サイトの検索フォームの送り先(奈良市・生駒市。日付つきで開くために使う) */
+  const postLinks: Record<string, { url: string; type: string }> = {};
   /** 「エリア|施設名」→ その施設の予約サイトのURL(画面で、コート名・時間をタップしたときの行き先) */
   const facilityUrls: Record<string, string> = {};
 
@@ -183,6 +187,8 @@ async function main() {
             if (!online && !offline) continue;
             slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end, ...(offline ? { offline: true as const } : {}) });
             facilityUrls[`${site.name}|${c.facility}`] = site.url; // 施設ごとの直接URLは無いので、予約サイトのトップへ
+            if (c.code) courtCodes[`${site.name}|${c.facility}|${c.court}`] = c.code;
+            postLinks[site.name] = { url: site.url, type: cfg.purpose.type };
             if (offline) {
               const ct = findContact(site.contacts ?? [], c.facility);
               contacts[`${site.name}|${c.facility}`] = ct
@@ -224,6 +230,8 @@ async function main() {
         .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
       slots,
       facilityUrls,
+      courtCodes,
+      postLinks,
       // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
       facilityNotes: Object.fromEntries(
         [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(利用目的に「テニス」を含む施設です。設備ごとの利用目的は、予約画面で確認してください)"]),
