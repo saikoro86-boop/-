@@ -226,7 +226,7 @@ async function main() {
       facilityUrls,
       // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
       facilityNotes: Object.fromEntries(
-        [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(この施設は、利用目的に「テニス」が含まれています)"]),
+        [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(利用目的に「テニス」を含む施設です。設備ごとの利用目的は、予約画面で確認してください)"]),
       ),
       contacts,
       // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
