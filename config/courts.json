@@ -5,10 +5,25 @@
       "name": "奈良市",
       "type": "kashikan",
       "url": "https://k6.p-kashikan.jp/nara-city/index.php",
-      "note": "「●」=空き(ネット予約は受付外)。電話番号は未登録",
+      "note": "「●」=空き(ネット予約は受付外)。電話番号は検索で見つけたもの(青山・鴻ノ池は奈良市の公式ページ掲載)。青山コートを事務所として案内",
       "offlineMarks": [
         "●"
-      ]
+      ],
+      "contacts": [
+        {
+          "match": "青山",
+          "tel": "0742-26-2996",
+          "hours": "9:00〜17:00"
+        },
+        {
+          "match": "鴻ノ池",
+          "tel": "0742-27-4880"
+        }
+      ],
+      "fallbackContact": {
+        "label": "青山コート(事務所)",
+        "tel": "0742-26-2996"
+      }
     },
     {
       "id": "ikoma-city",
