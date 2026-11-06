@@ -40,6 +40,14 @@
           "hint": "テニスコートA/B"
         }
       ]
+    },
+    {
+      "id": "yamatokoriyama-city",
+      "name": "大和郡山市",
+      "type": "nsa",
+      "facilityId": "a0nJ30000006tEoIAI",
+      "buildingId": "a0hJ30000005nP6IAI",
+      "note": "奈良スーパーアプリ(ゲスト)。大和郡山市総合公園施設(矢田山テニスコート)"
     }
   ],
   "purpose": {

@@ -5,6 +5,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import type { OpenSlot } from "./types";
+import { fetchNaraSuperAppRaw, listNaraSuperAppDates, parseNaraSuperApp } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 
 interface LinkSite {
@@ -15,7 +16,14 @@ interface LinkSite {
   note?: string;
   facilities: { name: string; hint?: string }[];
 }
-type Site = (KashikanSite & { type: "kashikan" }) | LinkSite;
+interface NsaSite {
+  id: string;
+  name: string;
+  type: "nsa";
+  facilityId: string;
+  buildingId: string;
+}
+type Site = (KashikanSite & { type: "kashikan" }) | LinkSite | NsaSite;
 
 interface Config {
   sites: Site[];
@@ -32,6 +40,24 @@ async function main() {
   const errors: string[] = [];
   const today = new Date();
   for (const site of cfg.sites) {
+    if (site.type === "nsa") {
+      // 1回のリクエストで全日付分が返る
+      try {
+        const raw = await fetchNaraSuperAppRaw(site.buildingId, site.facilityId);
+        const first = jst(today);
+        const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
+        for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
+          for (const c of parseNaraSuperApp(raw, date).filter(isTennisCourt)) {
+            for (const s of c.slots.filter(isOpen)) {
+              slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end });
+            }
+          }
+        }
+      } catch (e) {
+        errors.push(`${site.name}: ${(e as Error).message}`);
+      }
+      continue;
+    }
     if (site.type !== "kashikan") continue; // link 型は自動取得しない(公式サイトへ案内するだけ)
     for (let i = 0; i < cfg.days; i++) {
       const date = jst(new Date(today.getTime() + i * 86400e3));
