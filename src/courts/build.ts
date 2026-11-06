@@ -9,6 +9,7 @@ import {
   fetchNaraSuperAppRaw,
   fetchNaraSuperAppTop,
   isNsaTennisCourt,
+  nsaReservationUrl,
   listNaraSuperAppDates,
   parseNaraSuperApp,
   pickNaraSuperAppTargets,
@@ -79,13 +80,18 @@ async function main() {
   const first = jst(today);
   const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
   const discovered = new Set<string>(); // 自動で見つけた市町村(エリアのボタンに使う)
+  /** 「エリア|施設名」→ その施設の予約サイトのURL(画面で、コート名・時間をタップしたときの行き先) */
+  const facilityUrls: Record<string, string> = {};
 
   /** 奈良スーパーアプリの1建物分を slots に積む */
   const addNsa = (area: string, raw: NaraSuperAppResponse) => {
+    const { buildingRecord: b } = raw.returnValue;
+    const url = nsaReservationUrl(b.FRE_FacilitiesId__c, b.Id);
     for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
       for (const c of parseNaraSuperApp(raw, date).filter(isNsaTennisCourt)) {
         for (const s of c.slots.filter(isOpen)) {
           slots.push({ date, site: area, facility: c.facility, court: c.court, start: s.start, end: s.end });
+          facilityUrls[`${area}|${c.facility}`] = url;
         }
       }
     }
@@ -146,6 +152,7 @@ async function main() {
         for (const c of courts) {
           for (const s of c.slots.filter(isOpen)) {
             slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end });
+            facilityUrls[`${site.name}|${c.facility}`] = site.url; // 施設ごとの直接URLは無いので、予約サイトのトップへ
           }
         }
         // 「●」などで空きが出ていない日は、空きなしとは区別して電話案内の対象にする
@@ -183,6 +190,7 @@ async function main() {
         .filter((s): s is LinkSite => s.type === "link")
         .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
       slots,
+      facilityUrls,
       phone,
       errors,
     }),

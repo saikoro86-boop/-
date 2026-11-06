@@ -198,3 +198,7 @@ export function pickNaraSuperAppTargets(top: NaraSuperAppTopResponse, purpose = 
  * (「バドミントンコート」「多目的コート」などは対象外)
  */
 export const isNsaTennisCourt = (c: CourtAvailability) => /テニス|庭球|オムニ|クレー/.test(c.facility + c.court);
+
+/** 奈良スーパーアプリの、施設(建物)ごとの予約画面のURL。ゲストでも開ける(予約にはログインが必要) */
+export const nsaReservationUrl = (facilityId: string, buildingId: string) =>
+  `https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=${encodeURIComponent(facilityId)}&buildingId=${encodeURIComponent(buildingId)}`;

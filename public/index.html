@@ -35,6 +35,11 @@
   .t { background:var(--chip); color:var(--accent); border-radius:6px; padding:1px 8px; font-size:13px; font-weight:600; }
   .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
   .card.link .city + h2 + .city { margin:2px 0 0; }
+  a.t { text-decoration:none; }
+  a.t:active, a.t:hover { filter:brightness(.95); }
+  .card h2 a, .court a.cn { color:inherit; text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:3px; }
+  .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
+  .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
   .note { color:var(--sub); font-size:12px; margin-top:8px; }
   .card.phone { border-color:#e0b050; }
@@ -110,6 +115,20 @@ function loadImport() {
 
 const hm = (h) => { const m = Math.round((h % 1) * 60); return Math.floor(h) + (m ? ":" + String(m).padStart(2,"0") : ""); };
 
+// 施設の予約サイトのURL。施設ごとに分かればそれ、なければエリアの入口(木津川市など)
+const urlFor = (site, facility) => {
+  const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl;
+  return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
+};
+function anchor(url, text, cls, title) {
+  const a = document.createElement("a");
+  a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
+  if (cls) a.className = cls;
+  if (title) { a.title = title; a.setAttribute("aria-label", title); }
+  a.textContent = text;
+  return a;
+}
+
 function chips(el, items, key) {
   el.innerHTML = "";
   for (const [v, label] of items) {
@@ -151,15 +170,25 @@ function render() {
   }
   const list = $("list");
   list.innerHTML = "";
+  if (byFac.size) {
+    const hint = document.createElement("div"); hint.className = "hint";
+    hint.textContent = "コート名や時間をタップすると、その施設の予約サイトが開きます。日時は、予約サイト側で選び直してください。";
+    list.appendChild(hint);
+  }
   for (const f of byFac.values()) {
     const card = document.createElement("section");
     card.className = "card";
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
-    card.querySelector("h2").textContent = f.facility;
+    const fUrl = urlFor(f.site, f.facility);
+    const h2 = card.querySelector("h2");
+    if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く"));
+    else h2.textContent = f.facility;
     for (const [court, ss] of f.courts) {
       const row = document.createElement("div");
       row.className = "court";
-      const name = document.createElement("span"); name.textContent = court;
+      const name = document.createElement("span");
+      if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く"));
+      else name.textContent = court;
       const times = document.createElement("span"); times.className = "times";
       // 連続する枠(9-10, 10-11 …)は 1 つにまとめる
       const merged = [];
@@ -169,7 +198,9 @@ function render() {
         else merged.push({ start: s.start, end: s.end });
       }
       for (const s of merged) {
-        const t = document.createElement("span"); t.className = "t"; t.textContent = `${hm(s.start)}–${hm(s.end)}`; times.appendChild(t);
+        const label = `${hm(s.start)}–${hm(s.end)}`;
+        if (fUrl) times.appendChild(anchor(fUrl, label, "t", `${court} ${label} の予約サイトを開く`));
+        else { const t = document.createElement("span"); t.className = "t"; t.textContent = label; times.appendChild(t); }
       }
       row.append(name, times); card.appendChild(row);
     }

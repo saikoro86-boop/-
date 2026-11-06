@@ -89,3 +89,11 @@ test("テニスコート判定: 体育館・会議室・バドミントンなど
   assert.ok(!isNsaTennisCourt(c("三宅町中央公園運動施設", "ゲートボール場（西）")));
   assert.ok(!isNsaTennisCourt(c("何かの体育館", "バドミントンコート")));
 });
+
+import { nsaReservationUrl } from "../src/courts/narasuperapp";
+test("予約画面のURLは、施設と建物のIDから作る(実際に教えてもらったURLと同じ形)", () => {
+  assert.equal(
+    nsaReservationUrl("a0nJ30000006tEoIAI", "a0hJ30000005nP6IAI"),
+    "https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=a0nJ30000006tEoIAI&buildingId=a0hJ30000005nP6IAI",
+  );
+});
