@@ -136,3 +136,65 @@ export function parseNaraSuperApp(raw: NaraSuperAppResponse, date: string): Cour
   }
   return out;
 }
+
+// ---- 施設一覧(ゲストでも取れる getTopInfo)から、テニス対応の建物を自動で拾う ----
+
+const TOP_APEX_CLASS = "@udd/01p5i00000X9ekk";
+
+export interface NsaTarget {
+  municipality: string; // 例: "橿原市"(画面のエリア名に使う)
+  facilityName: string;
+  facilityId: string;
+  buildingName: string;
+  buildingId: string;
+}
+
+export interface NaraSuperAppTopResponse {
+  returnValue: {
+    facilitiesResultList: {
+      facilityId: string;
+      facilityName: string;
+      municipality: string;
+      buildingList: { buildingId: string; buildingName: string; purposeUseList?: string[] }[];
+    }[];
+  };
+}
+
+export async function fetchNaraSuperAppTop(): Promise<NaraSuperAppTopResponse> {
+  const res = await fetch(NSA_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "user-agent": "tennis-court-finder (personal use; low frequency)",
+    },
+    body: JSON.stringify({ namespace: "", classname: TOP_APEX_CLASS, method: "getTopInfo", isContinuation: false, cacheable: false }),
+  });
+  if (!res.ok) throw new Error(`${NSA_ENDPOINT} -> HTTP ${res.status}`);
+  return (await res.json()) as NaraSuperAppTopResponse;
+}
+
+/** 「利用目的」に purpose(既定: テニス)を含む建物を、施設一覧から取り出す(純粋関数) */
+export function pickNaraSuperAppTargets(top: NaraSuperAppTopResponse, purpose = "テニス"): NsaTarget[] {
+  const out: NsaTarget[] = [];
+  for (const f of top.returnValue.facilitiesResultList) {
+    for (const b of f.buildingList) {
+      if ((b.purposeUseList ?? []).includes(purpose)) {
+        out.push({
+          municipality: f.municipality,
+          facilityName: f.facilityName,
+          facilityId: f.facilityId,
+          buildingName: b.buildingName,
+          buildingId: b.buildingId,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 建物の「利用目的」はテニスでも、体育館や会議室などが同居している。
+ * 施設名 + 設備名に テニス/庭球/オムニ/クレー を含むものだけをテニスコートとみなす。
+ * (「バドミントンコート」「多目的コート」などは対象外)
+ */
+export const isNsaTennisCourt = (c: CourtAvailability) => /テニス|庭球|オムニ|クレー/.test(c.facility + c.court);

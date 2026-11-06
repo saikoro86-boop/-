@@ -35,8 +35,28 @@
   .t { background:var(--chip); color:var(--accent); border-radius:6px; padding:1px 8px; font-size:13px; font-weight:600; }
   .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
   .card.link .city + h2 + .city { margin:2px 0 0; }
+  .btn.tel { margin:6px 8px 0 0; }
+  .note { color:var(--sub); font-size:12px; margin-top:8px; }
+  .card.phone { border-color:#e0b050; }
+  .card.phone h2 { color:#8a5a00; }
+  @media (prefers-color-scheme: dark) { .card.phone { border-color:#8a6a20; } .card.phone h2 { color:#f0c674; } }
+  .phone-row { padding:8px 0; border-top:1px solid var(--line); }
+  .phone-row:first-of-type { border-top:0; }
+  .card.none h2 { color:var(--sub); font-weight:600; }
   .empty, .err { text-align:center; color:var(--sub); padding:32px 0; }
   .err { color:#c0392b; font-size:13px; }
+  #banner { display:none; margin:0 16px 8px; padding:8px 12px; border-radius:10px; font-size:13px; line-height:1.5; }
+  #banner.show { display:block; }
+  #banner.info { background:var(--chip); color:var(--accent); }
+  #banner.warn { background:#fff4e0; color:#8a5a00; }
+  #banner.error { background:#fdeaea; color:#b03030; }
+  @media (prefers-color-scheme: dark) { #banner.warn { background:#3a2f12; color:#f0c674; } #banner.error { background:#3a1b1b; color:#ff9d9d; } }
+  #banner button { margin-left:8px; padding:2px 10px; font-size:12px; }
+  .spin { display:inline-block; width:12px; height:12px; margin-right:6px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; vertical-align:-2px; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation:none; } }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 16px; border-radius:999px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .3s; z-index:5; }
+  #toast.show { opacity:.92; }
 </style>
 </head>
 <body>
@@ -49,13 +69,16 @@
   <div class="row" id="cities"></div>
   <div class="row" id="zones"></div>
 </div>
-<main id="list"></main>
+<div id="banner" role="status" aria-live="polite"></div>
+<main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
+<div id="toast" role="status"></div>
 <script>
 const $ = (id) => document.getElementById(id);
 const WD = ["日","月","火","水","木","金","土"];
 const ZONES = { "all":["すべて",0,24], "am":["午前",0,12], "pm":["午後",12,17], "ev":["夜",17,24] };
 const st = { date:null, city:"all", zone:"all" };
 let data = { slots:[], sites:[], links:[], errors:[] };
+let justImported = false;
 let imported = null; // ユーザーが自分のブラウザで取り込んだ空き(この端末だけに保存)
 const IMPORT_KEY = "courtImport";
 const STALE_MS = 24 * 3600e3;
@@ -78,7 +101,7 @@ function loadImport() {
   if (m) {
     try {
       const imp = validateImport(JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/"))))));
-      if (imp) localStorage.setItem(IMPORT_KEY, JSON.stringify(imp));
+      if (imp) { localStorage.setItem(IMPORT_KEY, JSON.stringify(imp)); justImported = true; }
     } catch {}
     history.replaceState(null, "", location.pathname + location.search); // URL からデータを消す
   }
@@ -99,7 +122,7 @@ function chips(el, items, key) {
 
 function render() {
   // 日付ストリップ(空きがある日にマーク)
-  const dates = [...new Set(data.slots.map(s => s.date))].sort();
+  const dates = [...new Set([...data.slots.map(s => s.date), ...(data.phone || []).map(p => p.date)])].sort();
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
   for (const d of dates) {
@@ -128,7 +151,6 @@ function render() {
   }
   const list = $("list");
   list.innerHTML = "";
-  if (!byFac.size) list.innerHTML = '<div class="empty">この条件で空いているコートはありません</div>';
   for (const f of byFac.values()) {
     const card = document.createElement("section");
     card.className = "card";
@@ -153,6 +175,67 @@ function render() {
     }
     list.appendChild(card);
   }
+  // ネットでは空きが分からない日(予約サイトに空きが出ていない)は、電話での問い合わせを案内する
+  const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
+  const phoneBySite = new Map();
+  for (const n of (data.phone || [])) {
+    if (n.date !== st.date || (st.city !== "all" && n.site !== st.city)) continue;
+    if (!phoneBySite.has(n.site)) phoneBySite.set(n.site, []);
+    phoneBySite.get(n.site).push(n);
+  }
+  for (const [site, notices] of phoneBySite) {
+    const card = document.createElement("section");
+    card.className = "card phone";
+    const head = document.createElement("div"); head.className = "city"; head.textContent = site + "(ネットでは空きが分かりません)";
+    const h2 = document.createElement("h2"); h2.textContent = "お電話でお問い合わせください";
+    const lead = document.createElement("div"); lead.className = "city";
+    lead.textContent = "この日は予約サイトに空きが表示されていません。空いているかどうかは、各施設に直接お問い合わせください。";
+    card.append(head, h2, lead);
+    for (const n of notices) {
+      const row = document.createElement("div"); row.className = "phone-row";
+      const name = document.createElement("div"); name.textContent = n.facility; row.appendChild(name);
+      if (n.tel) {
+        if (n.contactLabel) {
+          const w = document.createElement("div"); w.className = "note";
+          w.textContent = "この施設の電話番号は確認できていません。まず " + n.contactLabel + " にお問い合わせください。";
+          row.appendChild(w);
+        }
+        const a = document.createElement("a");
+        a.href = telHref(n.tel); a.className = "btn tel";
+        a.textContent = "📞 " + (n.contactLabel ? n.contactLabel + " " : "") + n.tel;
+        row.appendChild(a);
+        if (n.hours) { const h = document.createElement("span"); h.className = "note"; h.style.marginLeft = "4px"; h.textContent = n.hours; row.appendChild(h); }
+      } else {
+        const w = document.createElement("div"); w.className = "note";
+        w.textContent = "電話番号を確認できていません。市の公式ページで確認してください。";
+        row.appendChild(w);
+      }
+      card.appendChild(row);
+    }
+    const foot = document.createElement("div"); foot.className = "note";
+    foot.textContent = "電話番号は変更されていることがあります。つながらないときは、市の公式ページで確認してください。";
+    card.appendChild(foot);
+    list.appendChild(card);
+  }
+
+  // 空きがないエリアは「空きなし」と表示する(取得できていて、空きも電話案内もないエリア)
+  const linkOnly = new Set((data.links || []).filter(l => !(imported && imported.slots.some(s => s.site === l.name))).map(l => l.name));
+  const noneAreas = (st.city === "all" ? data.sites : [st.city])
+    .filter(a => !linkOnly.has(a) && !hits.some(s => s.site === a) && !phoneBySite.has(a));
+  if (noneAreas.length) {
+    const card = document.createElement("section");
+    card.className = "card none";
+    const zone = st.zone === "all" ? "" : "(" + ZONES[st.zone][0] + ")";
+    const h2 = document.createElement("h2");
+    h2.textContent = "空きなし" + zone;
+    const p = document.createElement("div"); p.className = "city";
+    p.textContent = st.city === "all"
+      ? noneAreas.join("・") + ":この日は空いているコートがありません"
+      : noneAreas[0] + ":この日は空いているコートがありません";
+    card.append(h2, p);
+    list.appendChild(card);
+  }
+
   // 自動取得できない地域は、公式サイトへのリンクを出す
   for (const l of (data.links || [])) {
     if (st.city !== "all" && st.city !== l.name) continue;
@@ -194,19 +277,91 @@ function render() {
 // アプリを開いたまま取り込みが来た場合(ハッシュだけが変わる)も読み直す
 window.addEventListener("hashchange", () => { if (/^#import=/.test(location.hash)) location.reload(); });
 
-fetch("data.json", { cache:"no-cache" }).then(r => r.json()).then(d => {
-  data = d;
-  data.links = data.links || [];
-  imported = loadImport();
-  if (imported) {
-    const today = new Date(Date.now() + 9*3600e3).toISOString().slice(0, 10);
-    data.slots = data.slots.concat(imported.slots.filter(s => s.date >= today));
-    for (const s of imported.slots) if (!data.sites.includes(s.site)) data.sites.push(s.site);
+// ---- 更新状況の表示 ----------------------------------------------------
+// 自動更新は UTC の 0,3,6,…時 17分(日本時間では 9,12,15,18,21,0,3,6時の17分)に動く。
+// 実行は数分〜数十分遅れることがあるので「目安」として扱う。
+const EVERY_MS = 3 * 3600e3, MINUTE_MS = 17 * 60e3;
+const UPDATING_WINDOW_MS = 40 * 60e3; // 予定時刻からこの間は「更新中かも」と案内する
+const DATA_STALE_MS = 6 * 3600e3; // data.json がこれより古いと警告
+const hhmm = (t) => `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
+const mdhm = (t) => `${t.getMonth()+1}/${t.getDate()} ${hhmm(t)}`;
+
+function scheduleOf(now) {
+  const last = Math.floor((now - MINUTE_MS) / EVERY_MS) * EVERY_MS + MINUTE_MS;
+  return { last, next: last + EVERY_MS };
+}
+/** "fresh" | "updating" | "stale" を返す(純粋関数) */
+function freshness(updatedAt, now) {
+  const { last } = scheduleOf(now);
+  if (updatedAt < last && now - last < UPDATING_WINDOW_MS) return "updating";
+  if (now - updatedAt > DATA_STALE_MS) return "stale";
+  return "fresh";
+}
+
+function showBanner(kind, html) {
+  const b = $("banner");
+  b.className = kind ? "show " + kind : "";
+  b.innerHTML = html || "";
+}
+let toastTimer;
+function toast(msg) {
+  const el = $("toast"); el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+let pollTimer = null, pollUntil = 0, lastUpdatedAt = 0;
+function applyStatus(updatedAtMs) {
+  const now = Date.now();
+  const t = new Date(updatedAtMs), next = new Date(scheduleOf(now).next);
+  $("updated").textContent = `最終更新 ${mdhm(t)} ・ 次の更新は ${hhmm(next)} 頃`;
+  const f = freshness(updatedAtMs, now);
+  if (f === "updating") {
+    showBanner("info", '<span class="spin"></span>データを更新中です。数分で反映されます(自動で確認しています)。<button type="button" onclick="load(false)">今すぐ確認</button>');
+    if (!pollTimer) { pollUntil = now + 20 * 60e3; pollTimer = setInterval(() => { if (Date.now() > pollUntil) stopPoll(); else load(true); }, 45e3); }
+  } else {
+    stopPoll();
+    if (f === "stale") {
+      const h = Math.floor((now - updatedAtMs) / 3600e3);
+      showBanner("warn", `データが古い可能性があります(最終更新から約${h}時間)。更新が止まっているかもしれません。<button type="button" onclick="load(false)">再読み込み</button>`);
+    } else showBanner("", "");
   }
-  const t = new Date(d.updatedAt);
-  $("updated").textContent = `最終更新 ${t.getMonth()+1}/${t.getDate()} ${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
-  render();
-}).catch(() => { $("updated").textContent = "データを読み込めませんでした"; });
+}
+function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+// ---- 読み込み ----------------------------------------------------------
+function load(silent) {
+  if (!silent) showBanner("info", '<span class="spin"></span>読み込み中…');
+  return fetch("data.json", { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => {
+    const updatedAt = Date.parse(d.updatedAt);
+    const firstLoad = !lastUpdatedAt;
+    const changed = updatedAt !== lastUpdatedAt;
+    if (silent && !changed) return; // 新しいデータがまだ → そのまま待つ
+    data = d;
+    data.links = data.links || [];
+    imported = loadImport();
+    if (imported) {
+      const today = new Date(Date.now() + 9*3600e3).toISOString().slice(0, 10);
+      data.slots = data.slots.concat(imported.slots.filter(s => s.date >= today));
+      for (const s of imported.slots) if (!data.sites.includes(s.site)) data.sites.push(s.site);
+    }
+    lastUpdatedAt = updatedAt;
+    render();
+    applyStatus(updatedAt);
+    if (justImported) { toast("木津川市の空きを取り込みました"); justImported = false; }
+    else if (!firstLoad && changed) toast("最新のデータに更新しました");
+  }).catch(() => {
+    if (silent) return; // 自動確認の失敗は静かに無視(次回また試す)
+    $("updated").textContent = "";
+    if (!lastUpdatedAt) $("list").innerHTML = "";
+    showBanner("error", 'データを読み込めませんでした。通信状況を確認してください。<button type="button" onclick="load(false)">再試行</button>');
+  });
+}
+
+// アプリを開いたまま取り込みが来た場合(ハッシュだけが変わる)も読み直す
+window.addEventListener("hashchange", () => { if (/^#import=/.test(location.hash)) location.reload(); });
+// ページに戻ってきたとき(スマホで別アプリから戻る等)に、更新中・古い状態を見直す
+document.addEventListener("visibilitychange", () => { if (!document.hidden && lastUpdatedAt) load(true); });
+load(false);
 </script>
 </body>
 </html>

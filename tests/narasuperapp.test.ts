@@ -61,3 +61,31 @@ test("香芝: 空き枠数 = 枠数 − 予約の明細数", () => {
   const all = listNaraSuperAppDates(kashiba).flatMap((d) => parseNaraSuperApp(kashiba, d).flatMap((c) => c.slots));
   assert.equal(all.filter(isOpen).length, kashiba.returnValue.rsvSlotResultList.length - kashiba.returnValue.rsvItemResultList.length);
 });
+
+// ---- 施設一覧から、テニス対応の建物を自動で拾う ----
+import { pickNaraSuperAppTargets, isNsaTennisCourt, type NaraSuperAppTopResponse } from "../src/courts/narasuperapp";
+const top: NaraSuperAppTopResponse = JSON.parse(readFileSync(__dirname + "/fixtures/nsa-top-20261106.json", "utf-8"));
+
+test("テニス対応の建物を拾う(2026-11-06 時点で35件)", () => {
+  const t = pickNaraSuperAppTargets(top);
+  assert.equal(t.length, 35);
+  const names = t.map((x) => x.facilityName);
+  for (const n of ["まほろば健康パーク", "大和郡山市総合公園施設", "香芝健民テニスコート", "橿原運動公園"]) assert.ok(names.includes(n), n);
+  assert.ok(!names.includes("カルム五條（五條市保健福祉センター）")); // テニス目的ではない
+});
+
+test("市町村名が付く(エリア表示用)", () => {
+  const t = pickNaraSuperAppTargets(top);
+  assert.equal(t.find((x) => x.facilityName === "香芝健民テニスコート")?.municipality, "香芝市");
+});
+
+test("テニスコート判定: 体育館・会議室・バドミントンなどは除く", () => {
+  const c = (facility: string, court: string) => ({ facility, court, slots: [] });
+  assert.ok(isNsaTennisCourt(c("天理市立総合体育館", "テニスコート1")));
+  assert.ok(isNsaTennisCourt(c("田原本町中央体育館", "庭球場1")));
+  assert.ok(isNsaTennisCourt(c("ワタキューテニスパーク明日香", "オムニコート09")));
+  assert.ok(!isNsaTennisCourt(c("田原本町中央体育館", "体育館")));
+  assert.ok(!isNsaTennisCourt(c("大和郡山市総合公園施設", "研修室")));
+  assert.ok(!isNsaTennisCourt(c("三宅町中央公園運動施設", "ゲートボール場（西）")));
+  assert.ok(!isNsaTennisCourt(c("何かの体育館", "バドミントンコート")));
+});
