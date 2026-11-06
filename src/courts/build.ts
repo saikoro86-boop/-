@@ -55,7 +55,9 @@ async function main() {
             }
           }
         } catch (e) {
-          errors.push(`${site.name} ${t.note ?? t.buildingId}: ${(e as Error).message}`);
+          // 公開する data.json には、取得元がわかる情報(URL・ID・エラー詳細)を入れない。詳細はログにだけ出す
+          console.error(`${site.name} ${t.note ?? t.buildingId}: ${(e as Error).message}`);
+          errors.push(`${site.name}: 取得に失敗`);
         }
         await sleep(1500); // 先方に負荷をかけない
       }
@@ -71,7 +73,8 @@ async function main() {
           }
         }
       } catch (e) {
-        errors.push(`${site.name} ${date}: ${(e as Error).message}`);
+        console.error(`${site.name} ${date}: ${(e as Error).message}`);
+        errors.push(`${site.name} ${date}: 取得に失敗`);
       }
       await sleep(300); // 先方サーバに負荷をかけない
     }
@@ -82,13 +85,16 @@ async function main() {
     JSON.stringify({
       updatedAt: new Date().toISOString(),
       sites: cfg.sites.map((s) => s.name),
-      links: cfg.sites.filter((s): s is LinkSite => s.type === "link"),
+      // 画面に必要な項目だけを出す(設定のメモなどは含めない)
+      links: cfg.sites
+        .filter((s): s is LinkSite => s.type === "link")
+        .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
       slots,
       errors,
     }),
   );
   console.log(`空き ${slots.length} 件 / エラー ${errors.length} 件 -> public/data.json`);
-  if (errors.length) console.log(errors.slice(0, 5).join("\n"));
+  if (errors.length) console.log(`失敗: ${errors.length} 件(詳細は上のログ)`);
 }
 
 main();

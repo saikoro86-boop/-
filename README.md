@@ -70,7 +70,10 @@ npm run courts:build                  # 今後30日分を public/data.json に�
 
 - `public/index.html` が画面です。`data.json` と同じ場所に置いて開きます(日付・エリア・時間帯で絞り込み)。
 - 対象サイトは `config/courts.json` で追加できます。同じ「いつでも貸館」方式の市なら URL を足すだけです。
-- `.github/workflows/courts.yml` が3時間ごとに取得して GitHub Pages に公開します。リポジトリの Settings → Pages で Source を「GitHub Actions」にしてください。
+- `.github/workflows/courts.yml` が3時間ごとに取得し、**画面と `data.json` だけを、公開用の別リポジトリ**に書き出します(このリポジトリは非公開のまま、取得の仕組みを隠せます)。
+  - 公開用リポジトリ: 新しく作って Public にし、Settings → Pages で「Deploy from a branch」→ `main` / `/(root)` を選びます。
+  - このリポジトリの Settings → Secrets and variables → Actions に、Variables: `SITE_REPO`(公開用リポジトリ名、ownerなし)、Secrets: `SITE_REPO_TOKEN`(公開用リポジトリの Contents 書き込み権限だけを持つ fine-grained トークン)を登録します。
+  - 公開される `data.json` には、取得元のURL・IDやエラー詳細は含めません。
 - 空き状況の取得にはログインや予約操作を行いません。サーバに負荷をかけないよう、1リクエストごとに待ち時間を入れています。
 
 ### 奈良スーパーアプリ(大和郡山市・明日香村・香芝市)
