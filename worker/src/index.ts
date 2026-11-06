@@ -1,4 +1,4 @@
-import { decideRefresh, ghHeaders, isAllowedOrigin, safeEqual, type Env, type RunInfo } from "./logic";
+import { decideRefresh, ghHeaders, isAllowedOrigin, parseCooldown, safeEqual, type Env, type RunInfo } from "./logic";
 
 const json = (body: unknown, status: number, origin: string) =>
   new Response(status === 204 ? null : JSON.stringify(body), { // 204 は本文を持てない
@@ -52,7 +52,7 @@ export default {
           await new Promise((r) => setTimeout(r, 800)); // 総当たりを遅くする
           return json({ error: "bad_passcode" }, 401, o);
         }
-        const d = decideRefresh(await lastRun(env), Date.now(), Number(env.COOLDOWN_SEC ?? 600));
+        const d = decideRefresh(await lastRun(env), Date.now(), parseCooldown(env.COOLDOWN_SEC));
         if (d.result !== "go") return json(d, 200, o);
         const res = await fetch(
           `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`,

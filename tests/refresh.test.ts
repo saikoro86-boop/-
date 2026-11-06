@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { decideRefresh, isAllowedOrigin, safeEqual, type Env } from "../worker/src/logic";
+import { decideRefresh, isAllowedOrigin, parseCooldown, safeEqual, type Env } from "../worker/src/logic";
 import worker from "../worker/src/index";
 
 const NOW = Date.parse("2026-11-06T12:00:00Z");
@@ -103,4 +103,15 @@ test("プリフライト(OPTIONS)は、許可したサイトにだけ通る", as
   assert.equal(ok.status, 204);
   const ng = await worker.fetch(new Request("https://w.example/refresh", { method: "OPTIONS", headers: { origin: "https://x.example" } }), env);
   assert.equal(ng.status, 403);
+});
+
+test("COOLDOWN_SEC が壊れていても、連続実行の制限は外れない", () => {
+  assert.equal(parseCooldown(undefined), 600);
+  assert.equal(parseCooldown(""), 600);
+  assert.equal(parseCooldown("abc"), 600);
+  assert.equal(parseCooldown("-5"), 600);
+  assert.equal(parseCooldown("120"), 120);
+  assert.equal(parseCooldown("0"), 0);
+  // 前回の時刻が読めない時も、すぐには起動しない
+  assert.equal(decideRefresh(run("completed", "not-a-date"), NOW).result, "cooldown");
 });
