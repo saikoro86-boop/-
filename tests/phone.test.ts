@@ -26,7 +26,7 @@ test("config の電話番号は、市外局番-市内局番-番号の形にな�
     for (const c of s.contacts ?? []) tels.push(c.tel);
     if (s.fallbackContact) tels.push(s.fallbackContact.tel);
   }
-  assert.ok(tels.length >= 15);
+  assert.ok(tels.length >= 19);
   for (const t of tels) assert.match(t, /^0\d{1,4}-\d{1,4}-\d{4}$/, t);
 });
 
@@ -48,9 +48,13 @@ test("奈良市: 施設ごとに、公式ページ掲載の窓口が当たる(�
   assert.equal(tel("奈良市佐保山コート"), "0742-34-4862"); // 平城と同じ担当課。施設自身の番号は未確認
   assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, true);
   assert.equal(findContact(c, "奈良市青山コート")?.unconfirmed, undefined); // 青山は、青山自身の番号だけ(他施設の窓口にはしない)
-  assert.equal(tel("二名公民館"), undefined);
-  assert.equal(tel("京西公民館"), undefined);
-  assert.equal(tel("サン・アクティブ奈良（勤労者総合福祉センター）"), undefined);
+  assert.equal(tel("二名公民館"), "0742-46-9113");
+  assert.equal(tel("京西公民館"), "0742-44-2669");
+  assert.equal(tel("サン・アクティブ奈良（勤労者総合福祉センター）"), "0742-71-2444");
+  assert.equal(tel("都祁生涯スポーツセンター"), "0743-82-0201"); // 予約の問い合わせ先: 都祁行政センター地域振興課
+  assert.equal(findContact(c, "都祁生涯スポーツセンター")?.unconfirmed, undefined);
+  // 奈良市の全施設に、何らかの連絡先がある
+  for (const f of ["奈良市南部生涯スポーツセンター","奈良市柏木コート","奈良市黒谷コート","奈良市平城第一コート","奈良市平城第二コート","奈良市青山コート","奈良市佐保山コート","奈良市鴻ノ池コート","奈良市西部生涯スポーツセンターコート","サン・アクティブ奈良（勤労者総合福祉センター）","二名公民館","京西公民館","富雄公民館","富雄南公民館","都祁生涯スポーツセンター"]) assert.ok(findContact(c, f), f);
 });
 
 test("生駒市: 全施設に個別の番号がある(TAC井出山はテニスコート管理事務所の番号で、プールの番号ではない)", () => {
