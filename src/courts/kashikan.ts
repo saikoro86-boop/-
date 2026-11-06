@@ -69,8 +69,13 @@ export function parseAvailability(html: string): CourtAvailability[] {
   return result;
 }
 
-/** 目的検索には会議室なども混ざるので、コート/テニスと名のつくものだけに絞る */
-export const isTennisCourt = (c: CourtAvailability) => /コート|テニス/.test(c.facility + c.court);
+/**
+ * 「利用目的 = テニス」で検索した結果は、すべてテニスの扱い(球技場・運動場・庭球場なども含む)。
+ * ただし、会議室・研修室・トレーニング室などの「部屋」は、コートではないので除く。
+ */
+const NOT_A_PLAYING_SPACE = /会議|研修|トレーニング|控室|更衣|和室|作法|調理|視聴覚|本部|事務|ロッカー|倉庫|談話|ホール|ロビー/;
+export const isPlayingSpace = (c: { court: string }) => !NOT_A_PLAYING_SPACE.test(c.court);
+export const isTennisCourt = (c: CourtAvailability) => isPlayingSpace(c);
 
 // 〇(U+3007) / ○(U+25CB) / ◯(U+25EF) の表記ゆれを吸収する
 export const isOpen = (s: Slot) => /^[\u3007\u25cb\u25ef]$/.test(s.mark);

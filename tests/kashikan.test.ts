@@ -23,3 +23,11 @@ test("空き(〇)は時間枠つきで取れる", () => {
   const open = a.slots.filter(isOpen);
   assert.deepEqual(open.map((s) => [s.start, s.end]), [[9, 12], [13, 17]]);
 });
+
+// ---- 「テニス」検索で返るものは、部屋を除いて、すべてコートとして扱う ----
+import { isTennisCourt } from "../src/courts/kashikan";
+test("庭球場・球技場・運動場はコート、会議室・研修室は除く", () => {
+  const c = (court: string) => ({ facility: "F", court, slots: [] });
+  for (const ok of ["庭球場A", "球技場", "運動場全面", "テニスコートA", "多目的コートA", "コートB(砂入り人工芝)"]) assert.ok(isTennisCourt(c(ok)), ok);
+  for (const ng of ["会議室", "研修室", "第1トレーニング室", "控室"]) assert.ok(!isTennisCourt(c(ng)), ng);
+});

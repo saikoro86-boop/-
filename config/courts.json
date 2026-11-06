@@ -4,13 +4,122 @@
       "id": "nara-city",
       "name": "奈良市",
       "type": "kashikan",
-      "url": "https://k6.p-kashikan.jp/nara-city/index.php"
+      "url": "https://k6.p-kashikan.jp/nara-city/index.php",
+      "note": "「●」=空き(ネット予約は受付外)。番号は検索結果で確認した奈良市の公式ページ等の掲載(私が直接開いたわけではない)。佐保山・平城は担当課(スポーツ振興課)の番号で代用(施設自身の番号は未確認)。都祁は施設自身の番号(0743-84-2004)が古い資料にあるが、市の予約案内の問い合わせ先(地域振興課)を登録",
+      "offlineMarks": [
+        "●"
+      ],
+      "contacts": [
+        {
+          "match": "青山",
+          "tel": "0742-26-2996",
+          "hours": "9:00〜17:00"
+        },
+        {
+          "match": "鴻ノ池",
+          "tel": "0742-27-4880"
+        },
+        {
+          "match": "柏木",
+          "tel": "0742-61-7029",
+          "via": "南部生涯スポーツセンター(申込先)"
+        },
+        {
+          "match": "南部",
+          "tel": "0742-61-7029"
+        },
+        {
+          "match": "黒谷",
+          "tel": "0742-52-0100",
+          "via": "西部生涯スポーツセンター(申込先)"
+        },
+        {
+          "match": "西部",
+          "tel": "0742-47-4118"
+        },
+        {
+          "match": "佐保山",
+          "tel": "0742-34-4862",
+          "via": "奈良市スポーツ振興課(担当課)",
+          "unconfirmed": true
+        },
+        {
+          "match": "平城",
+          "tel": "0742-34-4862",
+          "via": "奈良市スポーツ振興課(担当課)",
+          "unconfirmed": true
+        },
+        {
+          "match": "富雄南",
+          "tel": "0742-48-3066"
+        },
+        {
+          "match": "富雄",
+          "tel": "0742-43-5386"
+        },
+        {
+          "match": "都祁",
+          "tel": "0743-82-0201",
+          "via": "都祁行政センター地域振興課(予約の問い合わせ先)"
+        },
+        {
+          "match": "二名",
+          "tel": "0742-46-9113"
+        },
+        {
+          "match": "京西",
+          "tel": "0742-44-2669"
+        },
+        {
+          "match": "サン・アクティブ",
+          "tel": "0742-71-2444"
+        }
+      ]
     },
     {
       "id": "ikoma-city",
       "name": "生駒市",
       "type": "kashikan",
-      "url": "https://k5.p-kashikan.jp/ikoma-city/index.php"
+      "url": "https://k5.p-kashikan.jp/ikoma-city/index.php",
+      "contacts": [
+        {
+          "match": "山麓",
+          "tel": "0743-73-8880",
+          "hours": "テニス受付 9:00〜17:15"
+        },
+        {
+          "match": "滝寺",
+          "tel": "0743-74-4701"
+        },
+        {
+          "match": "高山",
+          "tel": "0743-85-6606"
+        },
+        {
+          "match": "総合S.C.",
+          "tel": "0743-74-7710"
+        },
+        {
+          "match": "むかいやま",
+          "tel": "0743-77-0330"
+        },
+        {
+          "match": "イモ山",
+          "tel": "0743-78-4909"
+        },
+        {
+          "match": "井出山",
+          "tel": "0743-76-6091"
+        }
+      ],
+      "fallbackContact": {
+        "label": "生駒市体育協会 事務局",
+        "tel": "0743-73-8822"
+      },
+      "note": "「●」=空き(ネット予約は受付外)。電話・窓口での予約。番号は生駒市の公式ページ掲載(検索結果で確認)。TAC井出山はテニスコート管理事務所(0743-76-6091。プールの0743-76-1123とは別)",
+      "offlineMarks": [
+        "●"
+      ]
     },
     {
       "id": "kizugawa-city",
@@ -42,63 +151,11 @@
       ]
     },
     {
-      "id": "yamatokoriyama-city",
-      "name": "大和郡山市",
-      "type": "nsa",
-      "note": "奈良スーパーアプリ(ゲスト)",
-      "targets": [
-        {
-          "facilityId": "a0nJ30000006tEoIAI",
-          "buildingId": "a0hJ30000005nP6IAI",
-          "note": "大和郡山市総合公園施設(矢田山テニスコート)"
-        },
-        {
-          "facilityId": "a0nJ30000006tErIAI",
-          "buildingId": "a0hJ30000005nPCIAY",
-          "note": "まほろば健康パーク"
-        }
-      ]
-    },
-    {
-      "id": "asuka-village",
-      "name": "明日香村",
-      "type": "nsa",
-      "note": "奈良スーパーアプリ(ゲスト)",
-      "targets": [
-        {
-          "facilityId": "a0nJ30000006rohIAA",
-          "buildingId": "a0hJ30000005lM0IAI",
-          "note": "ワタキューテニスパーク明日香 南コート(1〜8番)"
-        },
-        {
-          "facilityId": "a0nJ30000006rohIAA",
-          "buildingId": "a0hJ30000005lM1IAI",
-          "note": "同 中コート(9〜12番)"
-        },
-        {
-          "facilityId": "a0nJ30000006rohIAA",
-          "buildingId": "a0hJ30000005lM2IAI",
-          "note": "同 北コート(13〜20番)"
-        },
-        {
-          "facilityId": "a0nJ30000006rohIAA",
-          "buildingId": "a0hJ30000005lM3IAI",
-          "note": "同 中央コート(21〜28番)"
-        }
-      ]
-    },
-    {
-      "id": "kashiba-city",
-      "name": "香芝市",
-      "type": "nsa",
-      "note": "奈良スーパーアプリ(ゲスト)",
-      "targets": [
-        {
-          "facilityId": "a0nJ3000006hh2UIAQ",
-          "buildingId": "a0hJ30000007KkpIAE",
-          "note": "香芝健民テニスコート"
-        }
-      ]
+      "id": "nara-super-app",
+      "name": "奈良スーパーアプリ",
+      "type": "nsa-auto",
+      "purpose": "テニス",
+      "note": "ゲスト画面の施設一覧から、利用目的に「テニス」を含む建物を自動で拾う。エリア名は市町村名"
     }
   ],
   "purpose": {

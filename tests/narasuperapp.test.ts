@@ -61,3 +61,62 @@ test("香芝: 空き枠数 = 枠数 − 予約の明細数", () => {
   const all = listNaraSuperAppDates(kashiba).flatMap((d) => parseNaraSuperApp(kashiba, d).flatMap((c) => c.slots));
   assert.equal(all.filter(isOpen).length, kashiba.returnValue.rsvSlotResultList.length - kashiba.returnValue.rsvItemResultList.length);
 });
+
+// ---- 施設一覧から、テニス対応の建物を自動で拾う ----
+import { pickNaraSuperAppTargets, isNsaTennisCourt, type NaraSuperAppTopResponse } from "../src/courts/narasuperapp";
+const top: NaraSuperAppTopResponse = JSON.parse(readFileSync(__dirname + "/fixtures/nsa-top-20261106.json", "utf-8"));
+
+test("テニス対応の建物を拾う(2026-11-06 時点で35件)", () => {
+  const t = pickNaraSuperAppTargets(top);
+  assert.equal(t.length, 35);
+  const names = t.map((x) => x.facilityName);
+  for (const n of ["まほろば健康パーク", "大和郡山市総合公園施設", "香芝健民テニスコート", "橿原運動公園"]) assert.ok(names.includes(n), n);
+  assert.ok(!names.includes("カルム五條（五條市保健福祉センター）")); // テニス目的ではない
+});
+
+test("市町村名が付く(エリア表示用)", () => {
+  const t = pickNaraSuperAppTargets(top);
+  assert.equal(t.find((x) => x.facilityName === "香芝健民テニスコート")?.municipality, "香芝市");
+});
+
+test("テニスコート判定: 体育館・会議室・バドミントンなどは除く", () => {
+  const c = (facility: string, court: string) => ({ facility, court, slots: [] });
+  assert.ok(isNsaTennisCourt(c("天理市立総合体育館", "テニスコート1")));
+  assert.ok(isNsaTennisCourt(c("田原本町中央体育館", "庭球場1")));
+  assert.ok(isNsaTennisCourt(c("ワタキューテニスパーク明日香", "オムニコート09")));
+  assert.ok(!isNsaTennisCourt(c("田原本町中央体育館", "体育館")));
+  assert.ok(!isNsaTennisCourt(c("大和郡山市総合公園施設", "研修室")));
+  assert.ok(!isNsaTennisCourt(c("三宅町中央公園運動施設", "ゲートボール場（西）")));
+  assert.ok(!isNsaTennisCourt(c("何かの体育館", "バドミントンコート")));
+});
+
+import { nsaReservationUrl } from "../src/courts/narasuperapp";
+test("予約画面のURLは、施設と建物のIDから作る(実際に教えてもらったURLと同じ形)", () => {
+  assert.equal(
+    nsaReservationUrl("a0nJ30000006tEoIAI", "a0hJ30000005nP6IAI"),
+    "https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=a0nJ30000006tEoIAI&buildingId=a0hJ30000005nP6IAI",
+  );
+});
+
+// ---- テニス目的の建物: 体育館・競技場だけの建物も表示する(部屋は除く) ----
+import { nsaCourtFilter } from "../src/courts/narasuperapp";
+const rawWith = (facility: string, names: string[]) =>
+  ({ returnValue: { buildingRecord: { Id: "b", Name: facility, FRE_FacilitiesId__c: "f", FRE_FacilitiesId__r: { Name: facility } },
+    equResultList: names.map((n, i) => ({ Id: String(i), Name: n, MaxUseCount__c: 1 })), isInquiryOnly: true,
+    rsvItemResultList: [], rsvSlotResultList: [], isSuccess: true, messages: [] } }) as NaraSuperAppResponse;
+const crt = (court: string, facility = "施設") => ({ facility, court, slots: [] });
+
+test("設備名にテニスがある建物: テニスの設備だけ(同居する体育館・会議室は除く)", () => {
+  const f = nsaCourtFilter(rawWith("三宅町中央公園運動施設", ["ゲートボール場（西）", "テニスコート（西）", "体育館（西）"]));
+  assert.equal(f.gym, false);
+  assert.ok(f.pred(crt("テニスコート（西）", "三宅町中央公園運動施設")));
+  assert.ok(!f.pred(crt("体育館（西）", "三宅町中央公園運動施設")));
+});
+
+test("体育館・競技場だけの建物: 部屋(会議室・研修室・トレーニング室)を除いて、すべて表示する", () => {
+  const f = nsaCourtFilter(rawWith("宇陀市総合体育館", ["トレーニング室", "会議室", "格技室", "競技場"]));
+  assert.equal(f.gym, true);
+  assert.ok(f.pred(crt("競技場")) && f.pred(crt("格技室")));
+  assert.ok(!f.pred(crt("会議室")) && !f.pred(crt("トレーニング室")));
+  assert.ok(f.pred(crt("A面")) && f.pred(crt("アリーナ")) && f.pred(crt("体育館A")));
+});

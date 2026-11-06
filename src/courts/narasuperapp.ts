@@ -14,7 +14,7 @@
  *   rsvItemResultList    予約の明細。枠IDを持つ = その枠には予約が入っている
  *   → 「空き」= 枠があって、予約の明細がないもの。※画面との突き合わせは未了(README 参照)
  */
-import type { CourtAvailability, Slot } from "./kashikan";
+import { isPlayingSpace, type CourtAvailability, type Slot } from "./kashikan";
 
 export const NSA_ENDPOINT =
   "https://nsa.pref.nara.jp/fre/webruntime/api/apex/execute?language=ja&asGuest=true&htmlEncode=false";
@@ -135,4 +135,85 @@ export function parseNaraSuperApp(raw: NaraSuperAppResponse, date: string): Cour
     if (slots.length) out.push({ facility: norm(buildingRecord.FRE_FacilitiesId__r?.Name ?? buildingRecord.Name), court: norm(eq.Name), slots });
   }
   return out;
+}
+
+// ---- 施設一覧(ゲストでも取れる getTopInfo)から、テニス対応の建物を自動で拾う ----
+
+const TOP_APEX_CLASS = "@udd/01p5i00000X9ekk";
+
+export interface NsaTarget {
+  municipality: string; // 例: "橿原市"(画面のエリア名に使う)
+  facilityName: string;
+  facilityId: string;
+  buildingName: string;
+  buildingId: string;
+}
+
+export interface NaraSuperAppTopResponse {
+  returnValue: {
+    facilitiesResultList: {
+      facilityId: string;
+      facilityName: string;
+      municipality: string;
+      buildingList: { buildingId: string; buildingName: string; purposeUseList?: string[] }[];
+    }[];
+  };
+}
+
+export async function fetchNaraSuperAppTop(): Promise<NaraSuperAppTopResponse> {
+  const res = await fetch(NSA_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "user-agent": "tennis-court-finder (personal use; low frequency)",
+    },
+    body: JSON.stringify({ namespace: "", classname: TOP_APEX_CLASS, method: "getTopInfo", isContinuation: false, cacheable: false }),
+  });
+  if (!res.ok) throw new Error(`${NSA_ENDPOINT} -> HTTP ${res.status}`);
+  return (await res.json()) as NaraSuperAppTopResponse;
+}
+
+/** 「利用目的」に purpose(既定: テニス)を含む建物を、施設一覧から取り出す(純粋関数) */
+export function pickNaraSuperAppTargets(top: NaraSuperAppTopResponse, purpose = "テニス"): NsaTarget[] {
+  const out: NsaTarget[] = [];
+  for (const f of top.returnValue.facilitiesResultList) {
+    for (const b of f.buildingList) {
+      if ((b.purposeUseList ?? []).includes(purpose)) {
+        out.push({
+          municipality: f.municipality,
+          facilityName: f.facilityName,
+          facilityId: f.facilityId,
+          buildingName: b.buildingName,
+          buildingId: b.buildingId,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * 建物の「利用目的」はテニスでも、体育館や会議室などが同居している。
+ * 施設名 + 設備名に テニス/庭球/オムニ/クレー を含むものだけをテニスコートとみなす。
+ * (「バドミントンコート」「多目的コート」などは対象外)
+ */
+export const isNsaTennisCourt = (c: CourtAvailability) => /テニス|庭球|オムニ|クレー/.test(c.facility + c.court);
+
+/** 奈良スーパーアプリの、施設(建物)ごとの予約画面のURL。ゲストでも開ける(予約にはログインが必要) */
+export const nsaReservationUrl = (facilityId: string, buildingId: string) =>
+  `https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=${encodeURIComponent(facilityId)}&buildingId=${encodeURIComponent(buildingId)}`;
+
+/**
+ * 利用目的に「テニス」を含む建物の中で、表示する設備(コート)を決める。
+ * - 設備名に テニス/庭球/オムニ/クレー を含むものがあれば、それだけ(体育館や会議室が同居している建物)
+ * - なければ(体育館・競技場だけの建物)、会議室・研修室・トレーニング室などの「部屋」を除いたものを、すべて表示する。
+ *   画面は「テニスで検索して出る施設」は全部テニスの扱い、というユーザーの方針に合わせたもの。gym=true は、その場合
+ */
+export const isNsaPlayableSpace = (c: CourtAvailability) => isPlayingSpace(c);
+
+export function nsaCourtFilter(raw: NaraSuperAppResponse): { pred: (c: CourtAvailability) => boolean; gym: boolean } {
+  const b = raw.returnValue.buildingRecord;
+  const facility = b.FRE_FacilitiesId__r?.Name ?? b.Name;
+  const named = raw.returnValue.equResultList.some((e) => isNsaTennisCourt({ facility, court: e.Name, slots: [] }));
+  return named ? { pred: isNsaTennisCourt, gym: false } : { pred: isNsaPlayableSpace, gym: true };
 }
