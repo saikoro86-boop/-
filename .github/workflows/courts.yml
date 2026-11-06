@@ -67,7 +67,7 @@ jobs:
           # (空のリポジトリでも動く。データの変更履歴は不要)
           mkdir site && cd site
           git init -q -b publish
-          cp ../public/index.html ../public/bookmarklet.html ../public/data.json .
+          cp ../public/index.html ../public/bookmarklet.html ../public/data.json ../public/data2.json .
           cp ../public/refresh-config.json . 2>/dev/null || true
           touch .nojekyll
           git config user.name  "courts-bot"

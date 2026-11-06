@@ -173,7 +173,16 @@ function chips(el, items, key) {
   }
 }
 
+// 日本時間の「今日」と「いまの時刻(時)」。今日の、すでに終わった時間の枠は、出さない
+function nowJst() {
+  const j = new Date(Date.now() + 9 * 3600e3);
+  return { today: j.toISOString().slice(0, 10), hour: j.getUTCHours() + j.getUTCMinutes() / 60 };
+}
+
 function render() {
+  const { today: todayJ, hour: hourJ } = nowJst();
+  const isPast = (x) => x.date === todayJ && x.end <= hourJ;
+  const vis = data.slots.filter(x => !isPast(x));   // 表示する枠(終わった枠を除く)
   // 日付ストリップ(空きがある日にマーク)
   const dates = [...new Set([...data.slots.map(s => s.date), ...(data.status || []).map(x => x.d)])].sort();
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
@@ -193,7 +202,7 @@ function render() {
   chips($("zones"), Object.entries(ZONES).map(([k, v]) => [k, v[0]]), "zone");
 
   const [, z0, z1] = ZONES[st.zone];
-  const hits = data.slots.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0);
+  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0);
   const byFac = new Map();
   for (const s of hits) {
     const k = s.site + "|" + s.facility;
@@ -206,7 +215,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "");
+    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "");
     list.appendChild(hint);
   }
   for (const f of byFac.values()) {
@@ -402,9 +411,29 @@ function applyStatus(updatedAtMs) {
 function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
 // ---- 読み込み ----------------------------------------------------------
+// 小さな形式(v2)を、画面が使う「1枠ごとの配列」に戻す。data.json の枠と同じ形
+function expandV2(d) {
+  const out = [];
+  for (const [date, list] of Object.entries(d.byDate || {})) {
+    for (const [ci, start, end, off] of list) {
+      const c = d.courts[ci]; if (!c) continue;
+      out.push({ date, site: c[0], facility: c[1], court: c[2], start, end, ...(off ? { offline: true } : {}) });
+    }
+  }
+  return out;
+}
+async function fetchData() {
+  let r = await fetch("data2.json", { cache: "no-store" });
+  if (!r.ok) r = await fetch("data.json", { cache: "no-store" }); // v2 がまだ無い場合の保険
+  if (!r.ok) throw new Error(r.status);
+  const d = await r.json();
+  if (d.v === 2) d.slots = expandV2(d);
+  return d;
+}
+
 function load(silent) {
   if (!silent) showBanner("info", '<span class="spin"></span>読み込み中…');
-  return fetch("data.json", { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => {
+  return fetchData().then(d => {
     const updatedAt = Date.parse(d.updatedAt);
     const firstLoad = !lastUpdatedAt;
     const changed = updatedAt !== lastUpdatedAt;
