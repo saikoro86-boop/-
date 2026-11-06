@@ -26,17 +26,29 @@ test("config の電話番号は、市外局番-市内局番-番号の形にな�
     for (const c of s.contacts ?? []) tels.push(c.tel);
     if (s.fallbackContact) tels.push(s.fallbackContact.tel);
   }
-  assert.ok(tels.length >= 8);
+  assert.ok(tels.length >= 15);
   for (const t of tels) assert.match(t, /^0\d{1,4}-\d{1,4}-\d{4}$/, t);
 });
 
-test("奈良市: 青山と鴻ノ池は個別の番号、ほかは青山コート(事務所)を案内する", () => {
+test("奈良市: 施設ごとに、公式ページ掲載の窓口が当たる(未登録の施設は undefined)", () => {
   const cfg = JSON.parse(readFileSync(__dirname + "/../config/courts.json", "utf-8"));
-  const nara = cfg.sites.find((s: any) => s.id === "nara-city");
-  assert.equal(findContact(nara.contacts, "奈良市青山コート")?.tel, "0742-26-2996");
-  assert.equal(findContact(nara.contacts, "奈良市鴻ノ池コート")?.tel, "0742-27-4880");
-  assert.equal(findContact(nara.contacts, "奈良市柏木コート"), undefined);
-  assert.equal(nara.fallbackContact.tel, "0742-26-2996");
+  const c = cfg.sites.find((s: any) => s.id === "nara-city").contacts;
+  const tel = (f: string) => findContact(c, f)?.tel;
+  assert.equal(tel("奈良市青山コート"), "0742-26-2996");
+  assert.equal(tel("奈良市鴻ノ池コート"), "0742-27-4880");
+  assert.equal(tel("奈良市柏木コート"), "0742-61-7029"); // 申込先: 南部生涯スポーツセンター
+  assert.equal(tel("奈良市南部生涯スポーツセンター"), "0742-61-7029");
+  assert.equal(tel("奈良市黒谷コート"), "0742-52-0100"); // 申込先: 西部生涯スポーツセンター
+  assert.equal(tel("奈良市西部生涯スポーツセンターコート"), "0742-47-4118");
+  assert.equal(tel("富雄南公民館"), "0742-48-3066"); // 「富雄」より先に「富雄南」が当たる
+  assert.equal(tel("富雄公民館"), "0742-43-5386");
+  // 施設自身の番号が確認できないものは、窓口の番号で代用し、未確認と表示する
+  assert.equal(tel("奈良市平城第一コート"), "0742-34-4862"); // 担当課: スポーツ振興課
+  assert.equal(findContact(c, "奈良市平城第一コート")?.unconfirmed, true);
+  assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, true); // 青山コートの窓口(使用料の支払い先)。施設自身の番号は未確認
+  assert.equal(tel("二名公民館"), undefined);
+  assert.equal(tel("京西公民館"), undefined);
+  assert.equal(tel("サン・アクティブ奈良（勤労者総合福祉センター）"), undefined);
 });
 
 test("生駒市: 全施設に個別の番号がある(TAC井出山はテニスコート管理事務所の番号で、プールの番号ではない)", () => {

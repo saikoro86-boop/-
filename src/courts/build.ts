@@ -65,7 +65,7 @@ async function main() {
   const cfg: Config = JSON.parse(readFileSync("config/courts.json", "utf-8"));
   const slots: OpenSlot[] = [];
   /** 「エリア|施設名」→ ネット予約の受付外の枠があるときの問い合わせ先 */
-  const contacts: Record<string, { tel?: string; hours?: string; label?: string }> = {};
+  const contacts: Record<string, { tel?: string; hours?: string; via?: string; unconfirmed?: boolean }> = {};
   const errors: string[] = [];
   const today = new Date();
   const first = jst(today);
@@ -171,8 +171,10 @@ async function main() {
             if (offline) {
               const ct = findContact(site.contacts ?? [], c.facility);
               contacts[`${site.name}|${c.facility}`] = ct
-                ? { tel: ct.tel, hours: ct.hours }
-                : { tel: site.fallbackContact?.tel, label: site.fallbackContact?.label };
+                ? { tel: ct.tel, hours: ct.hours, via: ct.via, unconfirmed: ct.unconfirmed }
+                : site.fallbackContact
+                  ? { tel: site.fallbackContact.tel, via: site.fallbackContact.label, unconfirmed: true }
+                  : {};
             }
           }
         }

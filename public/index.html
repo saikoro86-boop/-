@@ -218,10 +218,10 @@ function render() {
       box.appendChild(msg);
       const ct = (data.contacts || {})[f.site + "|" + f.facility];
       if (ct && ct.tel) {
-        if (ct.label) { const w = document.createElement("div"); w.textContent = "この施設の電話番号は確認できていません。まず " + ct.label + " にお問い合わせください。"; box.appendChild(w); }
+        if (ct.unconfirmed && ct.via) { const w = document.createElement("div"); w.textContent = "この施設の電話番号は確認できていません。まず " + ct.via + " にお問い合わせください。"; box.appendChild(w); }
         const a = document.createElement("a");
         a.href = telHref(ct.tel); a.className = "btn tel";
-        a.textContent = "☎ " + (ct.label ? ct.label + " " : "") + ct.tel;
+        a.textContent = "☎ " + (ct.via ? ct.via + " " : "") + ct.tel;
         box.appendChild(a);
         if (ct.hours) { const h = document.createElement("span"); h.style.marginLeft = "4px"; h.textContent = ct.hours; box.appendChild(h); }
       } else {
