@@ -4,6 +4,7 @@
  * 1サイトの失敗で全体を止めず、失敗したサイトは errors に記録する。
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import type { OpenSlot } from "./types";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 
 interface LinkSite {
@@ -20,15 +21,6 @@ interface Config {
   sites: Site[];
   purpose: { type: string; codes: string[] };
   days: number;
-}
-
-export interface OpenSlot {
-  date: string; // YYYY-MM-DD
-  site: string;
-  facility: string;
-  court: string;
-  start: number;
-  end: number;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

@@ -1,0 +1,886 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0068)https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+
+
+<!-- HTTPヘッダ制御 -->
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
+
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<!-- キャッシュ対策(2行) -->
+<meta http-equiv="Expire" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<!-- ページの説明とキーワード -->
+<meta name="description" content="公共施設予約システム">
+<meta name="keywords" content="公共,施設予約">
+<!-- タイトル -->
+<title>京都府・市町村共同施設予約システム（施設別空き状況照会）</title>
+
+
+
+
+
+<!-- CSS、IMGのデフォルトパスの設定 -->
+
+<!-- 共通スタイルシート -->
+<link rel="stylesheet" type="text/css" href="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/import.css">
+<link rel="SHORTCUT ICON" href="https://g-kyoto.growone.net/eshisetsu/img/std/icon/favicon.ico">
+
+<!-- 共通スクリプト -->
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/jquery.js.ダウンロード"></script>
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/jquery.min.js.ダウンロード"></script>
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/jquery-ui-personalized.js.ダウンロード"></script>
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/meca.js.ダウンロード"></script>
+
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/CommonFunctions.js.ダウンロード"></script>
+
+<!--[if IE 6]>
+	<script type="text/javascript" src="/eshisetsu/js/DD_belatedPNG-min.js"></script>
+	<script type="text/javascript">
+		DD_belatedPNG.fix('.pngbg');
+	</script>
+<![endif]-->
+<!-- キーボードの制御 -->
+<script type="text/javascript" src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/checkHistoryBack.js.ダウンロード"></script>
+
+<!-- 共通変数の設定 -->
+
+
+
+
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="author" content="公共施設予約システム">
+<meta name="copyright" content="Copyright (C) 2020 , All rights reserved.">
+<meta name="keywords" content=" ">
+<meta name="description" content="">
+<meta property="og:url" content=" URL">
+<meta property="og:type" content="website">
+<meta property="og:description" content="">
+<meta property="og:site_name" content="">
+<meta property="og:image" content="">
+<!-- セッションタイムアウト通知 -->
+<script type="text/javascript">
+	<!--
+		function sessionNotice(limMin,str){
+			if(str=="pre"){
+				setTimeout(sessionNotice,60000,"0","fix");
+				alert("あと" + limMin + "分でセッションがタイムアウトします。");
+			}else{
+				alert("セッションがタイムアウトしました。");
+			}
+		}
+		$(document).ready( function(){
+			setTimeout(sessionNotice,28740000,"1","pre");
+		});
+	//-->
+</script>
+
+
+<script type="text/javascript">
+<!--
+	$(function(){
+		//opty,m,dを表示日付に設定
+		$('#startDate').val($('#optYear').val() + '-' + $('#optMonth').val() + '-' + $('#optDay').val());
+		if($('#radioshow').val()=='week'){
+			$('#7day').prop('checked',true);
+		}else{
+			$('#31day').prop('checked',true);
+		}
+
+		//曜日チェック
+		
+			/* 月曜日 */
+			$('#checkShowDayMON').prop("checked",true);
+		
+		
+			/* 火曜日 */
+			$('#checkShowDayTUE').prop("checked",true);
+		
+		
+			/* 水曜日 */
+			$('#checkShowDayWED').prop("checked",true);
+		
+		
+			/* 木曜日 */
+			$('#checkShowDayTHU').prop("checked",true);
+		
+		
+			/* 金曜日 */
+			$('#checkShowDayFRI').prop("checked",true);
+		
+		
+			/* 土曜日 */
+			$('#checkShowDaySAT').prop("checked",true);
+		
+		
+			/* 日曜日 */
+			$('#checkShowDaySUN').prop("checked",true);
+		
+		
+			/* 祝日 */
+			$('#checkShowDayHOL').prop("checked",true);
+		
+
+
+	});
+	function loadDate(){
+		var datewk = $('#startDate').val().split('-');
+		$('#optYear').val(datewk[0]);
+		$('#optMonth').val(datewk[1]);
+		$('#optDay').val(datewk[2]);
+	}
+	function loadDays(subj){
+		$('#radioshow').val(subj);
+	}
+	//-->
+</script>
+</head>
+<body onunload="ignoreTrue();" id="division">
+
+	
+	<form name="menu.Menu.Form" method="post" action="https://g-kyoto.growone.net/eshisetsu/menu/MenuLookup.cgi" onsubmit="return false;" id="formMenuMain">
+	
+	<input type="hidden" name="txtProcId" value="/menu/Menu">
+	<input type="hidden" name="txtFunctionCode" value="" id="txtFunctionCode">
+	</form>
+
+	<form name="yoyaku.CalendarStatusBrowser.Form" method="post" action="https://g-kyoto.growone.net/eshisetsu/yoyaku/CalendarStatusBrowser.cgi" id="formMain">
+	
+	<input type="hidden" name="action" value="" id="action">
+	<input type="hidden" name="txtProcId" value="/yoyaku/CalendarStatusBrowser">
+	<input type="hidden" name="txtCalYobiView" value="" id="txtCalYobiView">
+	<input type="hidden" name="optYear" value="2026" id="optYear">
+	<input type="hidden" name="optMonth" value="11" id="optMonth">
+	<input type="hidden" name="optDay" value="06" id="optDay">
+	<input type="hidden" name="radioshow" value="week" id="radioshow">
+	
+
+	<!-- header/ -->
+	
+	<header width="100%">
+		<h1>
+			<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" style="font-weight:bold" id="pageTopId" onclick="isNextFuncCodeSet('TopPage');">
+				
+				京都府・市町村共同施設予約システム
+			</a>
+		</h1>
+		
+		
+			<button type="button" id="id_hbmenu" class="btn_hbmenu" aria-expanded="false" aria-controls="sitemenu" title="サイトメニューボタン">
+				<span class="image"></span>
+				<span class="text"></span>
+			</button>
+		
+			<div id="sitemenu" class="box_navi" aria-hidden="true">
+				<nav aria-label="サイトメニュー">
+					
+					
+						<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageYoyaku')">空き照会・予約</a>
+					
+					
+					
+						<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageChusen')">抽選申込</a>
+					
+					
+					
+					
+						<!-- <a href="#" onclick="isNextFuncCodeSet('TodayInfo')">本日のお知らせ</a> -->
+					
+					
+					<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" class="hb_close">メニューを閉じる</a>
+					<div id="focustrap" tabindex="0"></div>
+				</nav>
+			</div>
+			
+			<nav class="box_login" aria-label="ログイン・ログアウトナビゲーション">
+				<p class="name">
+				
+				ゲストユーザ<span>でログイン中</span></p>
+				&nbsp;<a href="javascript:void(0)" class="sitemap" onclick="isNextFuncCodeSet('SiteMap');">サイトマップ</a>
+				
+				<button type="button" id="id_hbmenu2" class="btn_hbmenu2" aria-expanded="false" aria-controls="sitemenu2" title="サイトメニューボタン">
+					<span class="image"></span><span class="text"></span>
+					
+				</button>
+			
+				<div id="sitemenu2" class="box_navi2" aria-hidden="true">
+					<nav aria-label="サイトメニュー">
+						
+						
+							<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageYoyaku')">空き照会・予約</a>
+						
+						
+						
+							<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageChusen')">抽選申込</a>
+						
+						
+						
+						
+							<!-- <a href="#" onclick="isNextFuncCodeSet('TodayInfo')">本日のお知らせ</a> -->
+						
+						
+						<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" class="hb_close2">メニューを閉じる</a>
+						<div id="focustrap" tabindex="0"></div>
+					</nav>
+				</div>
+			</nav>
+			<nav class="box_gmenu" aria-label="グローバルナビゲーション">
+				
+				
+					<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageYoyaku')" class="curr gmenu_yoyaku">空き照会・予約</a>
+				
+				
+				
+					<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" onclick="isNextFuncCodeSet('TopPageChusen')" class="gmenu_chusen">抽選申込</a>
+				
+				
+			</nav>
+		
+		
+		
+		
+		
+	</header>
+	<!-- /header-->
+
+	<main>
+		<div id="errcolumn">
+			<noscript><p class="jserr"><strong>JavaScriptが無効になっているため使用できません。<br />ブラウザ設定でJavaScriptを有効にしてください。</strong></p></noscript>
+			<p class="jserr"><strong>●メッセージ
+<br>インターネット上で予約申込を希望する場合は、窓口で利用者登録を行ってください。<br><br>利用者登録済の方（利用者IDをお持ちの方）は、<br>本ページ一番下の「ログイン」ボタンからログインをお願いします。
+</strong></p>
+
+		</div>
+		<h2>施設別空き状況照会</h2>
+
+		<!-- パンクズ/ -->
+		<div class="breadclumbs">
+			<nav aria-label="予約段階のナビゲーション">
+				<a>施設検索</a>
+				<a>施設選択</a>
+				<span class="active">空き照会</span>
+				<a>対象区分選択</a>
+				<a>申込入力</a>
+				<a>内容確認</a>
+				<span class="fix">予約完了</span>
+			</nav>
+		</div>
+		<!-- /パンクズ -->
+
+		<!-- container/ -->
+		<div class="container">
+			<div class="box_setting">
+
+				
+					<div class="box_legend">
+						<ul>
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="">空き有り</li>
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="">予約済み</li>
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_out.png" alt="">予約申込対象外</li>
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_rest.png" alt="">休館日</li>
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_hoshu.png" alt="">保守点検</li>
+							
+							<li><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_haifun.png" alt="">利用不可</li>
+						</ul>
+					</div>
+
+					<div class="bg_green sort_calender">
+						<ul class="box_sort">
+							<li>
+								<fieldset>
+									<legend>表示開始日</legend>
+									<input type="date" id="startDate" title="表示開始日" name="" tabindex="0" onchange="loadDate();">
+								</fieldset>
+							</li>
+							<li>
+								<fieldset>
+									<legend>表示切替</legend>
+									<ul class="inner">
+										<li> <input type="radio" id="7day" tabindex="-1" name="radioshow" onclick="loadDays('week');">
+											<label for="7day" tabindex="0">7日間</label>
+										</li>
+										<li> <input type="radio" id="31day" tabindex="-1" name="radioshow" onclick="loadDays('month');">
+											<label for="31day" tabindex="0">31日間</label>
+										</li>
+									</ul>
+								</fieldset>
+							</li>
+							<li>
+								<fieldset>
+									<legend>曜日で絞込む</legend>
+									<ul class="inner">
+										<li>
+											<input type="checkbox" id="checkShowDayMON" name="checkShowDay" tabindex="-1" value="MON">
+											<label for="checkShowDayMON" title="曜日" tabindex="0">月</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDayTUE" name="checkShowDay" tabindex="-1" value="TUE">
+											<label for="checkShowDayTUE" title="曜日" tabindex="0"> 火</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDayWED" name="checkShowDay" tabindex="-1" value="WED">
+											<label for="checkShowDayWED" title="曜日" tabindex="0"> 水</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDayTHU" name="checkShowDay" tabindex="-1" value="THU">
+											<label for="checkShowDayTHU" title="曜日" tabindex="0"> 木</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDayFRI" name="checkShowDay" tabindex="-1" value="FRI">
+											<label for="checkShowDayFRI" title="曜日" tabindex="0"> 金</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDaySAT" name="checkShowDay" tabindex="-1" value="SAT">
+											<label for="checkShowDaySAT" title="曜日" tabindex="0"> 土</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDaySUN" name="checkShowDay" tabindex="-1" value="SUN">
+											<label for="checkShowDaySUN" title="曜日" tabindex="0"> 日</label>
+										</li>
+										<li>
+											<input type="checkbox" id="checkShowDayHOL" name="checkShowDay" tabindex="-1" value="HOL">
+											<label for="checkShowDayHOL" title="曜日" tabindex="0">土日祝</label>
+										</li>
+									</ul>
+								</fieldset>
+							</li>
+						</ul>
+
+     					
+						
+							<button type="button" class="btn_sort" onclick="javascript:isSubmitDataSet('Setup');return false;">選択した条件で表示</button>
+						
+
+					</div>
+				
+
+				
+
+					
+
+					
+					<h3>木津川市<br>兜谷公園</h3><div class="box_order">
+<ul class="box_schedule">
+<li><div class="box_title"><h4><a href="javascript:void(0)" onclick="linkUrlOpen('http://www/shisetsu-yoyaku.ne.jp');">テニスコートＡ<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_outlink_bl.png" alt="テニスコートＡのホームページ(外部リンク)" title="テニスコートＡのホームページ(外部リンク)"></a></h4>
+<a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetPrev');return false;" class="link back">前の7日分</a><a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetNext');return false;" class="link next">次の7日分</a></div><div class="inner_scroll_cal"><table class="box_calendar"><tbody>
+<tr class="date"><th class="th_sticky"></th><th><p class="day">11<span>月</span>6<span>日</span></p><p class="week">金</p></th><th class="satday"><p class="day">11<span>月</span>7<span>日</span></p><p class="week">土</p></th><th class="sunday"><p class="day">11<span>月</span>8<span>日</span></p><p class="week">日</p></th><th><p class="day">11<span>月</span>9<span>日</span></p><p class="week">月</p></th><th><p class="day">11<span>月</span>10<span>日</span></p><p class="week">火</p></th><th><p class="day">11<span>月</span>11<span>日</span></p><p class="week">水</p></th><th><p class="day">11<span>月</span>12<span>日</span></p><p class="week">木</p></th></tr>
+<tr><th class="th_sticky">09:00 - 10:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">10:00 - 11:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">11:00 - 12:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">12:00 - 13:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">13:00 - 14:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">14:00 - 15:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">15:00 - 16:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">16:00 - 17:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">17:00 - 18:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">18:00 - 19:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">19:00 - 20:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">20:00 - 21:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">21:00 - 22:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr></tbody></table></div></li>
+<li><div class="box_title"><h4><a href="javascript:void(0)" onclick="linkUrlOpen('http://www/shisetsu-yoyaku.ne.jp');">テニスコートＢ<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_outlink_bl.png" alt="テニスコートＢのホームページ(外部リンク)" title="テニスコートＢのホームページ(外部リンク)"></a></h4>
+<a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetPrev');return false;" class="link back">前の7日分</a><a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetNext');return false;" class="link next">次の7日分</a></div><div class="inner_scroll_cal"><table class="box_calendar"><tbody>
+<tr class="date"><th class="th_sticky"></th><th><p class="day">11<span>月</span>6<span>日</span></p><p class="week">金</p></th><th class="satday"><p class="day">11<span>月</span>7<span>日</span></p><p class="week">土</p></th><th class="sunday"><p class="day">11<span>月</span>8<span>日</span></p><p class="week">日</p></th><th><p class="day">11<span>月</span>9<span>日</span></p><p class="week">月</p></th><th><p class="day">11<span>月</span>10<span>日</span></p><p class="week">火</p></th><th><p class="day">11<span>月</span>11<span>日</span></p><p class="week">水</p></th><th><p class="day">11<span>月</span>12<span>日</span></p><p class="week">木</p></th></tr><tr><th class="th_sticky">09:00 - 10:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">10:00 - 11:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">11:00 - 12:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">12:00 - 13:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">13:00 - 14:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">14:00 - 15:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">15:00 - 16:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">16:00 - 17:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">17:00 - 18:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">18:00 - 19:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">19:00 - 20:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">20:00 - 21:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">21:00 - 22:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr></tbody></table></div></li>
+</ul></div><h3>木津川市<br>木津川台公園</h3><div class="box_order">
+<ul class="box_schedule">
+<li><div class="box_title"><h4><a href="javascript:void(0)" onclick="linkUrlOpen('http://www/shisetsu-yoyaku.ne.jp');">テニスコートＡ<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_outlink_bl.png" alt="テニスコートＡのホームページ(外部リンク)" title="テニスコートＡのホームページ(外部リンク)"></a></h4>
+<a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetPrev');return false;" class="link back">前の7日分</a><a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetNext');return false;" class="link next">次の7日分</a></div><div class="inner_scroll_cal"><table class="box_calendar"><tbody>
+<tr class="date"><th class="th_sticky"></th><th><p class="day">11<span>月</span>6<span>日</span></p><p class="week">金</p></th><th class="satday"><p class="day">11<span>月</span>7<span>日</span></p><p class="week">土</p></th><th class="sunday"><p class="day">11<span>月</span>8<span>日</span></p><p class="week">日</p></th><th><p class="day">11<span>月</span>9<span>日</span></p><p class="week">月</p></th><th><p class="day">11<span>月</span>10<span>日</span></p><p class="week">火</p></th><th><p class="day">11<span>月</span>11<span>日</span></p><p class="week">水</p></th><th><p class="day">11<span>月</span>12<span>日</span></p><p class="week">木</p></th></tr>
+<tr><th class="th_sticky">09:00 - 10:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">10:00 - 11:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">11:00 - 12:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">12:00 - 13:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">13:00 - 14:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">14:00 - 15:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">15:00 - 16:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">16:00 - 17:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">17:00 - 18:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">18:00 - 19:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">19:00 - 20:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">20:00 - 21:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">21:00 - 22:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr></tbody></table></div></li>
+<li><div class="box_title"><h4><a href="javascript:void(0)" onclick="linkUrlOpen('http://www/shisetsu-yoyaku.ne.jp');">テニスコートＢ<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_outlink_bl.png" alt="テニスコートＢのホームページ(外部リンク)" title="テニスコートＢのホームページ(外部リンク)"></a></h4>
+<a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetPrev');return false;" class="link back">前の7日分</a><a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetNext');return false;" class="link next">次の7日分</a></div><div class="inner_scroll_cal"><table class="box_calendar"><tbody>
+<tr class="date"><th class="th_sticky"></th><th><p class="day">11<span>月</span>6<span>日</span></p><p class="week">金</p></th><th class="satday"><p class="day">11<span>月</span>7<span>日</span></p><p class="week">土</p></th><th class="sunday"><p class="day">11<span>月</span>8<span>日</span></p><p class="week">日</p></th><th><p class="day">11<span>月</span>9<span>日</span></p><p class="week">月</p></th><th><p class="day">11<span>月</span>10<span>日</span></p><p class="week">火</p></th><th><p class="day">11<span>月</span>11<span>日</span></p><p class="week">水</p></th><th><p class="day">11<span>月</span>12<span>日</span></p><p class="week">木</p></th></tr><tr><th class="th_sticky">09:00 - 10:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">10:00 - 11:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">11:00 - 12:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">12:00 - 13:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">13:00 - 14:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">14:00 - 15:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">15:00 - 16:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">16:00 - 17:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">17:00 - 18:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">18:00 - 19:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">19:00 - 20:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">20:00 - 21:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">21:00 - 22:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr></tbody></table></div></li>
+<li><div class="box_title"><h4><a href="javascript:void(0)" onclick="linkUrlOpen('http://www/shisetsu-yoyaku.ne.jp');">テニスコートＣ<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_outlink_bl.png" alt="テニスコートＣのホームページ(外部リンク)" title="テニスコートＣのホームページ(外部リンク)"></a></h4>
+<a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetPrev');return false;" class="link back">前の7日分</a><a href="javascript:void(0)" onclick="javascript:isSubmitDataSet('OffsetNext');return false;" class="link next">次の7日分</a></div><div class="inner_scroll_cal"><table class="box_calendar"><tbody>
+<tr class="date"><th class="th_sticky"></th><th><p class="day">11<span>月</span>6<span>日</span></p><p class="week">金</p></th><th class="satday"><p class="day">11<span>月</span>7<span>日</span></p><p class="week">土</p></th><th class="sunday"><p class="day">11<span>月</span>8<span>日</span></p><p class="week">日</p></th><th><p class="day">11<span>月</span>9<span>日</span></p><p class="week">月</p></th><th><p class="day">11<span>月</span>10<span>日</span></p><p class="week">火</p></th><th><p class="day">11<span>月</span>11<span>日</span></p><p class="week">水</p></th><th><p class="day">11<span>月</span>12<span>日</span></p><p class="week">木</p></th></tr><tr><th class="th_sticky">09:00 - 10:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">10:00 - 11:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">11:00 - 12:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">12:00 - 13:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">13:00 - 14:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">14:00 - 15:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">15:00 - 16:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">16:00 - 17:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">17:00 - 18:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">18:00 - 19:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+</tr><tr><th class="th_sticky">19:00 - 20:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">20:00 - 21:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr><tr><th class="th_sticky">21:00 - 22:00</th><td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_ok.png" alt="空いています" title="空いています"></td>
+<td><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_scche_noset.png" alt="予約済みです" title="予約済みです"></td>
+</tr></tbody></table></div></li>
+</ul></div>
+					
+
+				
+				<div class="box_btn reconfirmation">
+					
+						<div class="box_btn box_selectarea reconfirmation bg_pink" style="margin-bottom:10px;">
+							<p class="txt_read">利用者登録済みの方で、引き続き予約申込を行う場合はログインしてください。</p>
+						</div>
+							<button type="button" class="btn_orange" id="loginbutton" onclick="javascript:isSubmitDataSet('Login');return false;">ログイン</button>
+
+					
+					
+						<a href="javascript:void(0)" id="reselect" class="link back" onclick="javascript:isSubmitDataSet('Back');return false;">施設を選び直す</a>
+					
+				</div>
+
+			</div>
+		</div>
+		<!-- /container -->
+
+	</main>
+	<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" id="page_top" onclick="setJumpFocus('pageTopId');"><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_tri_w_up.png" alt="ページトップへ戻る"></a>
+	
+	
+		<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" id="page_bottom" onclick="silideAnimateById('loginbutton');"><img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/icn_tri_w_down.png" alt="ページの最後へ"></a>
+	
+
+	<!--footer/-->
+	
+	<footer>
+		
+		<p class="logo">
+			<a href="https://g-kyoto.growone.net/eshisetsu/yoyaku/ShisetsuMultiSelect.cgi#" title="京都府・市町村共同施設予約システム" tabindex="0">
+			<img src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/logo_footer.png" alt="京都府・市町村共同施設予約システム">
+			</a>
+		</p>
+		<p class="copy" lang="en" xml:lang="en">Copyright All Rights Reserved.</p>
+		
+		
+		
+	</footer>
+	<!--/footer-->
+	</form>
+
+<script src="./京都府・市町村共同施設予約システム（施設別空き状況照会）_files/menu.js.ダウンロード"></script> <!-- ◆追加スクリプト◆ -->
+
+
+</body></html>

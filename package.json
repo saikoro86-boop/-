@@ -10,7 +10,8 @@
     "sns": "ts-node src/sns/cli.ts",
     "test": "node --require ts-node/register --test tests/*.test.ts",
     "courts": "ts-node src/courts/cli.ts",
-    "courts:build": "ts-node src/courts/build.ts"
+    "courts:build": "ts-node src/courts/build.ts",
+    "bookmarklet": "ts-node src/bookmarklet/build.ts"
   },
   "license": "MIT",
   "engines": {

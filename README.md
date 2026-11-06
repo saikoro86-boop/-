@@ -81,7 +81,10 @@ npm run courts:build                  # 今後30日分を public/data.json に�
   {"source":"import","importedAt":"2026-11-06T07:20:00Z","slots":[{"date":"2026-11-14","site":"木津川市","facility":"木津川台公園","court":"テニスコートA","start":9,"end":12}]}
   ```
 - 受け取った JSON は、型・範囲を検証してから使います。24時間以上前の取り込みは「古い可能性」と表示します。
-- 公式画面から JSON を作るブックマークレット(解析部分)は、公式の空き画面を確認してから作ります。
+- **ブックマークレット**で、公式の「施設別空き状況照会」画面から JSON を作って渡せます。
+  - `npm run bookmarklet` で `public/bookmarklet.html`(登録用ページ)を生成します。`APP_URL` 環境変数で、アプリの公開URLを指定できます(既定 `https://saikoro86-boop.github.io/-/`)。
+  - 解析は `src/courts/kizugawa.ts`(保存した実画面を使った `tests/kizugawa.test.ts` あり)。公式画面の `<img alt="空いています">` だけを空きとして読みます。
+  - 画面に表示されている期間(7日間/31日間)だけが取り込めます。サイトへの追加アクセスはしません。
 
 ### 未対応
 - 奈良県営(奈良スーパーアプリ)・大和郡山市は未対応です。

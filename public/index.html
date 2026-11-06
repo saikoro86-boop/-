@@ -170,6 +170,10 @@ function render() {
     a.href = l.entryUrl; a.target = "_blank"; a.rel = "noopener noreferrer"; a.className = "btn";
     a.textContent = "予約サイトを開く ↗";
     card.appendChild(a);
+    const imp = document.createElement("a");
+    imp.href = "bookmarklet.html"; imp.className = "city"; imp.style.cssText = "display:block;margin-top:8px";
+    imp.textContent = "空きをこのアプリに取り込む方法 →";
+    card.appendChild(imp);
     if (imported && imported.slots.some(s => s.site === l.name)) {
       const t = new Date(imported.importedAt);
       const stale = Date.now() - t.getTime() > STALE_MS;
