@@ -258,7 +258,7 @@ function render() {
     const card = document.createElement("section");
     card.className = "card " + cls;
     const det = document.createElement("details");
-    det.open = st.city !== "all" || items.size <= 5;
+    det.open = items.size <= 5;
     const sum = document.createElement("summary");
     sum.className = "reason-title"; sum.textContent = `${title}(${items.size}施設)`;
     det.appendChild(sum);

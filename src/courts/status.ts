@@ -26,7 +26,9 @@ export function kashikanFacilityState(
   if (marks.some((m) => offlineMarks.includes(m))) return { state: "open" };
   if (marks.includes("×")) return { state: "full" };
   const other = marks[0];
-  return { state: "closed", label: other === "-" ? "受付期間外" : other };
+  // 「市内の(学校体育施設)…団体の方のみ」のように長い記号は、利用者を限定した枠(一般向けの空きではない)
+  const label = other === "-" ? "受付期間外" : other.length > 10 || other.endsWith("のみ") ? "利用者を限定した枠" : other;
+  return { state: "closed", label };
 }
 
 /**

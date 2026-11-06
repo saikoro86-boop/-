@@ -29,3 +29,8 @@ test("複数の建物の状態は、空きに近いほうを優先する", () =>
   assert.equal(mergeStates("unpub", "open"), "open");
   assert.equal(mergeStates("closed", "full"), "full");
 });
+
+test("長い制限の記号(学校体育施設の団体限定など)は「利用者を限定した枠」と表示する", () => {
+  const r = kashikanFacilityState([court("市内の（学校体育施設）新たな地域クラブ、（学校体育施設）青少年団体のみ")], ["●"]);
+  assert.deepEqual(r, { state: "closed", label: "利用者を限定した枠" });
+});

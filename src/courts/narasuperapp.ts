@@ -14,7 +14,7 @@
  *   rsvItemResultList    予約の明細。枠IDを持つ = その枠には予約が入っている
  *   → 「空き」= 枠があって、予約の明細がないもの。※画面との突き合わせは未了(README 参照)
  */
-import type { CourtAvailability, Slot } from "./kashikan";
+import { isPlayingSpace, type CourtAvailability, type Slot } from "./kashikan";
 
 export const NSA_ENDPOINT =
   "https://nsa.pref.nara.jp/fre/webruntime/api/apex/execute?language=ja&asGuest=true&htmlEncode=false";
@@ -209,8 +209,7 @@ export const nsaReservationUrl = (facilityId: string, buildingId: string) =>
  * - なければ(体育館・競技場だけの建物)、会議室・研修室・トレーニング室などの「部屋」を除いたものを、すべて表示する。
  *   画面は「テニスで検索して出る施設」は全部テニスの扱い、というユーザーの方針に合わせたもの。gym=true は、その場合
  */
-const NOT_A_PLAYING_SPACE = /会議|研修|トレーニング|控室|更衣|和室|作法|調理|視聴覚|本部|事務|ロッカー|倉庫|談話|ホール|ロビー/;
-export const isNsaPlayableSpace = (c: CourtAvailability) => !NOT_A_PLAYING_SPACE.test(c.court);
+export const isNsaPlayableSpace = (c: CourtAvailability) => isPlayingSpace(c);
 
 export function nsaCourtFilter(raw: NaraSuperAppResponse): { pred: (c: CourtAvailability) => boolean; gym: boolean } {
   const b = raw.returnValue.buildingRecord;
