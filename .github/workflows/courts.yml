@@ -50,23 +50,23 @@ jobs:
         env:
           APP_URL: https://${{ github.repository_owner }}.github.io/${{ vars.SITE_REPO }}/
 
-      - name: 公開用リポジトリを取得
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/${{ vars.SITE_REPO }}
-          token: ${{ secrets.SITE_REPO_TOKEN }}
-          path: site
-
       - name: 画面とデータだけを書き出す
+        env:
+          OWNER: ${{ github.repository_owner }}
+          SITE_REPO: ${{ vars.SITE_REPO }}
+          TOKEN: ${{ secrets.SITE_REPO_TOKEN }}
         run: |
-          cd site
-          # 履歴を残さず、毎回 1 コミットに置き換える(データの変更履歴は不要)
-          git checkout --orphan publish
-          git rm -rf . >/dev/null 2>&1 || true
+          # 公開用リポジトリを取得せず、毎回「新しい1コミット」を作って置き換える
+          # (空のリポジトリでも動く。データの変更履歴は不要)
+          mkdir site && cd site
+          git init -q -b publish
           cp ../public/index.html ../public/bookmarklet.html ../public/data.json .
           touch .nojekyll
           git config user.name  "courts-bot"
           git config user.email "courts-bot@users.noreply.github.com"
           git add -A
-          git commit -m "update $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push --force origin publish:main
+          git commit -q -m "update $(date -u +%Y-%m-%dT%H:%MZ)"
+          AUTH="$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          echo "::add-mask::$AUTH"
+          git -c "http.extraheader=Authorization: Basic $AUTH" \
+            push --force "https://github.com/$OWNER/$SITE_REPO.git" publish:main
