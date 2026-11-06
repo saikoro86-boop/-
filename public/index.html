@@ -123,10 +123,33 @@ const urlFor = (site, facility) => {
   return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
 };
 const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
-function anchor(url, text, cls, title) {
+// 公式サイト(奈良市・生駒市)の検索フォームへ、選んだ日付と目的コードを入れて送信する。
+// 公式の画面で「日付を選ぶ→テニスを選ぶ→検索」と操作した状態と同じ結果が、新しいタブで開く。
+function postFor(site, facility, court) {
+  const pl = (data.postLinks || {})[site];
+  if (!pl) return null;
+  const cc = data.courtCodes || {};
+  let code = court ? cc[site + "|" + facility + "|" + court] : null;
+  if (!code) { const pre = site + "|" + facility + "|"; const k = Object.keys(cc).find(x => x.startsWith(pre)); code = k ? cc[k] : null; }
+  return code ? { url: pl.url, type: pl.type, code } : null;
+}
+function submitSearch(post, date) {
+  const [y, m, d] = date.split("-");
+  const form = document.createElement("form");
+  form.method = "POST"; form.action = post.url; form.target = "_blank"; form.rel = "noopener noreferrer";
+  form.style.display = "none";
+  const fields = { op: "srch_mkt", UseYM: y + m, UseDay: String(Number(d)), UseDate: y + m + d, Type: post.type, MokutekiCode: post.code, disp_span: "0", searchBtn: "" };
+  for (const [k, v] of Object.entries(fields)) { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; form.appendChild(i); }
+  document.body.appendChild(form); form.submit(); form.remove();
+}
+function anchor(url, text, cls, title, post) {
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
   if (cls) a.className = cls;
+  if (post) {
+    title = (title || "") + (title ? "。" : "") + "この日のテニスの空き一覧が開きます";
+    a.addEventListener("click", (e) => { e.preventDefault(); if (st.date) submitSearch(post, st.date); else window.open(url, "_blank", "noopener"); });
+  }
   if (title) { a.title = title; a.setAttribute("aria-label", title); }
   a.textContent = text;
   return a;
@@ -175,7 +198,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、その施設の予約サイトが開きます。日時は、予約サイト側で選び直してください。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "");
+    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "");
     list.appendChild(hint);
   }
   for (const f of byFac.values()) {
@@ -184,7 +207,7 @@ function render() {
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
-    if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く"));
+    if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
     const fNote = (data.facilityNotes || {})[f.site + "|" + f.facility];
     if (fNote) { const nn = document.createElement("div"); nn.className = "city"; nn.textContent = fNote; h2.insertAdjacentElement("afterend", nn); }
@@ -192,7 +215,7 @@ function render() {
       const row = document.createElement("div");
       row.className = "court";
       const name = document.createElement("span");
-      if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く"));
+      if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く", postFor(f.site, f.facility, court)));
       else name.textContent = court;
       const times = document.createElement("span"); times.className = "times";
       // 連続する枠(9-10, 10-11 …)は 1 つにまとめる。ネット予約できる枠と、受付外(●・電話)の枠は分けて結合する
@@ -208,7 +231,7 @@ function render() {
         const cls = "t" + (s.offline ? " off" : "");
         const text = s.offline ? label + " ☎" : label;
         const title = s.offline ? `${court} ${label}(ネット予約は受付外・電話や窓口で予約)` : `${court} ${label} の予約サイトを開く`;
-        if (fUrl) times.appendChild(anchor(fUrl, text, cls, title));
+        if (fUrl) times.appendChild(anchor(fUrl, text, cls, title, postFor(f.site, f.facility, court)));
         else { const t = document.createElement("span"); t.className = cls; t.textContent = text; times.appendChild(t); }
       }
       row.append(name, times); card.appendChild(row);
@@ -266,7 +289,7 @@ function render() {
     for (const it of [...items.values()].sort((a, b) => a.site.localeCompare(b.site, "ja"))) {
       const row = document.createElement("div"); row.className = "reason-row";
       const url = urlFor(it.site, it.facility);
-      const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く") : document.createTextNode(it.facility);
+      const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
       const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
       row.append(name, area);
       det.appendChild(row);

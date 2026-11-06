@@ -16,6 +16,8 @@ export interface CourtAvailability {
   facility: string;
   court: string;
   slots: Slot[];
+  /** どの目的コード(035=硬式テニス など)の検索で出たか。公式サイトの検索結果を同じ条件で開くために使う */
+  code?: string;
 }
 
 export interface KashikanSite {
@@ -112,7 +114,7 @@ export async function fetchDay(
       searchBtn: "",
     });
     const res = await request(site.url, body, cookie);
-    out.push(...parseAvailability(await res.text()));
+    out.push(...parseAvailability(await res.text()).map((c) => ({ ...c, code })));
   }
   // 硬式・軟式で同じコートが重複するので統合
   const seen = new Set<string>();
