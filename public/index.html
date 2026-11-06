@@ -14,6 +14,10 @@
   header { padding:16px; }
   h1 { margin:0; font-size:20px; }
   #updated { color:var(--sub); font-size:12px; }
+  [hidden] { display:none !important; }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .actions button { font-size:13px; padding:5px 12px; }
+  .actions button:disabled { opacity:.6; cursor:default; }
   .bar { position:sticky; top:0; background:var(--bg); padding:8px 16px; border-bottom:1px solid var(--line); z-index:2; }
   .row { display:flex; gap:8px; overflow-x:auto; padding:4px 0; scrollbar-width:none; }
   .row::-webkit-scrollbar { display:none; }
@@ -70,6 +74,10 @@
 <header>
   <h1>🎾 テニスコート空き検索</h1>
   <div id="updated">読み込み中…</div>
+  <div class="actions">
+    <button type="button" id="btnReload">↻ 最新を読み込む</button>
+    <button type="button" id="btnRefresh" hidden>⟳ 空き状況を取得し直す</button>
+  </div>
 </header>
 <div class="bar">
   <div class="row" id="days"></div>
@@ -400,7 +408,7 @@ function load(silent) {
     const updatedAt = Date.parse(d.updatedAt);
     const firstLoad = !lastUpdatedAt;
     const changed = updatedAt !== lastUpdatedAt;
-    if (silent && !changed) return; // 新しいデータがまだ → そのまま待つ
+    if (silent && !changed) return false; // 新しいデータがまだ → そのまま待つ
     data = d;
     data.links = data.links || [];
     imported = loadImport();
@@ -414,11 +422,13 @@ function load(silent) {
     applyStatus(updatedAt);
     if (justImported) { toast("木津川市の空きを取り込みました"); justImported = false; }
     else if (!firstLoad && changed) toast("最新のデータに更新しました");
+    return changed;
   }).catch(() => {
-    if (silent) return; // 自動確認の失敗は静かに無視(次回また試す)
+    if (silent) return null; // 自動確認の失敗は静かに無視(次回また試す)
     $("updated").textContent = "";
     if (!lastUpdatedAt) $("list").innerHTML = "";
     showBanner("error", 'データを読み込めませんでした。通信状況を確認してください。<button type="button" onclick="load(false)">再試行</button>');
+    return null;
   });
 }
 
@@ -426,6 +436,62 @@ function load(silent) {
 window.addEventListener("hashchange", () => { if (/^#import=/.test(location.hash)) location.reload(); });
 // ページに戻ってきたとき(スマホで別アプリから戻る等)に、更新中・古い状態を見直す
 document.addEventListener("visibilitychange", () => { if (!document.hidden && lastUpdatedAt) load(true); });
+// ---- ① 最新を読み込む(公開サイトの最新データを、画面に読み込み直す) ----------
+$("btnReload").onclick = async () => {
+  const b = $("btnReload"); b.disabled = true; b.textContent = "読み込み中…";
+  const r = await load(true);
+  b.disabled = false; b.textContent = "↻ 最新を読み込む";
+  if (r === null) toast("読み込めませんでした。通信状況を確認してください");
+  else if (r === false) toast("すでに最新のデータです");
+};
+
+// ---- ② 空き状況を取得し直す(中継役を通して、GitHub の取得を起動する) ---------
+// 画面に GitHub の鍵は置けないので、鍵を持つ中継役(worker/)に頼む。合言葉が必要。
+// 中継役のURLは、公開サイトの refresh-config.json に書かれていれば、このボタンが出る。
+let refreshUrl = null;
+const storeGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const storeSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch {} };
+fetch("refresh-config.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(c => {
+  if (c && typeof c.url === "string" && /^https:\/\//.test(c.url)) { refreshUrl = c.url.replace(/\/+$/, ""); $("btnRefresh").hidden = false; }
+}).catch(() => {});
+
+function startPolling(ms) {
+  pollUntil = Date.now() + ms;
+  if (pollTimer) return;
+  pollTimer = setInterval(() => {
+    if (Date.now() > pollUntil) {
+      stopPoll();
+      showBanner("warn", "取得に時間がかかっています。しばらくしてから「最新を読み込む」を押してください。うまくいかないときは、更新に失敗した可能性があります。");
+    } else load(true);
+  }, 45e3);
+}
+
+$("btnRefresh").onclick = async () => {
+  if (!refreshUrl) return;
+  let pass = storeGet("refreshPass");
+  if (!pass) { pass = (prompt("合言葉を入力してください(3人で共有しているもの)") || "").trim(); if (!pass) return; }
+  const b = $("btnRefresh"); b.disabled = true;
+  showBanner("info", '<span class="spin"></span>取得を依頼しています…');
+  try {
+    const r = await fetch(refreshUrl + "/refresh", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ passcode: pass }) });
+    if (r.status === 401) { storeSet("refreshPass", null); showBanner("error", "合言葉が違います。もう一度ボタンを押して、入力し直してください。"); return; }
+    if (!r.ok) throw new Error(r.status);
+    storeSet("refreshPass", pass); // この端末に覚えておく(次回から入力不要)
+    const j = await r.json();
+    if (j.result === "cooldown") {
+      showBanner("warn", `さきほど更新したばかりです。あと約${Math.max(1, Math.ceil(j.waitSec / 60))}分後に、もう一度押せます。`);
+      setTimeout(() => { if ($("banner").classList.contains("warn")) showBanner("", ""); }, 8000);
+      return;
+    }
+    showBanner("info", '<span class="spin"></span>' + (j.result === "running"
+      ? "すでに取得中です。終わると、新しい内容に変わります(自動で確認しています)。"
+      : "空き状況の取得を開始しました。約5〜10分で、新しい内容に変わります(自動で確認しています)。"));
+    startPolling(20 * 60e3);
+  } catch {
+    showBanner("error", "取得の依頼に失敗しました。時間をおいて、もう一度お試しください。");
+  } finally { b.disabled = false; }
+};
+
 load(false);
 </script>
 </body>
