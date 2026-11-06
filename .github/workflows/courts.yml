@@ -50,6 +50,13 @@ jobs:
         env:
           APP_URL: https://${{ github.repository_owner }}.github.io/${{ vars.SITE_REPO }}/
 
+      - name: 手動更新ボタンの設定(任意)
+        env:
+          REFRESH_URL: ${{ vars.REFRESH_URL }}
+        run: |
+          # 中継役のURLが設定されているときだけ、画面に「取得し直す」ボタンが出る
+          if [ -n "$REFRESH_URL" ]; then printf '{"url":"%s"}' "$REFRESH_URL" > public/refresh-config.json; fi
+
       - name: 画面とデータだけを書き出す
         env:
           OWNER: ${{ github.repository_owner }}
@@ -61,6 +68,7 @@ jobs:
           mkdir site && cd site
           git init -q -b publish
           cp ../public/index.html ../public/bookmarklet.html ../public/data.json .
+          cp ../public/refresh-config.json . 2>/dev/null || true
           touch .nojekyll
           git config user.name  "courts-bot"
           git config user.email "courts-bot@users.noreply.github.com"
