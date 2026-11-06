@@ -97,3 +97,26 @@ test("予約画面のURLは、施設と建物のIDから作る(実際に教え�
     "https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=a0nJ30000006tEoIAI&buildingId=a0hJ30000005nP6IAI",
   );
 });
+
+// ---- テニス目的の建物: 体育館・競技場だけの建物も表示する(部屋は除く) ----
+import { nsaCourtFilter } from "../src/courts/narasuperapp";
+const rawWith = (facility: string, names: string[]) =>
+  ({ returnValue: { buildingRecord: { Id: "b", Name: facility, FRE_FacilitiesId__c: "f", FRE_FacilitiesId__r: { Name: facility } },
+    equResultList: names.map((n, i) => ({ Id: String(i), Name: n, MaxUseCount__c: 1 })), isInquiryOnly: true,
+    rsvItemResultList: [], rsvSlotResultList: [], isSuccess: true, messages: [] } }) as NaraSuperAppResponse;
+const crt = (court: string, facility = "施設") => ({ facility, court, slots: [] });
+
+test("設備名にテニスがある建物: テニスの設備だけ(同居する体育館・会議室は除く)", () => {
+  const f = nsaCourtFilter(rawWith("三宅町中央公園運動施設", ["ゲートボール場（西）", "テニスコート（西）", "体育館（西）"]));
+  assert.equal(f.gym, false);
+  assert.ok(f.pred(crt("テニスコート（西）", "三宅町中央公園運動施設")));
+  assert.ok(!f.pred(crt("体育館（西）", "三宅町中央公園運動施設")));
+});
+
+test("体育館・競技場だけの建物: 部屋(会議室・研修室・トレーニング室)を除いて、すべて表示する", () => {
+  const f = nsaCourtFilter(rawWith("宇陀市総合体育館", ["トレーニング室", "会議室", "格技室", "競技場"]));
+  assert.equal(f.gym, true);
+  assert.ok(f.pred(crt("競技場")) && f.pred(crt("格技室")));
+  assert.ok(!f.pred(crt("会議室")) && !f.pred(crt("トレーニング室")));
+  assert.ok(f.pred(crt("A面")) && f.pred(crt("アリーナ")) && f.pred(crt("体育館A")));
+});

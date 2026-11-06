@@ -8,7 +8,7 @@ import type { OpenSlot } from "./types";
 import {
   fetchNaraSuperAppRaw,
   fetchNaraSuperAppTop,
-  isNsaTennisCourt,
+  nsaCourtFilter,
   nsaReservationUrl,
   listNaraSuperAppDates,
   parseNaraSuperApp,
@@ -59,6 +59,19 @@ interface Config {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** 一時的な通信エラーで施設が丸ごと抜けないよう、最大3回(2秒・4秒あけて)やり直す */
+async function withRetry<T>(label: string, fn: () => Promise<T>, tries = 3): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i >= tries) throw e;
+      console.error(`${label}: ${(e as Error).message}(${i}回目。やり直します)`);
+      await sleep(2000 * i);
+    }
+  }
+}
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
 
 async function main() {
@@ -81,6 +94,9 @@ async function main() {
     else if (mergeStates(prev.t, t) === t && prev.t !== t) statusMap.set(k, { d, s: site, f: facility, t, ...(l ? { l } : {}) });
   };
   const rangeDates = Array.from({ length: cfg.days }, (_, i) => jst(new Date(today.getTime() + i * 86400e3)));
+  /** 「エリア|施設名」→ 補足(体育館・競技場など、設備名に「テニス」を含まない施設) */
+  const gymFacilities = new Set<string>(); // 設備名に「テニス」を含まない建物がある施設
+  const namedFacilities = new Set<string>(); // 設備名に「テニス」を含む建物がある施設
   /** 「エリア|施設名」→ その施設の予約サイトのURL(画面で、コート名・時間をタップしたときの行き先) */
   const facilityUrls: Record<string, string> = {};
 
@@ -89,18 +105,20 @@ async function main() {
     const { buildingRecord: b } = raw.returnValue;
     const url = nsaReservationUrl(b.FRE_FacilitiesId__c, b.Id);
     const facility = (b.FRE_FacilitiesId__r?.Name ?? b.Name).normalize("NFKC").trim();
+    const { pred, gym } = nsaCourtFilter(raw);
+    (gym ? gymFacilities : namedFacilities).add(`${area}|${facility}`);
     // アプリに枠が出ている最初の日〜最後の日(テニスコートの枠だけで数える)
-    const tennisDates = listNaraSuperAppDates(raw).filter((d) => parseNaraSuperApp(raw, d).some(isNsaTennisCourt));
+    const tennisDates = listNaraSuperAppDates(raw).filter((d) => parseNaraSuperApp(raw, d).some(pred));
     const [firstSlot, lastSlot] = [tennisDates[0], tennisDates[tennisDates.length - 1]];
     for (const date of rangeDates) {
-      const cs = parseNaraSuperApp(raw, date).filter(isNsaTennisCourt);
+      const cs = parseNaraSuperApp(raw, date).filter(pred);
       const hasSlots = cs.some((c) => c.slots.length > 0);
       const hasOpen = cs.some((c) => c.slots.some(isOpen));
       const t = nsaDayState({ hasOpen, hasSlots, inRange: !!firstSlot && date >= firstSlot && date <= lastSlot });
       setStatus(area, facility, date, t, t === "closed" ? "休館日など" : undefined);
     }
     for (const date of listNaraSuperAppDates(raw).filter((d) => d >= first && d <= last)) {
-      for (const c of parseNaraSuperApp(raw, date).filter(isNsaTennisCourt)) {
+      for (const c of parseNaraSuperApp(raw, date).filter(pred)) {
         for (const s of c.slots.filter(isOpen)) {
           slots.push({ date, site: area, facility: c.facility, court: c.court, start: s.start, end: s.end });
           facilityUrls[`${area}|${c.facility}`] = url;
@@ -108,22 +126,19 @@ async function main() {
       }
     }
   };
-  /** この建物にテニスコートがあるか(体育館・会議室だけの建物を除く) */
-  const hasTennisCourt = (raw: NaraSuperAppResponse) =>
-    raw.returnValue.equResultList.some((e) =>
-      isNsaTennisCourt({
-        facility: raw.returnValue.buildingRecord.FRE_FacilitiesId__r?.Name ?? raw.returnValue.buildingRecord.Name,
-        court: e.Name,
-        slots: [],
-      }),
-    );
+  /** この建物に、表示する設備が1つでもあるか(会議室だけの建物を除く) */
+  const hasTennisCourt = (raw: NaraSuperAppResponse) => {
+    const { pred } = nsaCourtFilter(raw);
+    const b = raw.returnValue.buildingRecord;
+    return raw.returnValue.equResultList.some((e) => pred({ facility: b.FRE_FacilitiesId__r?.Name ?? b.Name, court: e.Name, slots: [] }));
+  };
 
   for (const site of cfg.sites) {
     if (site.type === "nsa") {
       // 施設(建物)ごとに1回のリクエストで全日付分が返る
       for (const t of site.targets) {
         try {
-          addNsa(site.name, await fetchNaraSuperAppRaw(t.buildingId, t.facilityId));
+          addNsa(site.name, await withRetry(t.note ?? t.buildingId, () => fetchNaraSuperAppRaw(t.buildingId, t.facilityId)));
         } catch (e) {
           // 公開する data.json には、取得元がわかる情報(URL・ID・エラー詳細)を入れない。詳細はログにだけ出す
           console.error(`${site.name} ${t.note ?? t.buildingId}: ${(e as Error).message}`);
@@ -135,11 +150,11 @@ async function main() {
     }
     if (site.type === "nsa-auto") {
       try {
-        const targets = pickNaraSuperAppTargets(await fetchNaraSuperAppTop(), site.purpose ?? "テニス");
+        const targets = pickNaraSuperAppTargets(await withRetry("施設一覧", () => fetchNaraSuperAppTop()), site.purpose ?? "テニス");
         await sleep(1000);
         for (const t of targets) {
           try {
-            const raw = await fetchNaraSuperAppRaw(t.buildingId, t.facilityId);
+            const raw = await withRetry(t.facilityName, () => fetchNaraSuperAppRaw(t.buildingId, t.facilityId));
             if (hasTennisCourt(raw)) {
               discovered.add(t.municipality);
               addNsa(t.municipality, raw);
@@ -209,6 +224,10 @@ async function main() {
         .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
       slots,
       facilityUrls,
+      // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
+      facilityNotes: Object.fromEntries(
+        [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(この施設は、利用目的に「テニス」が含まれています)"]),
+      ),
       contacts,
       // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
       status: [...statusMap.values()],

@@ -202,3 +202,19 @@ export const isNsaTennisCourt = (c: CourtAvailability) => /テニス|庭球|オ�
 /** 奈良スーパーアプリの、施設(建物)ごとの予約画面のURL。ゲストでも開ける(予約にはログインが必要) */
 export const nsaReservationUrl = (facilityId: string, buildingId: string) =>
   `https://nsa.pref.nara.jp/fre/rsvApplication?retType=0&facilitiesId=${encodeURIComponent(facilityId)}&buildingId=${encodeURIComponent(buildingId)}`;
+
+/**
+ * 利用目的に「テニス」を含む建物の中で、表示する設備(コート)を決める。
+ * - 設備名に テニス/庭球/オムニ/クレー を含むものがあれば、それだけ(体育館や会議室が同居している建物)
+ * - なければ(体育館・競技場だけの建物)、会議室・研修室・トレーニング室などの「部屋」を除いたものを、すべて表示する。
+ *   画面は「テニスで検索して出る施設」は全部テニスの扱い、というユーザーの方針に合わせたもの。gym=true は、その場合
+ */
+const NOT_A_PLAYING_SPACE = /会議|研修|トレーニング|控室|更衣|和室|作法|調理|視聴覚|本部|事務|ロッカー|倉庫|談話|ホール|ロビー/;
+export const isNsaPlayableSpace = (c: CourtAvailability) => !NOT_A_PLAYING_SPACE.test(c.court);
+
+export function nsaCourtFilter(raw: NaraSuperAppResponse): { pred: (c: CourtAvailability) => boolean; gym: boolean } {
+  const b = raw.returnValue.buildingRecord;
+  const facility = b.FRE_FacilitiesId__r?.Name ?? b.Name;
+  const named = raw.returnValue.equResultList.some((e) => isNsaTennisCourt({ facility, court: e.Name, slots: [] }));
+  return named ? { pred: isNsaTennisCourt, gym: false } : { pred: isNsaPlayableSpace, gym: true };
+}

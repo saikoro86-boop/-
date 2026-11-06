@@ -1,6 +1,6 @@
 /** 使い方: npm run courts -- 2026-11-14 [市名の一部] */
 import { readFileSync } from "node:fs";
-import { fetchNaraSuperAppRaw, fetchNaraSuperAppTop, isNsaTennisCourt, parseNaraSuperApp, pickNaraSuperAppTargets } from "./narasuperapp";
+import { fetchNaraSuperAppRaw, fetchNaraSuperAppTop, nsaCourtFilter, parseNaraSuperApp, pickNaraSuperAppTargets } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type CourtAvailability } from "./kashikan";
 
 async function main() {
@@ -19,7 +19,8 @@ async function main() {
       const targets = pickNaraSuperAppTargets(await fetchNaraSuperAppTop(), site.purpose).filter((t) => !filter || t.municipality.includes(filter));
       courts = [];
       for (const t of targets) {
-        courts.push(...parseNaraSuperApp(await fetchNaraSuperAppRaw(t.buildingId, t.facilityId), date).filter(isNsaTennisCourt));
+        const raw = await fetchNaraSuperAppRaw(t.buildingId, t.facilityId);
+        courts.push(...parseNaraSuperApp(raw, date).filter(nsaCourtFilter(raw).pred));
         await new Promise((r) => setTimeout(r, 1000));
       }
     } else courts = await fetchDay(site, date, cfg.purpose);

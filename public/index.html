@@ -186,6 +186,8 @@ function render() {
     const h2 = card.querySelector("h2");
     if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く"));
     else h2.textContent = f.facility;
+    const fNote = (data.facilityNotes || {})[f.site + "|" + f.facility];
+    if (fNote) { const nn = document.createElement("div"); nn.className = "city"; nn.textContent = fNote; h2.insertAdjacentElement("afterend", nn); }
     for (const [court, ss] of f.courts) {
       const row = document.createElement("div");
       row.className = "court";
