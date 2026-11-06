@@ -4,15 +4,16 @@ import { kashikanFacilityState, mergeStates, nsaDayState } from "../src/courts/s
 
 const court = (...marks: string[]) => ({ facility: "F", court: "A", slots: marks.map((mark, i) => ({ start: 9 + i, end: 10 + i, mark })) });
 
-test("貸館方式: ○があれば open、●は phone、×だけなら full", () => {
+test("貸館方式: ○があれば open、●(ネット予約は受付外の空き)も open、×だけなら full", () => {
   assert.equal(kashikanFacilityState([court("×", "○")], ["●"])?.state, "open");
-  assert.equal(kashikanFacilityState([court("×", "●")], ["●"])?.state, "phone");
+  assert.equal(kashikanFacilityState([court("×", "●")], ["●"])?.state, "open");
+  assert.equal(kashikanFacilityState([court("×", "●")], [])?.state, "full"); // ●を空きとして扱う設定がなければ
   assert.equal(kashikanFacilityState([court("×", "×", "")], ["●"])?.state, "full");
 });
 
-test("貸館方式: 休館・「-」は closed(ラベル付き)、空欄だけなら判定なし", () => {
+test("貸館方式: 休館は closed、「-」は受付期間外(ラベル付き)、空欄だけなら判定なし", () => {
   assert.deepEqual(kashikanFacilityState([court("休館", "休館")], ["●"]), { state: "closed", label: "休館" });
-  assert.deepEqual(kashikanFacilityState([court("-")], []), { state: "closed", label: "受付対象外" });
+  assert.deepEqual(kashikanFacilityState([court("-")], []), { state: "closed", label: "受付期間外" });
   assert.equal(kashikanFacilityState([court("", "")], ["●"]), undefined);
 });
 

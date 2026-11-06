@@ -16,13 +16,13 @@ import {
   type NaraSuperAppResponse,
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
-import { facilitiesWithMarks, findContact, type Contact } from "./phone";
+import { findContact, type Contact } from "./phone";
 import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
 
 interface KashikanConfig extends KashikanSite {
   type: "kashikan";
-  /** ◯でも×でもない、「ネットでは空きが分からない」ことを示す記号(例: 生駒市の直近の「●」) */
-  phoneMarks?: string[];
+  /** 「空きだが、ネット予約は受付外(電話・窓口で予約)」を示す記号。予約サイトの凡例で「●」 */
+  offlineMarks?: string[];
   /** 施設ごとの問い合わせ先 */
   contacts?: Contact[];
   /** contacts に合う施設がないときの窓口 */
@@ -58,24 +58,14 @@ interface Config {
   days: number;
 }
 
-/** 「ネットでは空きが分からない日」(電話で問い合わせてもらう) */
-export interface PhoneNotice {
-  date: string;
-  site: string;
-  facility: string;
-  tel?: string;
-  hours?: string;
-  /** 施設の番号がないときの窓口名 */
-  contactLabel?: string;
-}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
 
 async function main() {
   const cfg: Config = JSON.parse(readFileSync("config/courts.json", "utf-8"));
   const slots: OpenSlot[] = [];
-  const phone: PhoneNotice[] = [];
+  /** 「エリア|施設名」→ ネット予約の受付外の枠があるときの問い合わせ先 */
+  const contacts: Record<string, { tel?: string; hours?: string; label?: string }> = {};
   const errors: string[] = [];
   const today = new Date();
   const first = jst(today);
@@ -172,29 +162,26 @@ async function main() {
       try {
         const courts = (await fetchDay(site, date, cfg.purpose)).filter(isTennisCourt);
         for (const c of courts) {
-          for (const s of c.slots.filter(isOpen)) {
-            slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end });
+          for (const s of c.slots) {
+            const online = isOpen(s);
+            const offline = !online && (site.offlineMarks ?? []).includes(s.mark.trim());
+            if (!online && !offline) continue;
+            slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end, ...(offline ? { offline: true as const } : {}) });
             facilityUrls[`${site.name}|${c.facility}`] = site.url; // 施設ごとの直接URLは無いので、予約サイトのトップへ
+            if (offline) {
+              const ct = findContact(site.contacts ?? [], c.facility);
+              contacts[`${site.name}|${c.facility}`] = ct
+                ? { tel: ct.tel, hours: ct.hours }
+                : { tel: site.fallbackContact?.tel, label: site.fallbackContact?.label };
+            }
           }
         }
-        // 施設ごとの状態(空きなし/休館など)。●の電話案内は下の phone で扱う
+        // 施設ごとの状態(空きなし/休館など)。空き枠がある日は、一覧に出さない
         const byFac = new Map<string, typeof courts>();
         for (const c of courts) byFac.set(c.facility, [...(byFac.get(c.facility) ?? []), c]);
         for (const [facility, cs] of byFac) {
-          const st = kashikanFacilityState(cs, site.phoneMarks ?? []);
+          const st = kashikanFacilityState(cs, site.offlineMarks ?? []);
           if (st && (st.state === "full" || st.state === "closed")) setStatus(site.name, facility, date, st.state, st.label);
-        }
-        // 「●」などで空きが出ていない日は、空きなしとは区別して電話案内の対象にする
-        for (const facility of facilitiesWithMarks(courts, site.phoneMarks ?? [])) {
-          const c = findContact(site.contacts ?? [], facility);
-          phone.push({
-            date,
-            site: site.name,
-            facility,
-            tel: c?.tel ?? site.fallbackContact?.tel,
-            hours: c?.hours,
-            contactLabel: c ? undefined : site.fallbackContact?.label,
-          });
         }
       } catch (e) {
         console.error(`${site.name} ${date}: ${(e as Error).message}`);
@@ -220,13 +207,13 @@ async function main() {
         .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
       slots,
       facilityUrls,
-      phone,
+      contacts,
       // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
       status: [...statusMap.values()],
       errors,
     }),
   );
-  console.log(`空き ${slots.length} 件 / 電話案内 ${phone.length} 件 / エリア ${sites.length} / エラー ${errors.length} 件 -> public/data.json`);
+  console.log(`空き ${slots.length} 件(うちネット予約外 ${slots.filter((x) => x.offline).length}) / エリア ${sites.length} / エラー ${errors.length} 件 -> public/data.json`);
   if (errors.length) console.log(`失敗: ${errors.length} 件(詳細は上のログ)`);
 }
 

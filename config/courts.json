@@ -5,19 +5,16 @@
       "name": "奈良市",
       "type": "kashikan",
       "url": "https://k6.p-kashikan.jp/nara-city/index.php",
-      "phoneMarks": [
+      "note": "「●」=空き(ネット予約は受付外)。電話番号は未登録",
+      "offlineMarks": [
         "●"
-      ],
-      "note": "「●」は凡例が不明。ネットでは空きが分からない扱い(電話番号は未登録)"
+      ]
     },
     {
       "id": "ikoma-city",
       "name": "生駒市",
       "type": "kashikan",
       "url": "https://k5.p-kashikan.jp/ikoma-city/index.php",
-      "phoneMarks": [
-        "●"
-      ],
       "contacts": [
         {
           "match": "山麓",
@@ -45,7 +42,10 @@
         "label": "生駒市体育協会 事務局",
         "tel": "0743-73-8822"
       },
-      "note": "直近は予約サイトが「●」表示(空きが出ない)。電話での問い合わせを案内する。番号は検索で見つけたもので、公式ページで要確認"
+      "note": "「●」=空き(ネット予約は受付外)。電話・窓口での予約。番号は検索で見つけたもので、公式ページで要確認",
+      "offlineMarks": [
+        "●"
+      ]
     },
     {
       "id": "kizugawa-city",

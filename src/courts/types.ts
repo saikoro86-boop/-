@@ -6,4 +6,6 @@ export interface OpenSlot {
   court: string;
   start: number;
   end: number;
+  /** 空きだが、ネット予約の受付外(電話・窓口での予約)。予約サイトの「●」 */
+  offline?: true;
 }

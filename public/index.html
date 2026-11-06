@@ -36,17 +36,14 @@
   .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
   .card.link .city + h2 + .city { margin:2px 0 0; }
   a.t { text-decoration:none; }
+  .t.off { background:transparent; border:1px dashed var(--accent); }
+  .offnote { margin-top:10px; padding:8px 10px; border-radius:10px; background:var(--chip); color:var(--text); font-size:12px; line-height:1.6; }
   a.t:active, a.t:hover { filter:brightness(.95); }
   .card h2 a, .court a.cn { color:inherit; text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:3px; }
   .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
   .note { color:var(--sub); font-size:12px; margin-top:8px; }
-  .card.phone { border-color:#e0b050; }
-  .card.phone h2 { color:#8a5a00; }
-  @media (prefers-color-scheme: dark) { .card.phone { border-color:#8a6a20; } .card.phone h2 { color:#f0c674; } }
-  .phone-row { padding:8px 0; border-top:1px solid var(--line); }
-  .phone-row:first-of-type { border-top:0; }
   .card.none summary, .card.unpub summary { cursor:pointer; font-weight:700; }
   .card.unpub { border-style:dashed; }
   .reason-title { margin-bottom:6px; }
@@ -125,6 +122,7 @@ const urlFor = (site, facility) => {
   const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl;
   return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
 };
+const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
 function anchor(url, text, cls, title) {
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -146,7 +144,7 @@ function chips(el, items, key) {
 
 function render() {
   // 日付ストリップ(空きがある日にマーク)
-  const dates = [...new Set([...data.slots.map(s => s.date), ...(data.phone || []).map(p => p.date), ...(data.status || []).map(x => x.d)])].sort();
+  const dates = [...new Set([...data.slots.map(s => s.date), ...(data.status || []).map(x => x.d)])].sort();
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
   for (const d of dates) {
@@ -177,7 +175,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、その施設の予約サイトが開きます。日時は、予約サイト側で選び直してください。";
+    hint.textContent = "コート名や時間をタップすると、その施設の予約サイトが開きます。日時は、予約サイト側で選び直してください。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "");
     list.appendChild(hint);
   }
   for (const f of byFac.values()) {
@@ -195,69 +193,47 @@ function render() {
       if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く"));
       else name.textContent = court;
       const times = document.createElement("span"); times.className = "times";
-      // 連続する枠(9-10, 10-11 …)は 1 つにまとめる
+      // 連続する枠(9-10, 10-11 …)は 1 つにまとめる。ネット予約できる枠と、受付外(●・電話)の枠は分けて結合する
       const merged = [];
       for (const s of ss.sort((a, b) => a.start - b.start)) {
-        const last = merged[merged.length - 1];
+        const last = merged.filter(m => !!m.offline === !!s.offline).pop();
         if (last && s.start <= last.end) last.end = Math.max(last.end, s.end);
-        else merged.push({ start: s.start, end: s.end });
+        else merged.push({ start: s.start, end: s.end, offline: !!s.offline });
       }
+      merged.sort((a, b) => a.start - b.start || a.end - b.end);
       for (const s of merged) {
         const label = `${hm(s.start)}–${hm(s.end)}`;
-        if (fUrl) times.appendChild(anchor(fUrl, label, "t", `${court} ${label} の予約サイトを開く`));
-        else { const t = document.createElement("span"); t.className = "t"; t.textContent = label; times.appendChild(t); }
+        const cls = "t" + (s.offline ? " off" : "");
+        const text = s.offline ? label + " ☎" : label;
+        const title = s.offline ? `${court} ${label}(ネット予約は受付外・電話や窓口で予約)` : `${court} ${label} の予約サイトを開く`;
+        if (fUrl) times.appendChild(anchor(fUrl, text, cls, title));
+        else { const t = document.createElement("span"); t.className = cls; t.textContent = text; times.appendChild(t); }
       }
       row.append(name, times); card.appendChild(row);
     }
-    list.appendChild(card);
-  }
-  // ネットでは空きが分からない日(予約サイトに空きが出ていない)は、電話での問い合わせを案内する
-  const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
-  const phoneBySite = new Map();
-  for (const n of (data.phone || [])) {
-    if (n.date !== st.date || (st.city !== "all" && n.site !== st.city)) continue;
-    if (!phoneBySite.has(n.site)) phoneBySite.set(n.site, []);
-    phoneBySite.get(n.site).push(n);
-  }
-  for (const [site, notices] of phoneBySite) {
-    const card = document.createElement("section");
-    card.className = "card phone";
-    const head = document.createElement("div"); head.className = "city"; head.textContent = site + "(ネットでは空きが分かりません)";
-    const h2 = document.createElement("h2"); h2.textContent = "お電話でお問い合わせください";
-    const lead = document.createElement("div"); lead.className = "city";
-    lead.textContent = "この日は予約サイトに空きが表示されていません。空いているかどうかは、各施設に直接お問い合わせください。";
-    card.append(head, h2, lead);
-    for (const n of notices) {
-      const row = document.createElement("div"); row.className = "phone-row";
-      const name = document.createElement("div"); name.textContent = n.facility; row.appendChild(name);
-      if (n.tel) {
-        if (n.contactLabel) {
-          const w = document.createElement("div"); w.className = "note";
-          w.textContent = "この施設の電話番号は確認できていません。まず " + n.contactLabel + " にお問い合わせください。";
-          row.appendChild(w);
-        }
+    if ([...f.courts.values()].some(ss => ss.some(x => x.offline))) {
+      const box = document.createElement("div"); box.className = "offnote";
+      const msg = document.createElement("div");
+      msg.textContent = "点線(☎)の枠は空きですが、ネット予約の受付外です。電話や窓口でお申し込みください。";
+      box.appendChild(msg);
+      const ct = (data.contacts || {})[f.site + "|" + f.facility];
+      if (ct && ct.tel) {
+        if (ct.label) { const w = document.createElement("div"); w.textContent = "この施設の電話番号は確認できていません。まず " + ct.label + " にお問い合わせください。"; box.appendChild(w); }
         const a = document.createElement("a");
-        a.href = telHref(n.tel); a.className = "btn tel";
-        a.textContent = "📞 " + (n.contactLabel ? n.contactLabel + " " : "") + n.tel;
-        row.appendChild(a);
-        if (n.hours) { const h = document.createElement("span"); h.className = "note"; h.style.marginLeft = "4px"; h.textContent = n.hours; row.appendChild(h); }
+        a.href = telHref(ct.tel); a.className = "btn tel";
+        a.textContent = "☎ " + (ct.label ? ct.label + " " : "") + ct.tel;
+        box.appendChild(a);
+        if (ct.hours) { const h = document.createElement("span"); h.style.marginLeft = "4px"; h.textContent = ct.hours; box.appendChild(h); }
       } else {
-        const w = document.createElement("div"); w.className = "note";
-        w.textContent = "電話番号を確認できていません。市の公式ページで確認してください。";
-        row.appendChild(w);
+        const w = document.createElement("div"); w.textContent = "電話番号は未登録です。市の公式ページで確認してください。"; box.appendChild(w);
       }
-      card.appendChild(row);
+      card.appendChild(box);
     }
-    const foot = document.createElement("div"); foot.className = "note";
-    foot.textContent = "電話番号は変更されていることがあります。つながらないときは、市の公式ページで確認してください。";
-    card.appendChild(foot);
     list.appendChild(card);
   }
-
   // 空きがない施設は、理由ごとに分けて表示する
   //  full=すべて予約済み / closed=休館・利用不可 / unpub=予約アプリにまだ枠が出ていない(分からない)
   const key = (x) => x.s + "|" + x.f;
-  const phoneKeys = new Set([...phoneBySite].flatMap(([site, ns]) => ns.map(n => site + "|" + n.facility)));
   const openInZone = new Set(hits.map(s => s.site + "|" + s.facility));
   const openToday = new Set(data.slots.filter(s => s.date === st.date).map(s => s.site + "|" + s.facility));
   const cityOk = (site) => st.city === "all" || site === st.city;
@@ -265,7 +241,7 @@ function render() {
   for (const x of (data.status || [])) {
     if (x.d !== st.date || !cityOk(x.s)) continue;
     const k = key(x);
-    if (openInZone.has(k) || phoneKeys.has(k)) continue;                  // カード・電話案内で表示済み
+    if (openInZone.has(k)) continue;                                      // カードで表示済み
     reasons[openToday.has(k) ? "full" : x.t].set(k, { site: x.s, facility: x.f, label: x.l });
   }
   // 他の時間帯には空きがあるが、選んだ時間帯にはない施設
