@@ -140,3 +140,18 @@ test("大和郡山市総合公園・三宅町中央公園・明日香の料金",
   one("三宅町", "三宅町中央公園運動施設", /300円.*500円/);
   one("明日香村", "ワタキューテニスパーク明日香(橿原公苑明日香庭球場)", /750円/);
 });
+
+test("すべての料金に、別の資料での裏付け(crossCheck)があり、出典はhttps", () => {
+  for (const f of cfg.fees as any[]) {
+    assert.ok(f.crossCheck, `${f.site} ${f.match}`);
+    assert.ok(["match", "conflict"].includes(f.crossCheck.status));
+    assert.ok(f.crossCheck.sources.length >= 1);
+    for (const s of f.crossCheck.sources) assert.match(s.url, /^https:\/\//);
+  }
+});
+
+test("南部は多目的コートの料金も出す / 新町公園の照明は1回1,100円", () => {
+  const n = feeFor("奈良市", "奈良市南部生涯スポーツセンター")[0];
+  assert.match(n.summary, /多目的コート 午前750円/);
+  assert.match(feeFor("葛城市", "新町公園")[0].summary, /1,100円/);
+});

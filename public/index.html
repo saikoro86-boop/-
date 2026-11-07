@@ -53,6 +53,12 @@
   .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
+  .fee-cc.ok { color:var(--accent); }
+  .fee-cc.warn { color:#b45309; }
+  .btn.route { margin:0 0 0 8px; padding:3px 10px; font-size:12px; vertical-align:middle; }
+  .card h2 a.route::after { content:none; }
+  .card h2 a.route { color:#fff; text-decoration:none; }
+  .route-mini { margin-left:8px; font-size:11px; color:var(--accent); white-space:nowrap; }
   .note { color:var(--sub); font-size:12px; margin-top:8px; }
   .card.none summary, .card.unpub summary { cursor:pointer; font-weight:700; }
   .card.unpub { border-style:dashed; }
@@ -156,6 +162,25 @@ function submitSearch(post, date) {
   for (const [k, v] of Object.entries(fields)) { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; form.appendChild(i); }
   document.body.appendChild(form); form.submit(); form.remove();
 }
+// ---- 道案内: Google マップで、現在地からのルートを開く ----------------------
+// origin を付けないと、Google マップ(スマホではアプリ)が現在地を出発地にする
+const PREF = (site) => site === "木津川市" ? "京都府" : "奈良県";
+function mapDest(site, facility) {
+  const p = (data.places || []).find(r => r.site === site && facility.includes(r.match));
+  if (p) return p.dest;
+  // 名前で検索させる。「奈良市柏木コート」のように市名が入っていても、そのまま付ける(検索の精度が上がる)
+  return `${facility.replace(/[（(].*?[)）]/g, " ").trim()} ${PREF(site)}${site}`;
+}
+const mapUrl = (site, facility) => "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(mapDest(site, facility));
+function routeLink(site, facility, cls = "btn route") {
+  const a = document.createElement("a");
+  a.href = mapUrl(site, facility); a.target = "_blank"; a.rel = "noopener noreferrer";
+  a.className = cls; a.textContent = "🧭 ルート";
+  a.title = facility + "まで、現在地からのルートを Google マップで開く";
+  a.setAttribute("aria-label", a.title);
+  return a;
+}
+
 // ---- 料金(公式の原本で確認できたものだけ。ない施設は、公式ページへのリンク) --------
 const feeFor = (site, facility) => (data.fees || []).find(r => r.site === site && facility.includes(r.match));
 const feeLinkFor = (site, facility) => (data.feeLinks || []).find(r => r.site === site && facility.includes(r.match));
@@ -163,7 +188,7 @@ function feeBlock(site, facility) {
   const fee = feeFor(site, facility);
   if (fee) {
     const det = document.createElement("details"); det.className = "fee";
-    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary; det.appendChild(sum);
+    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary + (fee.crossCheck ? (fee.crossCheck.status === "match" ? " ✓" : " ⚠") : ""); det.appendChild(sum);
     const lines = document.createElement("div"); lines.className = "fee-lines";
     for (const t of fee.lines) { const d = document.createElement("div"); d.textContent = t; lines.appendChild(d); }
     det.appendChild(lines);
@@ -171,6 +196,14 @@ function feeBlock(site, facility) {
     const src = document.createElement("div"); src.className = "fee-src";
     src.append("出典: ", anchor(fee.source.url, fee.source.label), `(確認日 ${m}/${d}。料金は改定されることがあります。最新は、公式の案内で確認してください)`);
     det.appendChild(src);
+    // 裏付け: 別の資料(条例・別の公式ページ・テニスコート情報サイト)でも同じ金額か
+    const cc = fee.crossCheck;
+    if (cc && cc.sources && cc.sources.length) {
+      const box = document.createElement("div"); box.className = "fee-src fee-cc " + (cc.status === "match" ? "ok" : "warn");
+      box.append(cc.status === "match" ? "✓ 別の資料でも同じ金額でした: " : "⚠ 別の資料と金額が違います(公式の金額を表示しています): ");
+      cc.sources.forEach((x, i) => { if (i) box.append(" / "); box.append(anchor(x.url, x.label), x.note ? "(" + x.note + ")" : ""); });
+      det.appendChild(box);
+    }
     return det;
   }
   const fl = feeLinkFor(site, facility);
@@ -285,6 +318,7 @@ function render() {
     const h2 = card.querySelector("h2");
     if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
+    h2.appendChild(routeLink(f.site, f.facility));
     const fNote = (data.facilityNotes || {})[f.site + "|" + f.facility];
     if (fNote) { const nn = document.createElement("div"); nn.className = "city"; nn.textContent = fNote; h2.insertAdjacentElement("afterend", nn); }
     for (const [court, ss] of f.courts) {
@@ -376,7 +410,7 @@ function render() {
       const url = urlFor(it.site, it.facility);
       const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
       const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
-      row.append(name, area);
+      row.append(name, area, routeLink(it.site, it.facility, "route-mini"));
       det.appendChild(row);
     }
     card.appendChild(det);
@@ -400,6 +434,7 @@ function render() {
         const row = document.createElement("div");
         const fee = feeFor(l.name, f.name);
         row.textContent = f.name + (f.hint ? "(" + f.hint + ")" : "") + (fee ? " … " + fee.summary : "");
+        row.appendChild(routeLink(l.name, f.name, "route-mini"));
         box.appendChild(row);
       }
       card.appendChild(box);

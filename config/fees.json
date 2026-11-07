@@ -14,7 +14,23 @@
         "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ",
         "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "木津川市「社会体育施設及び学校施設 利用案内」(2021年2月改訂)の利用料金一覧表",
+            "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf",
+            "note": "同じ金額(1面1時間・夜間照明)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kabuto-tani-park-tennis-court/",
+            "note": "コート料金は同じ。照明を1,000円としているが、市の料金表(500円)と食い違い、市民スポーツセンターのテニス照明の額と取り違えていると思われます"
+          }
+        ]
+      }
     },
     {
       "site": "木津川市",
@@ -29,7 +45,23 @@
         "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ",
         "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "木津川市「社会体育施設及び学校施設 利用案内」(2021年2月改訂)の利用料金一覧表",
+            "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf",
+            "note": "同じ金額(1面1時間・夜間照明)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kizugawadai-park-tennis-court/",
+            "note": "コート料金は同じ。照明を1,000円としているが、市の料金表(500円)と食い違い、市民スポーツセンターのテニス照明の額と取り違えていると思われます"
+          }
+        ]
+      }
     },
     {
       "site": "木津川市",
@@ -44,7 +76,23 @@
         "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ",
         "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "木津川市「社会体育施設及び学校施設 利用案内」(2021年2月改訂)の利用料金一覧表",
+            "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf",
+            "note": "同じ金額(1面1時間・夜間照明)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/umemidai-park-tennis-court/",
+            "note": "コート料金は同じ。照明を1,000円としているが、市の料金表(500円)と食い違い、市民スポーツセンターのテニス照明の額と取り違えていると思われます"
+          }
+        ]
+      }
     },
     {
       "site": "木津川市",
@@ -59,7 +107,23 @@
         "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ",
         "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "木津川市「社会体育施設及び学校施設 利用案内」(2021年2月改訂)の利用料金一覧表",
+            "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf",
+            "note": "同じ金額(1面1時間・夜間照明)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/joushi-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "木津川市",
@@ -74,7 +138,23 @@
         "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ",
         "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "木津川市「社会体育施設及び学校施設 利用案内」(2021年2月改訂)の利用料金一覧表",
+            "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf",
+            "note": "同じ金額(1面1時間・夜間照明)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/tsukaana-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -90,7 +170,28 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "生駒山麓公園 公式サイト「テニスコート」",
+            "url": "https://ikoma36.jp/tennis/",
+            "note": "同じ金額(市内一般 1コート2時間1,260円)。夜間照明は30分200円"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/ikoma-sanroku-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -106,7 +207,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/mukaiyama-park-sports-shisetsu/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -122,7 +239,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-sogo-s-c/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -138,7 +271,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/imo-yama-park-sports-shisetsu/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -154,7 +303,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-taki-tera-s-c/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -170,7 +335,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/hos-ikoma-kita-sports-center/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "生駒市",
@@ -187,7 +368,23 @@
         "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF。井出山は「生駒市浄化センターテニスコート」)",
         "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "生駒市の例規集「生駒市体育施設条例」別表第3",
+            "url": "https://www.city.ikoma.lg.jp/html/reiki_int/reiki_honbun/k410RG00000236.html",
+            "note": "同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/tac-ide-yama-sports-park/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -206,7 +403,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16790.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/aoyama-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -225,7 +433,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/20032.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/sahoyama-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -245,7 +464,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/32783.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/tsuge-sports-center-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -264,7 +494,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16777.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kurodani-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -283,7 +524,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16783.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kashiwagi-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -302,7 +554,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16785.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/heijo-daiichi-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -321,7 +584,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/34000.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/heijo-daini-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -341,7 +615,18 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16791.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/rohto-nara-konoike-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -362,14 +647,26 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16779.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/seibu-sports-center-court/",
+            "note": "同じ金額(ただし出典は同じ奈良市の料金表なので、独立した確認ではありません)"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
       "match": "南部",
-      "summary": "テニスコート(クレー) 1面 午前900円 / 午後1,200円 / 全日2,400円(平日)",
+      "summary": "テニスコート(クレー) 1面 午前900円 / 午後1,200円 / 全日2,400円、多目的コート 午前750円 / 午後1,000円 / 全日2,000円(平日)",
       "lines": [
         "テニスコート(クレー舗装・人工芝以外の料金): 午前 900円 / 午後 1,200円 / 全日 2,400円",
+        "多目的コート(1面): 午前 750円、午後 1,000円、全日 2,000円(同じ料金表の「ゲートボール場・多目的コート」の行)",
         "多目的コート(クレー舗装): 午前 750円 / 午後 1,000円 / 全日 2,000円",
         "1面あたりの料金です。時間区分: 午前 9:00〜12:00 / 午後 13:00〜17:00 / 全日 9:00〜17:00",
         "上の金額は、平日の料金です。土曜・日曜・祝日は、2割増しです",
@@ -382,7 +679,23 @@
         "label": "奈良市「テニスコート他使用料」(この施設のページに掲載。PDFの作成日は2009年3月18日)",
         "url": "https://www.city.nara.lg.jp/uploaded/attachment/16787.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/nanbu-sports-center-court/",
+            "note": "テニスコート(クレー)は同じ金額。多目的コートは別料金(750円〜)で、こちらも市の料金表と一致"
+          },
+          {
+            "label": "テニスナビ(多目的コート)",
+            "url": "https://tennisnavi.jp/place/nara-nanbu-shougai-sports-center-tamokuteki-kooto/",
+            "note": "多目的コート 午前750円/午後1,000円/全日2,000円"
+          }
+        ]
+      }
     },
     {
       "site": "斑鳩町",
@@ -398,7 +711,18 @@
         "label": "斑鳩町「すこやか斑鳩・スポーツセンター(中央体育館)」の公式ページ(使用料)",
         "url": "https://www.town.ikaruga.nara.jp/0000000199.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/sukoyakaikaruga-sports-center-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "斑鳩町",
@@ -412,7 +736,18 @@
         "label": "斑鳩町「神南テニスコート」の公式ページ",
         "url": "https://www.town.ikaruga.nara.jp/0000000166.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/jinnan-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "斑鳩町",
@@ -428,7 +763,18 @@
         "label": "斑鳩町「奈良県斑鳩健民運動場」の公式ページ(使用料)",
         "url": "https://www.town.ikaruga.nara.jp/0000000178.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/ikaruga-kenmin-sports-ground-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "香芝市",
@@ -444,7 +790,18 @@
         "label": "香芝市体育施設(指定管理者 ミズノ)の公式サイト「施設利用料金」",
         "url": "https://shisetsu.mizuno.jp/m-7265/guide"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/takatsuka-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "香芝市",
@@ -460,7 +817,18 @@
         "label": "香芝市体育施設(指定管理者 ミズノ)の公式サイト「施設利用料金」",
         "url": "https://shisetsu.mizuno.jp/m-7265/guide"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kenmin-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "広陵町",
@@ -476,7 +844,18 @@
         "label": "奈良県第二浄化センタースポーツ広場の公式サイト「テニスコート 料金について」",
         "url": "https://www.2joka-sport.jp/tennis/"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/daini-jouka-center-sports-hiroba-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "大和郡山市",
@@ -491,7 +870,18 @@
         "label": "スイムピア奈良(まほろば健康パーク)公式サイト「料金案内」テニスコート一般料金",
         "url": "https://swimpia.com/price.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/mahoroba-kenkou-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "宇陀市",
@@ -506,7 +896,18 @@
         "label": "宇陀市の公式ページ「榛原グリーンテニスコート」使用料金表",
         "url": "https://www.city.uda.lg.jp/soshiki/43/3202.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "conflict",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/haibara-green-tennis-court/",
+            "note": "1時間500円(市外1,000円)と掲載。市の公式ページ(2026年6月更新)は520円(市外1,040円)なので、改定前の金額と思われます。市の公式ページの金額を表示しています"
+          }
+        ]
+      }
     },
     {
       "site": "橿原市",
@@ -522,7 +923,18 @@
         "label": "橿原運動公園(指定管理者)公式サイトの「料金表」PDF",
         "url": "https://kouen-kashi-sports.net/"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kashihara-sports-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "奈良市",
@@ -538,7 +950,18 @@
         "label": "大渕池公園(指定管理者 大阪府公園協会)公式サイト「有料施設の予約・料金」",
         "url": "https://oobuchiike.osaka-park.or.jp/ryokin/"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/oobuchi-ike-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "天理市",
@@ -554,7 +977,18 @@
         "label": "天理市の公式ページ「庭球場」の「庭球場利用料」PDF",
         "url": "https://www.city.tenri.nara.jp/kakuka/kurasibunkabu/sportsinkou/supo-tusinnkougakari/taiku_shisetsu/1401270618378.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/tenri-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "天理市",
@@ -568,7 +1002,18 @@
         "label": "天理市の公式ページ「福住運動場」",
         "url": "https://www.city.tenri.nara.jp/shisetsu/sportsshisetsu/fukuzumiundoujou/1401354902930.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/tenri-fukusumi-sports-ground-fukusumi-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "葛城市",
@@ -583,23 +1028,56 @@
         "label": "葛城市の公式「各社会体育施設の使用料一覧表(令和5年7月1日から)」PDF",
         "url": "https://www.city.katsuragi.nara.jp/material/files/group/36/shiyouryouichiranhyou.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "葛城市「屋敷山公園内 体育施設情報」",
+            "url": "https://www.city.katsuragi.nara.jp/soshiki/chuokominkan/3/1116.html",
+            "note": "同じ金額(午前・午後 各800円、市外2倍)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/yashiki-yama-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "葛城市",
       "match": "新町公園",
-      "summary": "午前・午後・夜間 各800円(市外1,600円)、夜間は照明料が別",
+      "summary": "午前・午後・夜間 各800円(市外1,600円)、夜間照明は1回1,100円",
       "lines": [
         "新町公園テニスコート: 午前 9〜13時、午後 13〜17時、夜間 17〜21時 各800円(市内)",
         "市外は1,600円(2倍)",
-        "夜間は、市内・市外にかかわらず、夜間照明使用料が別に必要",
-        "入場料を取る場合は5倍"
+        "夜間照明: 利用1回につき 1,100円(使えるのは3月1日〜11月30日)",
+        "入場料を取る場合は5倍",
+        "前半・後半に分けて使う場合は、半額"
       ],
       "source": {
         "label": "葛城市の公式「各社会体育施設の使用料一覧表(令和5年7月1日から)」PDF",
         "url": "https://www.city.katsuragi.nara.jp/material/files/group/36/shiyouryouichiranhyou.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "葛城市「新町運動公園 施設情報」",
+            "url": "https://www.city.katsuragi.nara.jp/soshiki/taiikushinkoka/3/3278.html",
+            "note": "同じ金額(各800円)。夜間照明は利用1回1,100円(3〜11月)"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/shinmachi-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "葛城市",
@@ -615,7 +1093,23 @@
         "label": "葛城市の公式「各社会体育施設の使用料一覧表(令和5年7月1日から)」PDF",
         "url": "https://www.city.katsuragi.nara.jp/material/files/group/36/shiyouryouichiranhyou.pdf"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "葛城市「當麻スポーツセンター 施設情報」",
+            "url": "https://www.city.katsuragi.nara.jp/soshiki/taiikushinkoka/3/2272.html",
+            "note": "4時間800円で、前半・後半に分けると半額(2時間400円)。17〜19時(7・8月)400円。同じ金額"
+          },
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/taima-sports-center-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "田原本町",
@@ -630,7 +1124,18 @@
         "label": "田原本町の公式ページ「中央体育館庭球場」",
         "url": "https://www.town.tawaramoto.nara.jp/gyosei/shisetsu/sport/3501.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "田原本町 住民協議会資料「各施設の利用料金」(2023年3月)",
+            "url": "https://www.town.tawaramoto.nara.jp/material/files/group/11/0318siryo_tuika.pdf",
+            "note": "同じ金額(一面1時間500円、照明は1時間600円を加算)"
+          }
+        ]
+      }
     },
     {
       "site": "大和郡山市",
@@ -645,7 +1150,18 @@
         "label": "大和郡山市の例規集「大和郡山市総合公園施設条例」別表第3 庭球場利用料金表",
         "url": "https://www.city.yamatokoriyama.lg.jp/section/reiki_int/reiki_honbun/k404RG00000247.html"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/yamatokoriyama-sogo-park-shisetsu-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "三宅町",
@@ -660,7 +1176,18 @@
         "label": "三宅町体育館(町の施設)公式サイト「中央公園」料金について",
         "url": "https://www.miyake-nara-sports.jp/park/"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/miyakechou-chuo-park-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     },
     {
       "site": "明日香村",
@@ -676,7 +1203,18 @@
         "label": "ワタキューテニスパーク明日香 公式サイト「料金案内」(検索エンジン経由で確認)",
         "url": "https://asuka-tennis.net/price/"
       },
-      "checkedAt": "2026-11-07"
+      "checkedAt": "2026-11-07",
+      "crossCheck": {
+        "status": "match",
+        "checkedAt": "2026-11-07",
+        "sources": [
+          {
+            "label": "テニスナビ(テニスコート情報サイト)",
+            "url": "https://tennisnavi.jp/place/kashihara-park-asuka-tennis-court/",
+            "note": "同じ金額"
+          }
+        ]
+      }
     }
   ],
   "links": [
