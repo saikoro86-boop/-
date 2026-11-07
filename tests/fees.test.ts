@@ -128,3 +128,15 @@ test("宇陀・橿原運動公園・大渕池・天理・葛城・田原本の�
   assert.equal(feeFor("宇陀市", "宇陀市総合体育館").length, 0);
   assert.equal(feeFor("橿原市", "県立橿原公苑").length, 0);
 });
+
+test("大和郡山市総合公園・三宅町中央公園・明日香の料金", () => {
+  const one = (site: string, name: string, re: RegExp) => {
+    const f = feeFor(site, name);
+    assert.equal(f.length, 1, `${site} ${name}`);
+    assert.match(f[0].summary, re, `${site} ${name}`);
+  };
+  one("大和郡山市", "大和郡山市総合公園施設", /385円.*440円/);
+  one("大和郡山市", "まほろば健康パーク", /560円/); // 総合公園の料金と取り違えない
+  one("三宅町", "三宅町中央公園運動施設", /300円.*500円/);
+  one("明日香村", "ワタキューテニスパーク明日香(橿原公苑明日香庭球場)", /750円/);
+});
