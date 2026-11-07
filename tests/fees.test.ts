@@ -14,7 +14,7 @@ test("料金の設定: 出典(https)・確認日・説明が、すべてそろ�
     assert.match(f.source.url, /^https:\/\//, f.match);
     assert.match(f.checkedAt, /^\d{4}-\d{2}-\d{2}$/, f.match);
     assert.ok(f.summary.length > 0 && f.lines.length > 0 && f.source.label.length > 0, f.match);
-    assert.match(f.summary, /\d円/, f.match); // 金額が入っている
+    assert.match(f.summary, /\d円|無料/, f.match); // 金額(または「無料」)が入っている
   }
   for (const l of cfg.links) assert.match(l.url, /^https:\/\//, l.match);
 });
@@ -69,4 +69,35 @@ test("奈良市: コートの種類に合った料金が当たっている(施�
     const t = f(n).lines.join("\n");
     assert.match(t, /2割増/); assert.match(t, /半額/); assert.match(t, /市外の方は、2倍/);
   }
+});
+
+// ---- 奈良スーパーアプリの施設: 各施設・指定管理者の「公式」ページ・料金表で確認した料金 ----
+test("斑鳩町: すこやか斑鳩300円(照明+200円)、神南は無料、斑鳩健民は300円(照明+200円)", () => {
+  const f = (n: string) => feeFor("斑鳩町", n);
+  assert.equal(f("すこやか斑鳩・スポーツセンター").length, 1);
+  assert.match(f("すこやか斑鳩・スポーツセンター")[0].summary, /1面1時間 300円.*\+200円/);
+  assert.equal(f("神南テニスコート").length, 1);
+  assert.match(f("神南テニスコート")[0].summary, /無料/);
+  assert.equal(f("奈良県斑鳩健民運動場").length, 1);
+  assert.match(f("奈良県斑鳩健民運動場")[0].summary, /300円.*\+200円/);
+});
+
+test("香芝市: 高塚・健民とも1コート2時間1,300円(高塚は照明+500円)。市外は2倍の記載がある", () => {
+  const f = (n: string) => feeFor("香芝市", n);
+  assert.equal(f("香芝市高塚テニスコート").length, 1);
+  assert.equal(f("香芝健民テニスコート").length, 1);
+  assert.match(f("香芝市高塚テニスコート")[0].summary, /1,300円.*\+500円/);
+  assert.match(f("香芝健民テニスコート")[0].summary, /1,300円/);
+  for (const n of ["香芝市高塚テニスコート", "香芝健民テニスコート"]) assert.ok(f(n)[0].lines.some((x) => x.includes("2倍")), n);
+});
+
+test("広陵町: 第二浄化センターは1面1時間560円(ナイターなし)", () => {
+  const f = feeFor("広陵町", "奈良県第二浄化センター スポーツ広場");
+  assert.equal(f.length, 1);
+  assert.match(f[0].summary, /560円/);
+});
+
+test("斑鳩町「健民」と香芝市「健民」は、エリアが違うので、取り違えない", () => {
+  assert.equal(feeFor("斑鳩町", "香芝健民テニスコート").length, 0);
+  assert.equal(feeFor("香芝市", "奈良県斑鳩健民運動場").length, 0);
 });
