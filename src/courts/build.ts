@@ -16,6 +16,7 @@ import {
   type NaraSuperAppResponse,
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
+import { compactSlots } from "./compact";
 import { findContact, type Contact } from "./phone";
 import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
 
@@ -219,30 +220,37 @@ async function main() {
   const sites = [...new Set([...configured, ...[...discovered].sort((a, b) => a.localeCompare(b, "ja"))])];
 
   mkdirSync("public", { recursive: true });
-  writeFileSync(
-    "public/data.json",
-    JSON.stringify({
-      updatedAt: new Date().toISOString(),
-      sites,
-      // 画面に必要な項目だけを出す(設定のメモなどは含めない)
-      links: cfg.sites
-        .filter((s): s is LinkSite => s.type === "link")
-        .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
-      slots,
-      facilityUrls,
-      courtCodes,
-      postLinks,
-      // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
-      facilityNotes: Object.fromEntries(
-        [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(利用目的に「テニス」を含む施設です。設備ごとの利用目的は、予約画面で確認してください)"]),
-      ),
-      contacts,
-      // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
-      status: [...statusMap.values()],
-      errors,
-    }),
+  const common = {
+    updatedAt: new Date().toISOString(),
+    sites,
+    // 画面に必要な項目だけを出す(設定のメモなどは含めない)
+    links: cfg.sites
+      .filter((s): s is LinkSite => s.type === "link")
+      .map((s) => ({ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities })),
+    facilityUrls,
+    courtCodes,
+    postLinks,
+    // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
+    facilityNotes: Object.fromEntries(
+      [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(利用目的に「テニス」を含む施設です。設備ごとの利用目的は、予約画面で確認してください)"]),
+    ),
+    contacts,
+    // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
+    status: [...statusMap.values()],
+    errors,
+  };
+  // data2.json: スマホ向けの小さな形式(いまの画面が読む)
+  const compact = compactSlots(slots);
+  const small = JSON.stringify({ v: 2, ...common, courts: compact.courts, byDate: compact.byDate });
+  writeFileSync("public/data2.json", small);
+  // data.json: 従来の形式。キャッシュに残った古い画面が読むために、しばらく残す(新しい画面は読まない)
+  const legacy = JSON.stringify({ ...common, slots });
+  writeFileSync("public/data.json", legacy);
+  const kb = (t: string) => Math.round(Buffer.byteLength(t) / 1024);
+  console.log(
+    `空き ${slots.length} 件(うちネット予約外 ${slots.filter((x) => x.offline).length}) → まとめて ${Object.values(compact.byDate).reduce((n, l) => n + l.length, 0)} 件 / エリア ${sites.length} / エラー ${errors.length} 件`,
   );
-  console.log(`空き ${slots.length} 件(うちネット予約外 ${slots.filter((x) => x.offline).length}) / エリア ${sites.length} / エラー ${errors.length} 件 -> public/data.json`);
+  console.log(`public/data2.json ${kb(small)}KB(画面が読む) / public/data.json ${kb(legacy)}KB(従来形式)`);
   if (errors.length) console.log(`失敗: ${errors.length} 件(詳細は上のログ)`);
 }
 
