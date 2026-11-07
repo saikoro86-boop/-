@@ -60,6 +60,10 @@
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
   .row[hidden] { display:none; }
+  .day .wx { display:block; font-size:10px; color:var(--sub); margin-top:1px; }
+  button[aria-pressed="true"] .wx { color:#fff; }
+  .wx-h { margin-left:8px; font-size:13px; font-weight:400; color:var(--sub); }
+  #filterbar { flex-wrap:wrap; }
   #install { display:flex; align-items:center; gap:8px; justify-content:space-between; margin-top:8px; padding:8px 10px; border-radius:12px; background:var(--chip); font-size:13px; }
   #install[hidden] { display:none; }
   .card.multi h2.mday { font-size:15px; margin-bottom:6px; }
@@ -118,6 +122,7 @@
   <div class="row" id="cities"></div>
   <div class="row" id="zones"></div>
   <div class="row" id="viewbar"></div>
+  <div class="row" id="filterbar" hidden></div>
 </div>
 <div id="banner" role="status" aria-live="polite"></div>
 <main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
@@ -138,6 +143,7 @@ st.favOnly = prefs.favOnly;
 // ---- 前回の選択を覚える(このスマホだけ) ----
 // view: day=日付ごと / week=7日間 / weekend=土日、sort: def=いつもの順 / near=近い順
 st.view = "day"; st.sort = "def";
+st.filt = { omni: false, clay: false, hard: false, indoor: false, night: false }; st.filtOpen = false;
 const UI_KEY = "courtUI";
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY) || "{}");
@@ -146,9 +152,60 @@ try {
   if (["day", "week", "weekend"].includes(u.view)) st.view = u.view;
   if (u.sort === "near") st.sort = "near";
   if (typeof u.date === "string") st.date = u.date; // 過ぎた日なら、render が今日に直す
+  if (u.filt && typeof u.filt === "object") for (const k of Object.keys(st.filt)) st.filt[k] = !!u.filt[k];
 } catch {}
 function saveUI() {
-  try { localStorage.setItem(UI_KEY, JSON.stringify({ city: st.city, zone: st.zone, view: st.view, sort: st.sort, date: st.date })); } catch {}
+  try { localStorage.setItem(UI_KEY, JSON.stringify({ city: st.city, zone: st.zone, view: st.view, sort: st.sort, date: st.date, filt: st.filt })); } catch {}
+}
+
+// ---- 天気(気象庁の予報。降水確率は 6〜18時の大きいほう) ----
+const wArea = () => st.city === "木津川市" ? "kyoto" : "nara";
+const W_NAME = { nara: "奈良県北部", kyoto: "京都府南部" };
+function weatherOf(d) {
+  const w = ((data.weather || {})[wArea()] || {})[d];
+  return w && (w.pop != null || w.icon) ? w : null;
+}
+const weatherText = (d) => { const w = weatherOf(d); return w ? `${w.icon}${w.pop != null ? w.pop + "%" : ""}` : ""; };
+
+// ---- コートの種類・屋内・ナイターで絞り込む ----
+const FILT = [["omni", "オムニ(砂入り人工芝)"], ["clay", "クレー"], ["hard", "全天候・ハード"], ["indoor", "屋内(体育館など)"], ["night", "ナイターあり"]];
+const infoOf = (site, facility) => (data.courtInfo || {})[fkey(site, facility)] || null;
+/** コート名に種類が書いてあれば、それを優先(例: コートC(クレーコート)) */
+function surfacesOf(site, facility, court) {
+  if (court) {
+    if (/クレー/.test(court)) return ["clay"];
+    if (/砂入り|人工芝|オムニ/.test(court)) return ["omni"];
+    if (/ハード|全天候/.test(court)) return ["hard"];
+  }
+  const i = infoOf(site, facility); return i ? i.s : [];
+}
+const filtOn = () => Object.values(st.filt).some(Boolean);
+function courtOk(site, facility, court) {
+  if (!filtOn()) return true;
+  const i = infoOf(site, facility);
+  const kinds = ["omni", "clay", "hard", "indoor"].filter(k => st.filt[k]);
+  if (kinds.length) {
+    const have = new Set(surfacesOf(site, facility, court)); if (i && i.i) have.add("indoor");
+    if (!kinds.some(k => have.has(k))) return false;
+  }
+  if (st.filt.night && !(i && i.n === 1)) return false;
+  return true;
+}
+let facCourts = new Map(), facCourtsFor = null;
+/** 施設のどれかのコートが条件に合うか(空きなしの一覧など、施設単位で出すところ用) */
+function facilityOk(site, facility) {
+  if (!filtOn()) return true;
+  if (facCourtsFor !== data) { facCourts = new Map(); for (const x of data.slots) { const k = fkey(x.site, x.facility); if (!facCourts.has(k)) facCourts.set(k, new Set()); facCourts.get(k).add(x.court); } facCourtsFor = data; }
+  const courts = facCourts.get(fkey(site, facility)) || new Set();
+  if (!courts.size) return courtOk(site, facility, "");
+  return [...courts].some(c => courtOk(site, facility, c));
+}
+function infoTag(site, facility) {
+  const i = infoOf(site, facility); if (!i) return "";
+  const L = { omni: "オムニ", clay: "クレー", hard: "全天候" };
+  const parts = i.i ? ["屋内"] : i.s.map(x => L[x]).filter(Boolean);
+  if (i.n === 1) parts.push("ナイターあり"); else if (i.n === 0 && !i.i) parts.push("ナイターなし");
+  return parts.join("・");
 }
 
 // ---- 近い順(現在地からの直線距離) ----
@@ -191,7 +248,7 @@ const fkey = (site, facility) => site + "|" + facility;
 const isFav = (site, facility) => prefs.fav.has(fkey(site, facility));
 const isHidden = (site, facility) => prefs.hidden.has(fkey(site, facility));
 /** 一覧に出すか: 非表示にした施設は出さない。「お気に入りだけ」のときは、お気に入りだけ */
-const shown = (site, facility) => !isHidden(site, facility) && (!st.favOnly || isFav(site, facility));
+const shown = (site, facility) => !isHidden(site, facility) && (!st.favOnly || isFav(site, facility)) && facilityOk(site, facility);
 function favButton(site, facility) {
   const b = document.createElement("button"); b.type = "button";
   const on = isFav(site, facility);
@@ -385,14 +442,17 @@ function renderMulti(vis, dates) {
   let ds = future.slice(0, 7);
   if (st.view === "weekend") ds = future.filter(d => [0, 6].includes(wd(d))).slice(0, 4);
   const hint = document.createElement("div"); hint.className = "hint";
-  hint.textContent = (st.view === "weekend" ? "この先の土日" : "この先7日間") + "の空きをまとめています。施設の行を押すと、その日の詳しい空き(コートごと)が開きます。" + (st.favOnly ? "(お気に入りだけ)" : "");
+  hint.textContent = (st.view === "weekend" ? "この先の土日" : "この先7日間") + "の空きをまとめています。施設の行を押すと、その日の詳しい空き(コートごと)が開きます。" + (st.favOnly ? "(お気に入りだけ)" : "") + (filtOn() ? "(絞り込み中)" : "");
+  if (data.weather) hint.textContent += `天気は気象庁の予報(${W_NAME[wArea()]}、降水確率は6〜18時の大きいほう)。`;
   list.appendChild(hint);
   let any = false;
   for (const d of ds) {
-    const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility));
+    const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court));
     const card = document.createElement("section"); card.className = "card multi";
     const h = document.createElement("h2"); h.className = "mday " + (wd(d) === 6 ? "sat" : wd(d) === 0 ? "sun" : "");
-    h.textContent = dateLabel(d); card.appendChild(h);
+    h.textContent = dateLabel(d);
+    if (weatherText(d)) { const wx = document.createElement("span"); wx.className = "wx-h"; wx.textContent = weatherText(d); h.appendChild(wx); }
+    card.appendChild(h);
     const byFac = new Map();
     for (const s of hits) {
       const k = fkey(s.site, s.facility);
@@ -415,7 +475,7 @@ function renderMulti(vis, dates) {
       main.title = dateLabel(d) + " " + f.facility + " の空きを詳しく見る";
       const nm = document.createElement("span"); nm.className = "mname"; nm.textContent = f.facility;
       const sub = document.createElement("span"); sub.className = "msub";
-      sub.textContent = f.site + " ・ " + f.courts.size + "面 ・ " + merged.map(([a, b2, off]) => `${hm(a)}–${hm(b2)}${off ? "☎" : ""}`).join(" ");
+      sub.textContent = f.site + (infoTag(f.site, f.facility) ? "・" + infoTag(f.site, f.facility) : "") + " ・ " + f.courts.size + "面 ・ " + merged.map(([a, b2, off]) => `${hm(a)}–${hm(b2)}${off ? "☎" : ""}`).join(" ");
       const dt = distTag(f.site, f.facility); if (dt) sub.append(" ・ ", dt);
       main.append(nm, sub);
       main.onclick = () => { st.view = "day"; st.date = d; render(); scrollTo(0, 0); };
@@ -446,7 +506,7 @@ function render() {
     const dt = new Date(Date.UTC(yy, mm - 1, dd)), w = dt.getUTCDay();
     const b = document.createElement("button");
     b.className = "day " + (w === 6 ? "sat" : w === 0 ? "sun" : "");
-    b.innerHTML = `<small>${WD[w]}</small><b>${dt.getUTCMonth()+1}/${dt.getUTCDate()}</b>`;
+    b.innerHTML = `<small>${WD[w]}</small><b>${dt.getUTCMonth()+1}/${dt.getUTCDate()}</b>` + (weatherText(d) ? `<span class="wx">${weatherText(d)}</span>` : "");
     b.setAttribute("aria-pressed", st.date === d);
     b.onclick = () => { st.date = d; render(); };
     $("days").appendChild(b);
@@ -466,6 +526,10 @@ function render() {
   fo.setAttribute("aria-pressed", st.favOnly);
   fo.onclick = () => { if (!prefs.fav.size && !st.favOnly) { toast("施設名の横の☆を押すと、お気に入りにできます"); return; } st.favOnly = !st.favOnly; savePrefs(); render(); };
   pb.appendChild(fo);
+  const nf = Object.values(st.filt).filter(Boolean).length;
+  const fb = document.createElement("button"); fb.type = "button";
+  fb.textContent = "⚙ 絞り込み" + (nf ? `(${nf})` : ""); fb.setAttribute("aria-pressed", nf > 0 || st.filtOpen);
+  fb.onclick = () => { st.filtOpen = !st.filtOpen; render(); };
   const nb = document.createElement("button"); nb.type = "button";
   nb.textContent = "📍 近い順"; nb.setAttribute("aria-pressed", st.sort === "near");
   nb.onclick = () => {
@@ -474,12 +538,21 @@ function render() {
     if (myPos) render(); else locate(() => { render(); toast("現在地から近い順に並べました"); });
   };
   pb.appendChild(nb);
+  pb.appendChild(fb);
+  const fr = $("filterbar"); fr.innerHTML = ""; fr.hidden = !st.filtOpen;
+  for (const [k, label] of FILT) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", st.filt[k]);
+    b.onclick = () => { st.filt[k] = !st.filt[k]; render(); };
+    fr.appendChild(b);
+  }
+  if (nf) { const c = document.createElement("button"); c.type = "button"; c.className = "mini"; c.textContent = "解除"; c.onclick = () => { for (const k in st.filt) st.filt[k] = false; render(); }; fr.appendChild(c); }
   saveUI();
   if (st.sort === "near" && !myPos) locate(() => render()); // 前回「近い順」だったとき
   if (st.view !== "day") { renderMulti(vis, dates); return; }
 
   const [, z0, z1] = ZONES[st.zone];
-  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility));
+  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court));
   const byFac = new Map();
   for (const s of hits) {
     const k = s.site + "|" + s.facility;
@@ -492,7 +565,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "");
+    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "") + (weatherOf(st.date) ? `この日の天気(気象庁・${W_NAME[wArea()]}): ${weatherText(st.date)}(降水確率は6〜18時の大きいほう)。` : "") + (filtOn() ? "コートの種類などで絞り込み中です(種類が分からない施設は出ません)。" : "");
     list.appendChild(hint);
   }
   // お気に入りを先に(それ以外は、これまでどおりの順)
@@ -502,6 +575,7 @@ function render() {
     card.className = "card";
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
     const dt0 = distTag(f.site, f.facility); if (dt0) card.querySelector(".city").append(" ・ ", dt0);
+    const tg = infoTag(f.site, f.facility); if (tg) card.querySelector(".city").append(" ・ " + tg);
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
     if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));

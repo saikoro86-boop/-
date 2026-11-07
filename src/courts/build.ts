@@ -17,6 +17,7 @@ import {
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 import { compactSlots } from "./compact";
+import { fetchWeather } from "./weather";
 import { findContact, type Contact } from "./phone";
 import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
 
@@ -237,6 +238,17 @@ async function main() {
   const coordConfig = JSON.parse(readFileSync("config/coords.json", "utf-8")) as {
     coords: Record<string, { lat: number; lng: number; src: string; ref: string }>;
   };
+  // コートの種類・屋内・ナイター(絞り込み用)
+  const courtInfo = JSON.parse(readFileSync("config/courtinfo.json", "utf-8")) as {
+    info: Record<string, { surfaces: string[]; indoor: boolean; nighter: boolean | null }>;
+  };
+  // 天気(気象庁)。取れなくても空き状況の更新は止めない
+  let weather: Awaited<ReturnType<typeof fetchWeather>> | null = null;
+  try {
+    weather = await fetchWeather();
+  } catch (e) {
+    console.log("天気(気象庁)の取得に失敗:", (e as Error).message);
+  }
   const placeConfig = JSON.parse(readFileSync("config/places.json", "utf-8")) as {
     places: { site: string; match: string; dest: string; source: string }[];
   };
@@ -259,6 +271,8 @@ async function main() {
     fees: feeConfig.fees,
     feeLinks: [...feeConfig.links, ...nsaInfoLinks],
     coords: Object.fromEntries(Object.entries(coordConfig.coords).map(([k, v]) => [k, [v.lat, v.lng]])),
+    courtInfo: Object.fromEntries(Object.entries(courtInfo.info).map(([k, v]) => [k, { s: v.surfaces, i: v.indoor ? 1 : 0, n: v.nighter == null ? null : v.nighter ? 1 : 0 }])),
+    weather,
     places: placeConfig.places.map(({ site, match, dest }) => ({ site, match, dest })),
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],

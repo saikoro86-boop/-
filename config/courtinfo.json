@@ -1,0 +1,427 @@
+{
+ "note": "コートの種類・屋内・ナイターの絞り込み用。surfaces: omni=砂入り人工芝(オムニ)、clay=クレー、hard=全天候(ハード等)。nighter: true=照明あり / false=なし / null=不明。既定はテニスナビの公開API(出典つきで引用自由)。公式ページで確かめたものは、そちらを出典にして上書きしている。コート名に種類が書いてあるとき(例: コートA(砂入り人工芝))は、画面はコート名を優先する。2026-11-08 取得。",
+ "info": {
+  "三宅町|三宅町中央公園運動施設": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/miyakechou-chuo-park-tennis-court/"
+  },
+  "大和郡山市|まほろば健康パーク": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": true,
+   "src": "スイムピア奈良「料金案内」(照明あり)",
+   "ref": "https://swimpia.com/price.html"
+  },
+  "大和郡山市|大和郡山市総合公園施設": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": null,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/yamatokoriyama-sogo-park-shisetsu-tennis-court/"
+  },
+  "天理市|天理市福住運動場": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": false,
+   "src": "天理市「福住運動場」(利用は9〜17時)",
+   "ref": "https://www.city.tenri.nara.jp/shisetsu/sportsshisetsu/fukuzumiundoujou/1401354902930.html"
+  },
+  "天理市|長柄運動公園": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "天理市「庭球場」(人工芝コート、照明設備ありの面あり)",
+   "ref": "https://www.city.tenri.nara.jp/kakuka/kurasibunkabu/sportsinkou/supo-tusinnkougakari/taiku_shisetsu/1401270618378.html"
+  },
+  "奈良市|奈良市佐保山コート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/sahoyama-court/"
+  },
+  "奈良市|奈良市南部生涯スポーツセンター": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/nanbu-sports-center-court/"
+  },
+  "奈良市|奈良市平城第一コート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/heijo-daiichi-court/"
+  },
+  "奈良市|奈良市平城第二コート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/heijo-daini-court/"
+  },
+  "奈良市|奈良市柏木コート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kashiwagi-court/"
+  },
+  "奈良市|奈良市西部生涯スポーツセンターコート": {
+   "surfaces": [
+    "clay",
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/seibu-sports-center-court/"
+  },
+  "奈良市|奈良市青山コート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/aoyama-court/"
+  },
+  "奈良市|奈良市鴻ノ池コート": {
+   "surfaces": [
+    "clay",
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/rohto-nara-konoike-court/"
+  },
+  "奈良市|奈良市黒谷コート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kurodani-court/"
+  },
+  "奈良市|都祁生涯スポーツセンター": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/tsuge-sports-center-court/"
+  },
+  "宇陀市|伊那佐体育館": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "宇陀市|大宇陀体育館": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "宇陀市|宇陀市榛原グリーンテニスコート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "宇陀市「榛原グリーンテニスコート」(透水型砂入り人工芝4面、ナイター照明)",
+   "ref": "https://www.city.uda.lg.jp/soshiki/43/3202.html"
+  },
+  "宇陀市|宇陀市総合体育館": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "宇陀市|室生農林トレーニングセンター": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "宇陀市|榛原体育センター": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "広陵町|奈良県第二浄化センター スポーツ広場": {
+   "surfaces": [
+    "hard"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "第二浄化センタースポーツ広場の公式サイト(ナイター設備なし)",
+   "ref": "https://www.2joka-sport.jp/tennis/"
+  },
+  "斑鳩町|すこやか斑鳩・スポーツセンター": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/sukoyakaikaruga-sports-center-tennis-court/"
+  },
+  "斑鳩町|奈良県斑鳩健民運動場": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/ikaruga-kenmin-sports-ground-tennis-court/"
+  },
+  "斑鳩町|神南テニスコート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/jinnan-tennis-court/"
+  },
+  "明日香村|ワタキューテニスパーク明日香(橿原公苑明日香庭球場)": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kashihara-park-asuka-tennis-court/"
+  },
+  "木津川市|兜谷公園": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kabuto-tani-park-tennis-court/"
+  },
+  "木津川市|城址公園": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": false,
+   "src": "木津川市の利用案内の料金表(夜間照明の料金がない)",
+   "ref": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf"
+  },
+  "木津川市|塚穴公園": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": false,
+   "src": "木津川市の利用案内の料金表(夜間照明の料金がない)",
+   "ref": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000001/1480/20210128-140946.pdf"
+  },
+  "木津川市|木津川台公園": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kizugawadai-park-tennis-court/"
+  },
+  "木津川市|梅美台公園": {
+   "surfaces": [],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/umemidai-park-tennis-court/"
+  },
+  "橿原市|ひがしたけだドーム": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "橿原市|曽我川緑地体育館": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/soga-kawa-ryokuchi-gym-okugai-shisetsu/"
+  },
+  "橿原市|橿原運動公園": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kashihara-sports-park-tennis-court/"
+  },
+  "橿原市|県立橿原公苑": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "生駒市|TAC井出山スポーツパーク（井出山体育施設）": {
+   "surfaces": [
+    "hard",
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": null,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/tac-ide-yama-sports-park/"
+  },
+  "生駒市|むかいやま公園スポーツ施設": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/mukaiyama-park-sports-shisetsu/"
+  },
+  "生駒市|イモ山公園スポーツ施設": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": null,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/imo-yama-park-sports-shisetsu/"
+  },
+  "生駒市|山麓公園テニスコート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/ikoma-sanroku-park-tennis-court/"
+  },
+  "生駒市|生駒市体育協会滝寺S.C.（滝寺公園体育施設）": {
+   "surfaces": [
+    "clay",
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": null,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-taki-tera-s-c/"
+  },
+  "生駒市|生駒市体育協会総合S.C.（総合公園体育施設）": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-sogo-s-c/"
+  },
+  "生駒市|生駒市体育協会高山S.C.（生駒北スポーツセンター）": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/hos-ikoma-kita-sports-center/"
+  },
+  "田原本町|心身障害者福祉センター": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "田原本町|田原本町教育委員会(中央体育館)": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "田原本町「中央体育館庭球場」(砂入り人工芝コート4面、ナイター照明)",
+   "ref": "https://www.town.tawaramoto.nara.jp/gyosei/shisetsu/sport/3501.html"
+  },
+  "葛城市|屋敷山公園テニスコート": {
+   "surfaces": [
+    "clay"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "葛城市「屋敷山公園内 体育施設情報」(クレーコート2面、午前・午後のみ)",
+   "ref": "https://www.city.katsuragi.nara.jp/soshiki/chuokominkan/3/1116.html"
+  },
+  "葛城市|新町公園": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "葛城市「新町運動公園」(人工芝コート2面、照明設備)",
+   "ref": "https://www.city.katsuragi.nara.jp/soshiki/taiikushinkoka/3/3278.html"
+  },
+  "葛城市|當麻スポーツセンター": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "葛城市「當麻スポーツセンター」(全天候型砂入り人工芝4面。夜間は7・8月の17〜19時のみ)",
+   "ref": "https://www.city.katsuragi.nara.jp/soshiki/taiikushinkoka/3/2272.html"
+  },
+  "香芝市|香芝健民テニスコート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": false,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/kenmin-tennis-court/"
+  },
+  "香芝市|香芝市北部地域体育館": {
+   "surfaces": [],
+   "indoor": true,
+   "nighter": null,
+   "src": "施設の種類(体育館・ドーム。予約サイトの設備名)",
+   "ref": ""
+  },
+  "香芝市|香芝市高塚テニスコート": {
+   "surfaces": [
+    "omni"
+   ],
+   "indoor": false,
+   "nighter": true,
+   "src": "テニスナビ",
+   "ref": "https://tennisnavi.jp/place/takatsuka-tennis-court/"
+  }
+ }
+}
