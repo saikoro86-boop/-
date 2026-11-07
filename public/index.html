@@ -40,6 +40,8 @@
   .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
   .card.link .city + h2 + .city { margin:2px 0 0; }
   a.t { text-decoration:none; }
+  .court-actions { display:flex; gap:6px; margin-top:6px; }
+  .mini { font-size:11px; padding:2px 10px; color:var(--sub); }
   .t.off { background:transparent; border:1px dashed var(--accent); }
   .offnote { margin-top:10px; padding:8px 10px; border-radius:10px; background:var(--chip); color:var(--text); font-size:12px; line-height:1.6; }
   a.t:active, a.t:hover { filter:brightness(.95); }
@@ -150,6 +152,33 @@ function submitSearch(post, date) {
   for (const [k, v] of Object.entries(fields)) { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; form.appendChild(i); }
   document.body.appendChild(form); form.submit(); form.remove();
 }
+// ---- 空き枠の共有・コピー ------------------------------------------------
+const fmtT = (h) => Math.floor(h) + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
+function dateLabel(d) {
+  const [y, m, dd] = d.split("-").map(Number);
+  return `${m}/${dd}(${WD[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]})`;
+}
+/** LINE やメモに貼れる文。ネット予約の受付外(☎)の枠は、そう分かるようにして、電話番号も付ける */
+function shareText({ facility, court, date, spans, url, tel }) {
+  const times = spans.map(x => `${fmtT(x.start)}〜${fmtT(x.end)}${x.offline ? "(ネット予約外・電話)" : ""}`).join(" / ");
+  const lines = ["【テニスコートの空き】", `${dateLabel(date)} ${facility} ${court}`, times];
+  if (tel && spans.some(x => x.offline)) lines.push("電話: " + tel);
+  if (url) lines.push("予約サイト: " + url);
+  return lines.join("\n");
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch {}
+  try { // 古いブラウザ向けの保険
+    const ta = document.createElement("textarea"); ta.value = t; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok;
+  } catch { return false; }
+}
+function miniButton(label, aria, onclick) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "mini"; b.textContent = label; b.setAttribute("aria-label", aria); b.onclick = onclick;
+  return b;
+}
+
 function anchor(url, text, cls, title, post) {
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -251,6 +280,13 @@ function render() {
         if (fUrl) times.appendChild(anchor(fUrl, text, cls, title, postFor(f.site, f.facility, court)));
         else { const t = document.createElement("span"); t.className = cls; t.textContent = text; times.appendChild(t); }
       }
+      // コピー・共有(友達に「ここどう?」と送る、メモに残す、など)
+      const ct = (data.contacts || {})[f.site + "|" + f.facility];
+      const text = shareText({ facility: f.facility, court, date: st.date, spans: merged, url: fUrl, tel: ct && ct.tel });
+      const act = document.createElement("span"); act.className = "court-actions";
+      act.appendChild(miniButton("コピー", court + "の空きをコピー", async () => toast((await copyText(text)) ? "コピーしました" : "コピーできませんでした")));
+      if (navigator.share) act.appendChild(miniButton("共有", court + "の空きを共有", async () => { try { await navigator.share({ text }); } catch {} }));
+      name.appendChild(act);
       row.append(name, times); card.appendChild(row);
     }
     if ([...f.courts.values()].some(ss => ss.some(x => x.offline))) {
