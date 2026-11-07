@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>テニスコート空き検索</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f8a4c">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="テニス空き">
 <style>
   :root { --bg:#f6f7f9; --card:#fff; --text:#1c1f24; --sub:#6a7280; --accent:#1f8a4c; --line:#e3e6ea; --chip:#e9f5ee; }
   @media (prefers-color-scheme: dark) {
@@ -53,6 +59,18 @@
   .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
+  .row[hidden] { display:none; }
+  #install { display:flex; align-items:center; gap:8px; justify-content:space-between; margin-top:8px; padding:8px 10px; border-radius:12px; background:var(--chip); font-size:13px; }
+  #install[hidden] { display:none; }
+  .card.multi h2.mday { font-size:15px; margin-bottom:6px; }
+  .card.multi h2.sat { color:#2563eb; } .card.multi h2.sun { color:#dc2626; }
+  .mrow { display:flex; align-items:center; gap:6px; padding:6px 0; border-top:1px solid var(--line); }
+  main > * { min-width:0; }
+  .sep { flex:0 0 1px; background:var(--line); margin:4px 2px; }
+  .mmain { white-space:normal; flex:1; min-width:0; text-align:left; background:none; border:0; padding:4px 0; font:inherit; color:inherit; cursor:pointer; }
+  .mname { display:block; font-weight:600; font-size:14px; }
+  .msub { display:block; font-size:12px; color:var(--sub); margin-top:2px; }
+  .dist { color:var(--accent); font-weight:600; }
   .fav { border:0; background:none; padding:0 6px 0 0; font-size:20px; line-height:1; color:var(--sub); cursor:pointer; vertical-align:-2px; }
   .fav.on { color:#e0a800; }
   .card-foot { display:flex; justify-content:flex-end; margin-top:8px; }
@@ -99,7 +117,7 @@
   <div class="row" id="days"></div>
   <div class="row" id="cities"></div>
   <div class="row" id="zones"></div>
-  <div class="row" id="prefbar"></div>
+  <div class="row" id="viewbar"></div>
 </div>
 <div id="banner" role="status" aria-live="polite"></div>
 <main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
@@ -117,6 +135,55 @@ const prefs = (() => {
   } catch { return { fav: new Set(), hidden: new Set(), favOnly: false }; }
 })();
 st.favOnly = prefs.favOnly;
+// ---- 前回の選択を覚える(このスマホだけ) ----
+// view: day=日付ごと / week=7日間 / weekend=土日、sort: def=いつもの順 / near=近い順
+st.view = "day"; st.sort = "def";
+const UI_KEY = "courtUI";
+try {
+  const u = JSON.parse(localStorage.getItem(UI_KEY) || "{}");
+  if (typeof u.city === "string") st.city = u.city;
+  if (u.zone in ZONES) st.zone = u.zone;
+  if (["day", "week", "weekend"].includes(u.view)) st.view = u.view;
+  if (u.sort === "near") st.sort = "near";
+  if (typeof u.date === "string") st.date = u.date; // 過ぎた日なら、render が今日に直す
+} catch {}
+function saveUI() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify({ city: st.city, zone: st.zone, view: st.view, sort: st.sort, date: st.date })); } catch {}
+}
+
+// ---- 近い順(現在地からの直線距離) ----
+let myPos = null; // {lat,lng}
+try { const p = JSON.parse(sessionStorage.getItem("courtPos") || "null"); if (p && Date.now() - p.t < 30 * 60e3) myPos = p; } catch {}
+function locate(then) {
+  if (!navigator.geolocation) { toast("この端末では現在地を使えません"); st.sort = "def"; render(); return; }
+  toast("現在地を確認しています…");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { myPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: Date.now() }; try { sessionStorage.setItem("courtPos", JSON.stringify(myPos)); } catch {} then && then(); },
+    () => { toast("現在地を取得できませんでした(位置情報の許可を確認してください)"); st.sort = "def"; render(); },
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60e3 });
+}
+function distKm(site, facility) {
+  const c = (data.coords || {})[fkey(site, facility)];
+  if (!myPos || !c) return null;
+  const R = 6371, rad = (x) => x * Math.PI / 180;
+  const dLat = rad(c[0] - myPos.lat), dLng = rad(c[1] - myPos.lng);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(myPos.lat)) * Math.cos(rad(c[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+const kmLabel = (km) => km == null ? "" : km < 1 ? "約" + Math.round(km * 10) / 10 + "km" : "約" + (km < 10 ? km.toFixed(1) : Math.round(km)) + "km";
+/** 並べ順: お気に入りが先。近い順のときは、その中で近い順(位置が分からない施設は後ろ) */
+function facCompare(a, b) {
+  const f = isFav(b.site, b.facility) - isFav(a.site, a.facility);
+  if (f || st.sort !== "near" || !myPos) return f;
+  const da = distKm(a.site, a.facility), db = distKm(b.site, b.facility);
+  return (da == null ? 1e9 : da) - (db == null ? 1e9 : db);
+}
+function distTag(site, facility) {
+  if (st.sort !== "near" || !myPos) return null;
+  const km = distKm(site, facility);
+  const t = document.createElement("span"); t.className = "dist"; t.textContent = km == null ? "距離不明" : kmLabel(km);
+  return t;
+}
 function savePrefs() {
   try { localStorage.setItem(PREF_KEY, JSON.stringify({ fav: [...prefs.fav], hidden: [...prefs.hidden], favOnly: st.favOnly })); } catch {}
 }
@@ -307,6 +374,63 @@ function nowJst() {
   return { today: j.toISOString().slice(0, 10), hour: j.getUTCHours() + j.getUTCMinutes() / 60 };
 }
 
+// ---- 何日かまとめて表示(7日間 / 土日) ------------------------------------
+// 日付ごとに、空きのある施設を1行ずつ。行を押すと、その日の「日付ごと」の画面に移る
+function renderMulti(vis, dates) {
+  const list = $("list"); list.innerHTML = "";
+  const [, z0, z1] = ZONES[st.zone];
+  const wd = (d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd)).getUTCDay(); };
+  const todayJ = nowJst().today;
+  const future = dates.filter(d => d >= todayJ);
+  let ds = future.slice(0, 7);
+  if (st.view === "weekend") ds = future.filter(d => [0, 6].includes(wd(d))).slice(0, 4);
+  const hint = document.createElement("div"); hint.className = "hint";
+  hint.textContent = (st.view === "weekend" ? "この先の土日" : "この先7日間") + "の空きをまとめています。施設の行を押すと、その日の詳しい空き(コートごと)が開きます。" + (st.favOnly ? "(お気に入りだけ)" : "");
+  list.appendChild(hint);
+  let any = false;
+  for (const d of ds) {
+    const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility));
+    const card = document.createElement("section"); card.className = "card multi";
+    const h = document.createElement("h2"); h.className = "mday " + (wd(d) === 6 ? "sat" : wd(d) === 0 ? "sun" : "");
+    h.textContent = dateLabel(d); card.appendChild(h);
+    const byFac = new Map();
+    for (const s of hits) {
+      const k = fkey(s.site, s.facility);
+      if (!byFac.has(k)) byFac.set(k, { site: s.site, facility: s.facility, courts: new Set(), spans: [] });
+      const f = byFac.get(k); f.courts.add(s.court); f.spans.push(s);
+    }
+    if (!byFac.size) {
+      const e = document.createElement("div"); e.className = "city"; e.textContent = "この条件の空きはありません";
+      card.appendChild(e); list.appendChild(card); continue;
+    }
+    any = true;
+    for (const f of [...byFac.values()].sort(facCompare)) {
+      // 施設全体で、空いている時間帯をまとめる(どこかのコートが空いていれば空き)
+      const sp = f.spans.map(x => [x.start, x.end, !!x.offline]).sort((a, b) => a[0] - b[0]);
+      const merged = [];
+      for (const [a, b2, off] of sp) { const l = merged[merged.length - 1]; if (l && a <= l[1]) { l[1] = Math.max(l[1], b2); l[2] = l[2] && off; } else merged.push([a, b2, off]); }
+      const row = document.createElement("div"); row.className = "mrow";
+      row.appendChild(favButton(f.site, f.facility));
+      const main = document.createElement("button"); main.type = "button"; main.className = "mmain";
+      main.title = dateLabel(d) + " " + f.facility + " の空きを詳しく見る";
+      const nm = document.createElement("span"); nm.className = "mname"; nm.textContent = f.facility;
+      const sub = document.createElement("span"); sub.className = "msub";
+      sub.textContent = f.site + " ・ " + f.courts.size + "面 ・ " + merged.map(([a, b2, off]) => `${hm(a)}–${hm(b2)}${off ? "☎" : ""}`).join(" ");
+      const dt = distTag(f.site, f.facility); if (dt) sub.append(" ・ ", dt);
+      main.append(nm, sub);
+      main.onclick = () => { st.view = "day"; st.date = d; render(); scrollTo(0, 0); };
+      row.append(main, routeLink(f.site, f.facility, "route-mini"));
+      card.appendChild(row);
+    }
+    list.appendChild(card);
+  }
+  if (!any && st.favOnly) {
+    const e = document.createElement("div"); e.className = "empty";
+    e.textContent = "お気に入りの施設に、この期間の空きはありません。「★ お気に入りだけ」を押すと、すべての施設に戻ります。";
+    list.appendChild(e);
+  }
+}
+
 function render() {
   const { today: todayJ, hour: hourJ } = nowJst();
   const isPast = (x) => x.date === todayJ && x.end <= hourJ;
@@ -315,6 +439,7 @@ function render() {
   const dates = [...new Set([...data.slots.map(s => s.date), ...(data.status || []).map(x => x.d)])].sort();
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
+  $("days").hidden = st.view !== "day";
   for (const d of dates) {
     // 端末のタイムゾーンに左右されないよう、日付文字列から直接作る
     const [yy, mm, dd] = d.split("-").map(Number);
@@ -328,12 +453,30 @@ function render() {
   }
   chips($("cities"), [["all","全エリア"], ...data.sites.map(s => [s, s])], "city");
   chips($("zones"), Object.entries(ZONES).map(([k, v]) => [k, v[0]]), "zone");
-  const pb = $("prefbar"); pb.innerHTML = "";
+  const pb = $("viewbar"); pb.innerHTML = "";
+  for (const [v, label] of [["day", "日付ごと"], ["week", "7日間"], ["weekend", "土日"]]) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", st.view === v);
+    b.onclick = () => { st.view = v; render(); };
+    pb.appendChild(b);
+  }
+  const sep = document.createElement("span"); sep.className = "sep"; pb.appendChild(sep);
   const fo = document.createElement("button"); fo.type = "button";
-  fo.textContent = "★ お気に入りだけ" + (prefs.fav.size ? `(${prefs.fav.size})` : "");
+  fo.textContent = "★ お気に入り" + (prefs.fav.size ? `(${prefs.fav.size})` : "");
   fo.setAttribute("aria-pressed", st.favOnly);
   fo.onclick = () => { if (!prefs.fav.size && !st.favOnly) { toast("施設名の横の☆を押すと、お気に入りにできます"); return; } st.favOnly = !st.favOnly; savePrefs(); render(); };
   pb.appendChild(fo);
+  const nb = document.createElement("button"); nb.type = "button";
+  nb.textContent = "📍 近い順"; nb.setAttribute("aria-pressed", st.sort === "near");
+  nb.onclick = () => {
+    if (st.sort === "near") { st.sort = "def"; render(); return; }
+    st.sort = "near";
+    if (myPos) render(); else locate(() => { render(); toast("現在地から近い順に並べました"); });
+  };
+  pb.appendChild(nb);
+  saveUI();
+  if (st.sort === "near" && !myPos) locate(() => render()); // 前回「近い順」だったとき
+  if (st.view !== "day") { renderMulti(vis, dates); return; }
 
   const [, z0, z1] = ZONES[st.zone];
   const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility));
@@ -353,11 +496,12 @@ function render() {
     list.appendChild(hint);
   }
   // お気に入りを先に(それ以外は、これまでどおりの順)
-  const facs = [...byFac.values()].sort((a, b) => isFav(b.site, b.facility) - isFav(a.site, a.facility));
+  const facs = [...byFac.values()].sort(facCompare);
   for (const f of facs) {
     const card = document.createElement("section");
     card.className = "card";
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
+    const dt0 = distTag(f.site, f.facility); if (dt0) card.querySelector(".city").append(" ・ ", dt0);
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
     if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
@@ -451,7 +595,7 @@ function render() {
     sum.className = "reason-title"; sum.textContent = `${title}(${items.size}施設)`;
     det.appendChild(sum);
     if (lead) { const l = document.createElement("div"); l.className = "city"; l.textContent = lead; det.appendChild(l); }
-    for (const it of [...items.values()].sort((a, b) => (isFav(b.site, b.facility) - isFav(a.site, a.facility)) || a.site.localeCompare(b.site, "ja"))) {
+    for (const it of [...items.values()].sort((a, b) => facCompare(a, b) || a.site.localeCompare(b.site, "ja"))) {
       const row = document.createElement("div"); row.className = "reason-row";
       row.appendChild(favButton(it.site, it.facility));
       const url = urlFor(it.site, it.facility);
@@ -608,6 +752,7 @@ async function fetchData() {
   if (!r.ok) throw new Error(r.status);
   const d = await r.json();
   if (d.v === 2) d.slots = expandV2(d);
+  d._offline = r.headers.get("x-from-cache") === "1"; // 電波がなく、前回保存したデータを出している
   return d;
 }
 
@@ -629,6 +774,7 @@ function load(silent) {
     lastUpdatedAt = updatedAt;
     render();
     applyStatus(updatedAt);
+    if (d._offline) showBanner("warn", "電波がないため、前回保存した空き状況を表示しています(最新ではありません)。<button type=\"button\" onclick=\"load(false)\">再読み込み</button>");
     if (justImported) { toast("木津川市の空きを取り込みました"); justImported = false; }
     else if (!firstLoad && changed) toast("最新のデータに更新しました");
     return changed;
@@ -702,6 +848,28 @@ $("btnRefresh").onclick = async () => {
 };
 
 load(false);
+
+// ---- ホーム画面に追加(アプリのように使う) ----------------------------------
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {});
+(function installHint() {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  let done = false; try { done = localStorage.getItem("courtInstallHint") === "done"; } catch {}
+  if (standalone || done) return;
+  const bar = document.createElement("div"); bar.id = "install"; bar.hidden = true;
+  const msg = document.createElement("span");
+  const close = document.createElement("button"); close.type = "button"; close.className = "mini"; close.textContent = "閉じる";
+  close.onclick = () => { bar.hidden = true; try { localStorage.setItem("courtInstallHint", "done"); } catch {} };
+  bar.append(msg, close);
+  document.querySelector("header").appendChild(bar);
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (ios) { msg.textContent = "📲 ホーム画面に置けます: 下の共有ボタン(□↑)→「ホーム画面に追加」"; bar.hidden = false; return; }
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    const add = document.createElement("button"); add.type = "button"; add.textContent = "📲 ホーム画面に追加";
+    add.onclick = async () => { e.prompt(); try { await e.userChoice; } catch {} bar.hidden = true; try { localStorage.setItem("courtInstallHint", "done"); } catch {} };
+    msg.textContent = ""; msg.appendChild(add); bar.hidden = false;
+  });
+})();
 </script>
 </body>
 </html>

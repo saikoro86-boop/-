@@ -1,0 +1,330 @@
+{
+ "note": "「近い順」に使う施設の位置(緯度・経度)。tennisnavi = テニスナビ(tennisnavi.jp)の公開API(事実は出典URLつきで引用自由)。gsi = 公式ページの所在地を、国土地理院の住所検索で緯度経度にしたもの。2026-11-07 取得。テニスナビの13件は、公式の所在地(places.json)と1km以内で一致することを確認済み。",
+ "attribution": "位置: テニスナビ(tennisnavi.jp)/ 国土地理院",
+ "coords": {
+  "三宅町|三宅町中央公園運動施設": {
+   "lat": 34.57356,
+   "lng": 135.76813,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/miyakechou-chuo-park-tennis-court/"
+  },
+  "大和郡山市|まほろば健康パーク": {
+   "lat": 34.59882,
+   "lng": 135.78236,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/mahoroba-kenkou-park-tennis-court/"
+  },
+  "大和郡山市|大和郡山市総合公園施設": {
+   "lat": 34.64561,
+   "lng": 135.74486,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/yamatokoriyama-sogo-park-shisetsu-tennis-court/"
+  },
+  "天理市|天理市福住運動場": {
+   "lat": 34.60274,
+   "lng": 135.8996,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/tenri-fukusumi-sports-ground-fukusumi-tennis-court/"
+  },
+  "天理市|長柄運動公園": {
+   "lat": 34.57486,
+   "lng": 135.81969,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/tenri-tennis-court/"
+  },
+  "奈良市|サン・アクティブ奈良（勤労者総合福祉センター）": {
+   "lat": 34.71225,
+   "lng": 135.80994,
+   "src": "gsi",
+   "ref": "奈良市「サン・アクティブ奈良の利用案内」 の所在地 奈良県奈良市佐保台西町115(国土地理院 住所検索)"
+  },
+  "奈良市|二名公民館": {
+   "lat": 34.70491,
+   "lng": 135.73898,
+   "src": "gsi",
+   "ref": "奈良市「公民館一覧」 の所在地 奈良県奈良市学園赤松町3684(国土地理院 住所検索)"
+  },
+  "奈良市|京西公民館": {
+   "lat": 34.67154,
+   "lng": 135.77136,
+   "src": "gsi",
+   "ref": "奈良市「公民館一覧」 の所在地 奈良県奈良市六条西一丁目3(国土地理院 住所検索)"
+  },
+  "奈良市|奈良市佐保山コート": {
+   "lat": 34.71006,
+   "lng": 135.81276,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/sahoyama-court/"
+  },
+  "奈良市|奈良市南部生涯スポーツセンター": {
+   "lat": 34.66277,
+   "lng": 135.80394,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/nanbu-sports-center-court/"
+  },
+  "奈良市|奈良市平城第一コート": {
+   "lat": 34.7104,
+   "lng": 135.80425,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/heijo-daiichi-court/"
+  },
+  "奈良市|奈良市平城第二コート": {
+   "lat": 34.71896,
+   "lng": 135.79581,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/heijo-daini-court/"
+  },
+  "奈良市|奈良市柏木コート": {
+   "lat": 34.66605,
+   "lng": 135.79629,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kashiwagi-court/"
+  },
+  "奈良市|奈良市西部生涯スポーツセンターコート": {
+   "lat": 34.66689,
+   "lng": 135.75099,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/seibu-sports-center-court/"
+  },
+  "奈良市|奈良市青山コート": {
+   "lat": 34.70726,
+   "lng": 135.8342,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/aoyama-court/"
+  },
+  "奈良市|奈良市鴻ノ池コート": {
+   "lat": 34.70072,
+   "lng": 135.82959,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/rohto-nara-konoike-court/"
+  },
+  "奈良市|奈良市黒谷コート": {
+   "lat": 34.67508,
+   "lng": 135.73314,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kurodani-court/"
+  },
+  "奈良市|富雄公民館": {
+   "lat": 34.68926,
+   "lng": 135.72694,
+   "src": "gsi",
+   "ref": "奈良市「公民館一覧」 の所在地 奈良県奈良市鳥見町二丁目9(国土地理院 住所検索)"
+  },
+  "奈良市|富雄南公民館": {
+   "lat": 34.67864,
+   "lng": 135.75058,
+   "src": "gsi",
+   "ref": "奈良市「公民館一覧」 の所在地 奈良県奈良市中町501(国土地理院 住所検索)"
+  },
+  "奈良市|都祁生涯スポーツセンター": {
+   "lat": 34.63213,
+   "lng": 135.95232,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/tsuge-sports-center-court/"
+  },
+  "宇陀市|伊那佐体育館": {
+   "lat": 34.49966,
+   "lng": 135.95686,
+   "src": "gsi",
+   "ref": "宇陀市「伊那佐体育館」 の所在地 奈良県宇陀市榛原石田109(国土地理院 住所検索)"
+  },
+  "宇陀市|大宇陀体育館": {
+   "lat": 34.47667,
+   "lng": 135.92839,
+   "src": "gsi",
+   "ref": "宇陀市「大宇陀体育館」 の所在地 奈良県宇陀市大宇陀拾生89(国土地理院 住所検索)"
+  },
+  "宇陀市|宇陀市榛原グリーンテニスコート": {
+   "lat": 34.48673,
+   "lng": 135.96343,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/haibara-green-tennis-court/"
+  },
+  "宇陀市|宇陀市総合体育館": {
+   "lat": 34.54024,
+   "lng": 135.95805,
+   "src": "gsi",
+   "ref": "宇陀市「総合体育館」 の所在地 奈良県宇陀市榛原萩原1057(国土地理院 住所検索)"
+  },
+  "宇陀市|榛原体育センター": {
+   "lat": 34.54245,
+   "lng": 135.9731,
+   "src": "gsi",
+   "ref": "宇陀市「榛原体育センター」 の所在地 奈良県宇陀市榛原長峯615(国土地理院 住所検索)"
+  },
+  "広陵町|奈良県第二浄化センター スポーツ広場": {
+   "lat": 34.5742,
+   "lng": 135.75452,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/daini-jouka-center-sports-hiroba-tennis-court/"
+  },
+  "斑鳩町|すこやか斑鳩・スポーツセンター": {
+   "lat": 34.60784,
+   "lng": 135.73036,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/sukoyakaikaruga-sports-center-tennis-court/"
+  },
+  "斑鳩町|奈良県斑鳩健民運動場": {
+   "lat": 34.61353,
+   "lng": 135.7269,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/ikaruga-kenmin-sports-ground-tennis-court/"
+  },
+  "斑鳩町|神南テニスコート": {
+   "lat": 34.5966,
+   "lng": 135.72034,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/jinnan-tennis-court/"
+  },
+  "明日香村|ワタキューテニスパーク明日香(橿原公苑明日香庭球場)": {
+   "lat": 34.4919,
+   "lng": 135.81206,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kashihara-park-asuka-tennis-court/"
+  },
+  "木津川市|兜谷公園": {
+   "lat": 34.72932,
+   "lng": 135.78854,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kabuto-tani-park-tennis-court/"
+  },
+  "木津川市|城址公園": {
+   "lat": 34.73294,
+   "lng": 135.83,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/joushi-park-tennis-court/"
+  },
+  "木津川市|塚穴公園": {
+   "lat": 34.73902,
+   "lng": 135.86757,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/tsukaana-park-tennis-court/"
+  },
+  "木津川市|木津川台公園": {
+   "lat": 34.741,
+   "lng": 135.78642,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kizugawadai-park-tennis-court/"
+  },
+  "木津川市|梅美台公園": {
+   "lat": 34.71618,
+   "lng": 135.83855,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/umemidai-park-tennis-court/"
+  },
+  "橿原市|ひがしたけだドーム": {
+   "lat": 34.52657,
+   "lng": 135.81775,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kashihara-higashitakeda-dome/"
+  },
+  "橿原市|曽我川緑地体育館": {
+   "lat": 34.51318,
+   "lng": 135.77539,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/soga-kawa-ryokuchi-gym-okugai-shisetsu/"
+  },
+  "橿原市|橿原運動公園": {
+   "lat": 34.49765,
+   "lng": 135.77072,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kashihara-sports-park-tennis-court/"
+  },
+  "橿原市|県立橿原公苑": {
+   "lat": 34.49085,
+   "lng": 135.79207,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kashihara-park-tennis-court/"
+  },
+  "生駒市|TAC井出山スポーツパーク（井出山体育施設）": {
+   "lat": 34.65249,
+   "lng": 135.70789,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/tac-ide-yama-sports-park/"
+  },
+  "生駒市|むかいやま公園スポーツ施設": {
+   "lat": 34.66343,
+   "lng": 135.69728,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/mukaiyama-park-sports-shisetsu/"
+  },
+  "生駒市|イモ山公園スポーツ施設": {
+   "lat": 34.73022,
+   "lng": 135.71225,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/imo-yama-park-sports-shisetsu/"
+  },
+  "生駒市|山麓公園テニスコート": {
+   "lat": 34.70158,
+   "lng": 135.67886,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/ikoma-sanroku-park-tennis-court/"
+  },
+  "生駒市|生駒市体育協会滝寺S.C.（滝寺公園体育施設）": {
+   "lat": 34.68837,
+   "lng": 135.69017,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-taki-tera-s-c/"
+  },
+  "生駒市|生駒市体育協会総合S.C.（総合公園体育施設）": {
+   "lat": 34.7113,
+   "lng": 135.71123,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/ikoma-taiiku-kyoukai-sogo-s-c/"
+  },
+  "生駒市|生駒市体育協会高山S.C.（生駒北スポーツセンター）": {
+   "lat": 34.76945,
+   "lng": 135.71011,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/hos-ikoma-kita-sports-center/"
+  },
+  "田原本町|心身障害者福祉センター": {
+   "lat": 34.53702,
+   "lng": 135.79059,
+   "src": "gsi",
+   "ref": "奈良県心身障害者福祉センターの所在地 の所在地 奈良県磯城郡田原本町宮森34(国土地理院 住所検索)"
+  },
+  "田原本町|田原本町教育委員会(中央体育館)": {
+   "lat": 34.55592,
+   "lng": 135.80966,
+   "src": "gsi",
+   "ref": "田原本町「中央体育館庭球場」 の所在地 奈良県磯城郡田原本町平田46(国土地理院 住所検索)"
+  },
+  "葛城市|屋敷山公園テニスコート": {
+   "lat": 34.48541,
+   "lng": 135.71426,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/yashiki-yama-park-tennis-court/"
+  },
+  "葛城市|新町公園": {
+   "lat": 34.48121,
+   "lng": 135.74037,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/shinmachi-park-tennis-court/"
+  },
+  "葛城市|當麻スポーツセンター": {
+   "lat": 34.50869,
+   "lng": 135.70428,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/taima-sports-center-tennis-court/"
+  },
+  "香芝市|香芝健民テニスコート": {
+   "lat": 34.55723,
+   "lng": 135.70105,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/kenmin-tennis-court/"
+  },
+  "香芝市|香芝市北部地域体育館": {
+   "lat": 34.55723,
+   "lng": 135.70105,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/hokubu-chiiki-gym/"
+  },
+  "香芝市|香芝市高塚テニスコート": {
+   "lat": 34.54511,
+   "lng": 135.72179,
+   "src": "tennisnavi",
+   "ref": "https://tennisnavi.jp/place/takatsuka-tennis-court/"
+  }
+ }
+}
