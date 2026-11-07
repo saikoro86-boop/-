@@ -102,6 +102,8 @@ async function main() {
   const courtCodes: Record<string, string> = {};
   /** エリア → 公式サイトの検索フォームの送り先(奈良市・生駒市。日付つきで開くために使う) */
   const postLinks: Record<string, { url: string; type: string }> = {};
+  /** 奈良スーパーアプリの施設の、案内ページ(公式。料金などが載っていることが多い) */
+  const nsaInfoLinks: { site: string; match: string; url: string }[] = [];
   /** 「エリア|施設名」→ その施設の予約サイトのURL(画面で、コート名・時間をタップしたときの行き先) */
   const facilityUrls: Record<string, string> = {};
 
@@ -162,6 +164,9 @@ async function main() {
             const raw = await withRetry(t.facilityName, () => fetchNaraSuperAppRaw(t.buildingId, t.facilityId));
             if (hasTennisCourt(raw)) {
               discovered.add(t.municipality);
+              const info = t.facilityUrl && /^https?:\/\//.test(t.facilityUrl) ? t.facilityUrl : null;
+              const match = t.facilityName.normalize("NFKC").trim();
+              if (info && !nsaInfoLinks.some((x) => x.site === t.municipality && x.match === match)) nsaInfoLinks.push({ site: t.municipality, match, url: info });
               addNsa(t.municipality, raw);
             }
           } catch (e) {
@@ -220,6 +225,10 @@ async function main() {
   const sites = [...new Set([...configured, ...[...discovered].sort((a, b) => a.localeCompare(b, "ja"))])];
 
   mkdirSync("public", { recursive: true });
+  const feeConfig = JSON.parse(readFileSync("config/fees.json", "utf-8")) as {
+    fees: { site: string; match: string; summary: string; lines: string[]; source: { label: string; url: string }; checkedAt: string }[];
+    links: { site: string; match: string; url: string }[];
+  };
   const common = {
     updatedAt: new Date().toISOString(),
     sites,
@@ -235,6 +244,9 @@ async function main() {
       [...gymFacilities].filter((k) => !namedFacilities.has(k)).map((k) => [k, "体育館・競技場など(利用目的に「テニス」を含む施設です。設備ごとの利用目的は、予約画面で確認してください)"]),
     ),
     contacts,
+    // 料金: 公式の原本で確認できたものだけ(config/fees.json)。確認できない施設は、公式ページへのリンク
+    fees: feeConfig.fees,
+    feeLinks: [...feeConfig.links, ...nsaInfoLinks],
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],
     errors,

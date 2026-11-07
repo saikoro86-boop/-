@@ -1,0 +1,78 @@
+{
+  "note": "料金は、公式の原本を読んで確認できたものだけを載せる。確認できないものは、金額を載せず、公式ページへのリンクにする。改定されることがあるため、source と checkedAt を必ず付ける。site と match は、contacts と同じ方式(エリア名と、施設名に含まれる文字列)で施設に合わせる。",
+  "fees": [
+    {
+      "site": "木津川市", "match": "兜谷", "summary": "1面1時間 600円(夜間照明 +500円)",
+      "lines": ["施設利用料: 1面1時間 600円(平日・土日祝とも同額)", "夜間照明: 1面1時間 500円", "付属設備を使う場合は、別途料金がかかります(各施設に確認)"],
+      "source": { "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ", "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "木津川市", "match": "木津川台", "summary": "1面1時間 600円(夜間照明 +500円)",
+      "lines": ["施設利用料: 1面1時間 600円(平日・土日祝とも同額)", "夜間照明: 1面1時間 500円", "付属設備を使う場合は、別途料金がかかります(各施設に確認)"],
+      "source": { "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ", "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "木津川市", "match": "梅美台", "summary": "1面1時間 600円(夜間照明 +500円)",
+      "lines": ["施設利用料: 1面1時間 600円(平日・土日祝とも同額)", "夜間照明: 1面1時間 500円", "付属設備を使う場合は、別途料金がかかります(各施設に確認)"],
+      "source": { "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ", "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "木津川市", "match": "城址", "summary": "1面1時間 600円",
+      "lines": ["施設利用料: 1面1時間 600円(平日・土日祝とも同額)", "夜間照明の設備は、ありません", "付属設備を使う場合は、別途料金がかかります(各施設に確認)"],
+      "source": { "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ", "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "木津川市", "match": "塚穴", "summary": "1面1時間 500円",
+      "lines": ["施設利用料: 1面1時間 500円(平日・土日祝とも同額)", "夜間照明の設備は、ありません", "付属設備を使う場合は、別途料金がかかります(各施設に確認)"],
+      "source": { "label": "木津川市「公共施設案内予約システム 利用案内」(令和8年3月31日改訂)11ページ", "url": "https://www.city.kizugawa.lg.jp/cmsfiles/contents/0000002/2951/riyouannnai.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "山麓", "summary": "1コート2時間 1,260円",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜21時の、すべての2時間枠が同額です", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "むかいやま", "summary": "1コート2時間 1,260円",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜21時の、すべての2時間枠が同額です", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "総合S.C.", "summary": "1コート2時間 1,260円",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜21時の、すべての2時間枠が同額です", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "イモ山", "summary": "1コート2時間 1,260円(17〜19時は 1,050円)",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜17時の2時間枠: 1,260円 / 17〜19時: 1,050円(19時以降の区分は、ありません)", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "滝寺", "summary": "1コート2時間 1,260円(17〜19時は 1,050円)",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜17時の2時間枠: 1,260円 / 17〜19時: 1,050円(19時以降の区分は、ありません)", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "高山", "summary": "1コート2時間 1,260円(17〜19時は 1,050円)",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "9〜17時の2時間枠: 1,260円 / 17〜19時: 1,050円(19時以降の区分は、ありません)", "市外の方は2倍、児童生徒・障がい者等は半額です", "アマチュアスポーツ以外(集会・講演会等)や営利目的は、料金が異なります"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    },
+    {
+      "site": "生駒市", "match": "井出山", "summary": "1コート2時間 730円〜1,260円(コートの種類による)",
+      "lines": ["アマチュアスポーツの、市内の方の料金です(消費税等込み)", "砂入り人工芝型のコート: 9〜17時 1,260円 / 17〜19時 1,050円", "全天候型のコート: 9〜17時 730円 / 17〜19時 630円", "どのコートがどちらの型かは、施設に確認してください", "市外の方は2倍、児童生徒・障がい者等は半額です"],
+      "source": { "label": "生駒市体育施設条例 別表第3「4 テニスコート」(PDF。井出山は「生駒市浄化センターテニスコート」)", "url": "https://www.city.ikoma.lg.jp/cmsfiles/contents/0000036/36021/7_a_02_jyourei.pdf" }, "checkedAt": "2026-11-07"
+    }
+  ],
+  "links": [
+    { "site": "奈良市", "match": "青山", "url": "https://www.city.nara.lg.jp/soshiki/22/5378.html" },
+    { "site": "奈良市", "match": "鴻ノ池", "url": "https://www.city.nara.lg.jp/soshiki/22/5379.html" },
+    { "site": "奈良市", "match": "柏木", "url": "https://www.city.nara.lg.jp/soshiki/22/5375.html" },
+    { "site": "奈良市", "match": "黒谷", "url": "https://www.city.nara.lg.jp/soshiki/22/5372.html" },
+    { "site": "奈良市", "match": "西部", "url": "https://www.city.nara.lg.jp/soshiki/22/5373.html" },
+    { "site": "奈良市", "match": "佐保山", "url": "https://www.city.nara.lg.jp/soshiki/22/6591.html" },
+    { "site": "奈良市", "match": "都祁", "url": "https://www.city.nara.lg.jp/soshiki/29/10785.html" },
+    { "site": "奈良市", "match": "サン・アクティブ", "url": "https://www.city.nara.lg.jp/site/shisetsu/9845.html" },
+    { "site": "奈良市", "match": "南部", "url": "https://www.city.nara.lg.jp/soshiki/22/61877.html" },
+    { "site": "奈良市", "match": "平城", "url": "https://www.city.nara.lg.jp/soshiki/22/61877.html" },
+    { "site": "奈良市", "match": "公民館", "url": "https://www.city.nara.lg.jp/site/kyouiku/146456.html" }
+  ]
+}

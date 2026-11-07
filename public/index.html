@@ -40,6 +40,10 @@
   .btn { display:inline-block; margin-top:10px; padding:8px 16px; border-radius:999px; background:var(--accent); color:#fff; text-decoration:none; font-weight:600; }
   .card.link .city + h2 + .city { margin:2px 0 0; }
   a.t { text-decoration:none; }
+  .fee { margin-top:10px; font-size:13px; }
+  .fee summary { cursor:pointer; font-weight:600; }
+  .fee .fee-lines div { color:var(--sub); margin:3px 0; }
+  .fee .fee-src { margin-top:6px; font-size:12px; }
   .court-actions { display:flex; gap:6px; margin-top:6px; }
   .mini { font-size:11px; padding:2px 10px; color:var(--sub); }
   .t.off { background:transparent; border:1px dashed var(--accent); }
@@ -152,6 +156,32 @@ function submitSearch(post, date) {
   for (const [k, v] of Object.entries(fields)) { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; form.appendChild(i); }
   document.body.appendChild(form); form.submit(); form.remove();
 }
+// ---- 料金(公式の原本で確認できたものだけ。ない施設は、公式ページへのリンク) --------
+const feeFor = (site, facility) => (data.fees || []).find(r => r.site === site && facility.includes(r.match));
+const feeLinkFor = (site, facility) => (data.feeLinks || []).find(r => r.site === site && facility.includes(r.match));
+function feeBlock(site, facility) {
+  const fee = feeFor(site, facility);
+  if (fee) {
+    const det = document.createElement("details"); det.className = "fee";
+    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary; det.appendChild(sum);
+    const lines = document.createElement("div"); lines.className = "fee-lines";
+    for (const t of fee.lines) { const d = document.createElement("div"); d.textContent = t; lines.appendChild(d); }
+    det.appendChild(lines);
+    const [, m, d] = fee.checkedAt.split("-").map(Number);
+    const src = document.createElement("div"); src.className = "fee-src";
+    src.append("出典: ", anchor(fee.source.url, fee.source.label), `(確認日 ${m}/${d}。料金は改定されることがあります。最新は、公式の案内で確認してください)`);
+    det.appendChild(src);
+    return det;
+  }
+  const fl = feeLinkFor(site, facility);
+  if (fl) {
+    const d = document.createElement("div"); d.className = "fee";
+    d.append("料金は、公式ページで確認してください: ", anchor(fl.url, "施設の案内ページ"));
+    return d;
+  }
+  return null;
+}
+
 // ---- 空き枠の共有・コピー ------------------------------------------------
 const fmtT = (h) => Math.floor(h) + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
 function dateLabel(d) {
@@ -307,6 +337,8 @@ function render() {
       }
       card.appendChild(box);
     }
+    const feeEl = feeBlock(f.site, f.facility);
+    if (feeEl) card.appendChild(feeEl);
     list.appendChild(card);
   }
   // 空きがない施設は、理由ごとに分けて表示する
@@ -363,9 +395,14 @@ function render() {
     const h2 = document.createElement("h2"); h2.textContent = "公式サイトで空きを確認";
     card.append(head, h2);
     if (l.facilities && l.facilities.length) {
-      const p = document.createElement("div"); p.className = "city";
-      p.textContent = l.facilities.map(f => f.name + (f.hint ? "(" + f.hint + ")" : "")).join(" / ");
-      card.appendChild(p);
+      const box = document.createElement("div"); box.className = "city";
+      for (const f of l.facilities) {
+        const row = document.createElement("div");
+        const fee = feeFor(l.name, f.name);
+        row.textContent = f.name + (f.hint ? "(" + f.hint + ")" : "") + (fee ? " … " + fee.summary : "");
+        box.appendChild(row);
+      }
+      card.appendChild(box);
     }
     const a = document.createElement("a");
     a.href = l.entryUrl; a.target = "_blank"; a.rel = "noopener noreferrer"; a.className = "btn";
