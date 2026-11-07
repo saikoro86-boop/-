@@ -53,6 +53,10 @@
   .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
+  .fav { border:0; background:none; padding:0 6px 0 0; font-size:20px; line-height:1; color:var(--sub); cursor:pointer; vertical-align:-2px; }
+  .fav.on { color:#e0a800; }
+  .card-foot { display:flex; justify-content:flex-end; margin-top:8px; }
+  .hide-btn { border:1px solid var(--line); border-radius:999px; background:none; }
   .fee-cc.ok { color:var(--accent); }
   .fee-cc.warn { color:#b45309; }
   .btn.route { margin:0 0 0 8px; padding:3px 10px; font-size:12px; vertical-align:middle; }
@@ -95,6 +99,7 @@
   <div class="row" id="days"></div>
   <div class="row" id="cities"></div>
   <div class="row" id="zones"></div>
+  <div class="row" id="prefbar"></div>
 </div>
 <div id="banner" role="status" aria-live="polite"></div>
 <main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
@@ -103,7 +108,38 @@
 const $ = (id) => document.getElementById(id);
 const WD = ["日","月","火","水","木","金","土"];
 const ZONES = { "all":["すべて",0,24], "am":["午前",0,12], "pm":["午後",12,17], "ev":["夜",17,24] };
-const st = { date:null, city:"all", zone:"all" };
+const st = { date:null, city:"all", zone:"all", favOnly:false };
+// ---- お気に入り・非表示(このスマホだけに保存。ほかの人とは共有しない) ----
+const PREF_KEY = "courtPrefs";
+const prefs = (() => {
+  try { const p = JSON.parse(localStorage.getItem(PREF_KEY) || "{}");
+    return { fav: new Set(Array.isArray(p.fav) ? p.fav : []), hidden: new Set(Array.isArray(p.hidden) ? p.hidden : []), favOnly: !!p.favOnly };
+  } catch { return { fav: new Set(), hidden: new Set(), favOnly: false }; }
+})();
+st.favOnly = prefs.favOnly;
+function savePrefs() {
+  try { localStorage.setItem(PREF_KEY, JSON.stringify({ fav: [...prefs.fav], hidden: [...prefs.hidden], favOnly: st.favOnly })); } catch {}
+}
+const fkey = (site, facility) => site + "|" + facility;
+const isFav = (site, facility) => prefs.fav.has(fkey(site, facility));
+const isHidden = (site, facility) => prefs.hidden.has(fkey(site, facility));
+/** 一覧に出すか: 非表示にした施設は出さない。「お気に入りだけ」のときは、お気に入りだけ */
+const shown = (site, facility) => !isHidden(site, facility) && (!st.favOnly || isFav(site, facility));
+function favButton(site, facility) {
+  const b = document.createElement("button"); b.type = "button";
+  const on = isFav(site, facility);
+  b.className = "fav" + (on ? " on" : ""); b.textContent = on ? "★" : "☆";
+  b.title = on ? facility + "をお気に入りから外す" : facility + "をお気に入りにする";
+  b.setAttribute("aria-label", b.title); b.setAttribute("aria-pressed", on);
+  b.onclick = (e) => { e.preventDefault(); const k = fkey(site, facility); on ? prefs.fav.delete(k) : prefs.fav.add(k); savePrefs(); render(); toast(on ? "お気に入りから外しました" : "お気に入りにしました"); };
+  return b;
+}
+function hideButton(site, facility) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "mini hide-btn";
+  b.textContent = "非表示"; b.title = facility + "を一覧に出さない(あとで戻せます)";
+  b.onclick = () => { prefs.hidden.add(fkey(site, facility)); prefs.fav.delete(fkey(site, facility)); savePrefs(); render(); toast("非表示にしました(下の「非表示にした施設」から戻せます)"); };
+  return b;
+}
 let data = { slots:[], sites:[], links:[], errors:[] };
 let justImported = false;
 let imported = null; // ユーザーが自分のブラウザで取り込んだ空き(この端末だけに保存)
@@ -292,9 +328,15 @@ function render() {
   }
   chips($("cities"), [["all","全エリア"], ...data.sites.map(s => [s, s])], "city");
   chips($("zones"), Object.entries(ZONES).map(([k, v]) => [k, v[0]]), "zone");
+  const pb = $("prefbar"); pb.innerHTML = "";
+  const fo = document.createElement("button"); fo.type = "button";
+  fo.textContent = "★ お気に入りだけ" + (prefs.fav.size ? `(${prefs.fav.size})` : "");
+  fo.setAttribute("aria-pressed", st.favOnly);
+  fo.onclick = () => { if (!prefs.fav.size && !st.favOnly) { toast("施設名の横の☆を押すと、お気に入りにできます"); return; } st.favOnly = !st.favOnly; savePrefs(); render(); };
+  pb.appendChild(fo);
 
   const [, z0, z1] = ZONES[st.zone];
-  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0);
+  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility));
   const byFac = new Map();
   for (const s of hits) {
     const k = s.site + "|" + s.facility;
@@ -310,7 +352,9 @@ function render() {
     hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "");
     list.appendChild(hint);
   }
-  for (const f of byFac.values()) {
+  // お気に入りを先に(それ以外は、これまでどおりの順)
+  const facs = [...byFac.values()].sort((a, b) => isFav(b.site, b.facility) - isFav(a.site, a.facility));
+  for (const f of facs) {
     const card = document.createElement("section");
     card.className = "card";
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
@@ -318,6 +362,7 @@ function render() {
     const h2 = card.querySelector("h2");
     if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
+    h2.prepend(favButton(f.site, f.facility));
     h2.appendChild(routeLink(f.site, f.facility));
     const fNote = (data.facilityNotes || {})[f.site + "|" + f.facility];
     if (fNote) { const nn = document.createElement("div"); nn.className = "city"; nn.textContent = fNote; h2.insertAdjacentElement("afterend", nn); }
@@ -373,6 +418,7 @@ function render() {
     }
     const feeEl = feeBlock(f.site, f.facility);
     if (feeEl) card.appendChild(feeEl);
+    const foot = document.createElement("div"); foot.className = "card-foot"; foot.appendChild(hideButton(f.site, f.facility)); card.appendChild(foot);
     list.appendChild(card);
   }
   // 空きがない施設は、理由ごとに分けて表示する
@@ -383,14 +429,14 @@ function render() {
   const cityOk = (site) => st.city === "all" || site === st.city;
   const reasons = { full: new Map(), closed: new Map(), unpub: new Map() };
   for (const x of (data.status || [])) {
-    if (x.d !== st.date || !cityOk(x.s)) continue;
+    if (x.d !== st.date || !cityOk(x.s) || !shown(x.s, x.f)) continue;
     const k = key(x);
     if (openInZone.has(k)) continue;                                      // カードで表示済み
     reasons[openToday.has(k) ? "full" : x.t].set(k, { site: x.s, facility: x.f, label: x.l });
   }
   // 他の時間帯には空きがあるが、選んだ時間帯にはない施設
   for (const s of data.slots) {
-    if (s.date !== st.date || !cityOk(s.site)) continue;
+    if (s.date !== st.date || !cityOk(s.site) || !shown(s.site, s.facility)) continue;
     const k = s.site + "|" + s.facility;
     if (!openInZone.has(k)) reasons.full.set(k, { site: s.site, facility: s.facility });
   }
@@ -405,8 +451,9 @@ function render() {
     sum.className = "reason-title"; sum.textContent = `${title}(${items.size}施設)`;
     det.appendChild(sum);
     if (lead) { const l = document.createElement("div"); l.className = "city"; l.textContent = lead; det.appendChild(l); }
-    for (const it of [...items.values()].sort((a, b) => a.site.localeCompare(b.site, "ja"))) {
+    for (const it of [...items.values()].sort((a, b) => (isFav(b.site, b.facility) - isFav(a.site, a.facility)) || a.site.localeCompare(b.site, "ja"))) {
       const row = document.createElement("div"); row.className = "reason-row";
+      row.appendChild(favButton(it.site, it.facility));
       const url = urlFor(it.site, it.facility);
       const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
       const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
@@ -419,6 +466,31 @@ function render() {
   reasonCard("まだ空きが公開されていません", "予約アプリに、この日の枠がまだ出ていません。空いているかどうかは、各施設の予約サイトで確認してください。", reasons.unpub, "unpub");
   reasonCard("空きなし" + zoneNote, "", reasons.full, "none");
   reasonCard("休館・利用不可", "", reasons.closed, "none");
+
+  // 何も出ないとき(お気に入りだけ・非表示のせい)は、そう伝える
+  if (st.favOnly && !list.querySelector(".card")) {
+    const e = document.createElement("div"); e.className = "empty";
+    e.textContent = "この日・この条件では、お気に入りの施設の情報がありません。「★ お気に入りだけ」を押すと、すべての施設に戻ります。";
+    list.appendChild(e);
+  }
+  // 非表示にした施設(戻せる)
+  if (prefs.hidden.size) {
+    const card = document.createElement("section"); card.className = "card none";
+    const det = document.createElement("details");
+    const sum = document.createElement("summary"); sum.className = "reason-title"; sum.textContent = `非表示にした施設(${prefs.hidden.size})`;
+    det.appendChild(sum);
+    const l = document.createElement("div"); l.className = "city"; l.textContent = "このスマホだけの設定です。「戻す」で、一覧に出るようになります。"; det.appendChild(l);
+    for (const k of [...prefs.hidden].sort((a, b) => a.localeCompare(b, "ja"))) {
+      const [site, ...rest] = k.split("|"); const facility = rest.join("|");
+      const row = document.createElement("div"); row.className = "reason-row";
+      const name = document.createElement("span"); name.textContent = facility;
+      const area = document.createElement("small"); area.textContent = site;
+      const back = document.createElement("button"); back.type = "button"; back.className = "mini"; back.textContent = "戻す";
+      back.onclick = () => { prefs.hidden.delete(k); savePrefs(); render(); };
+      row.append(name, area, back); det.appendChild(row);
+    }
+    card.appendChild(det); list.appendChild(card);
+  }
 
   // 自動取得できない地域は、公式サイトへのリンクを出す
   for (const l of (data.links || [])) {
