@@ -147,6 +147,8 @@ export interface NsaTarget {
   facilityId: string;
   buildingName: string;
   buildingId: string;
+  /** 施設の案内ページ(公式。あれば) */
+  facilityUrl?: string;
 }
 
 export interface NaraSuperAppTopResponse {
@@ -155,6 +157,7 @@ export interface NaraSuperAppTopResponse {
       facilityId: string;
       facilityName: string;
       municipality: string;
+      facilityURL?: string;
       buildingList: { buildingId: string; buildingName: string; purposeUseList?: string[] }[];
     }[];
   };
@@ -185,6 +188,7 @@ export function pickNaraSuperAppTargets(top: NaraSuperAppTopResponse, purpose = 
           facilityId: f.facilityId,
           buildingName: b.buildingName,
           buildingId: b.buildingId,
+          facilityUrl: f.facilityURL || undefined,
         });
       }
     }
