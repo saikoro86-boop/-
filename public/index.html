@@ -53,6 +53,8 @@
   .card h2 a::after, .court a.cn::after { content:" ↗"; font-size:.7em; color:var(--sub); }
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
+  .fee-cc.ok { color:var(--accent); }
+  .fee-cc.warn { color:#b45309; }
   .btn.route { margin:0 0 0 8px; padding:3px 10px; font-size:12px; vertical-align:middle; }
   .card h2 a.route::after { content:none; }
   .card h2 a.route { color:#fff; text-decoration:none; }
@@ -186,7 +188,7 @@ function feeBlock(site, facility) {
   const fee = feeFor(site, facility);
   if (fee) {
     const det = document.createElement("details"); det.className = "fee";
-    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary; det.appendChild(sum);
+    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary + (fee.crossCheck ? (fee.crossCheck.status === "match" ? " ✓" : " ⚠") : ""); det.appendChild(sum);
     const lines = document.createElement("div"); lines.className = "fee-lines";
     for (const t of fee.lines) { const d = document.createElement("div"); d.textContent = t; lines.appendChild(d); }
     det.appendChild(lines);
@@ -194,6 +196,14 @@ function feeBlock(site, facility) {
     const src = document.createElement("div"); src.className = "fee-src";
     src.append("出典: ", anchor(fee.source.url, fee.source.label), `(確認日 ${m}/${d}。料金は改定されることがあります。最新は、公式の案内で確認してください)`);
     det.appendChild(src);
+    // 裏付け: 別の資料(条例・別の公式ページ・テニスコート情報サイト)でも同じ金額か
+    const cc = fee.crossCheck;
+    if (cc && cc.sources && cc.sources.length) {
+      const box = document.createElement("div"); box.className = "fee-src fee-cc " + (cc.status === "match" ? "ok" : "warn");
+      box.append(cc.status === "match" ? "✓ 別の資料でも同じ金額でした: " : "⚠ 別の資料と金額が違います(公式の金額を表示しています): ");
+      cc.sources.forEach((x, i) => { if (i) box.append(" / "); box.append(anchor(x.url, x.label), x.note ? "(" + x.note + ")" : ""); });
+      det.appendChild(box);
+    }
     return det;
   }
   const fl = feeLinkFor(site, facility);

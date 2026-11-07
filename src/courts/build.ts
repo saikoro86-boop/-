@@ -226,7 +226,10 @@ async function main() {
 
   mkdirSync("public", { recursive: true });
   const feeConfig = JSON.parse(readFileSync("config/fees.json", "utf-8")) as {
-    fees: { site: string; match: string; summary: string; lines: string[]; source: { label: string; url: string }; checkedAt: string }[];
+    fees: {
+      site: string; match: string; summary: string; lines: string[]; source: { label: string; url: string }; checkedAt: string;
+      crossCheck?: { status: "match" | "conflict"; checkedAt: string; sources: { label: string; url: string; note?: string }[] };
+    }[];
     links: { site: string; match: string; url: string }[];
   };
   // 「ルート」ボタンの行き先(名前だけでは場所が決まらない施設の所在地)。出典は config 側にだけ残す
