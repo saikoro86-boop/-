@@ -229,6 +229,10 @@ async function main() {
     fees: { site: string; match: string; summary: string; lines: string[]; source: { label: string; url: string }; checkedAt: string }[];
     links: { site: string; match: string; url: string }[];
   };
+  // 「ルート」ボタンの行き先(名前だけでは場所が決まらない施設の所在地)。出典は config 側にだけ残す
+  const placeConfig = JSON.parse(readFileSync("config/places.json", "utf-8")) as {
+    places: { site: string; match: string; dest: string; source: string }[];
+  };
   const common = {
     updatedAt: new Date().toISOString(),
     sites,
@@ -247,6 +251,7 @@ async function main() {
     // 料金: 公式の原本で確認できたものだけ(config/fees.json)。確認できない施設は、公式ページへのリンク
     fees: feeConfig.fees,
     feeLinks: [...feeConfig.links, ...nsaInfoLinks],
+    places: placeConfig.places.map(({ site, match, dest }) => ({ site, match, dest })),
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],
     errors,
