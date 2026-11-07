@@ -15,6 +15,7 @@
  *   → 「空き」= 枠があって、予約の明細がないもの。※画面との突き合わせは未了(README 参照)
  */
 import { isPlayingSpace, type CourtAvailability, type Slot } from "./kashikan";
+import { fetchWithTimeout } from "./http";
 
 export const NSA_ENDPOINT =
   "https://nsa.pref.nara.jp/fre/webruntime/api/apex/execute?language=ja&asGuest=true&htmlEncode=false";
@@ -85,7 +86,7 @@ export async function fetchNaraSuperAppRaw(buildingId: string, facilityId: strin
     params: { buildingId, facilityId, isForStaff: false, rsvId: null },
     cacheable: false,
   };
-  const res = await fetch(NSA_ENDPOINT, {
+  const res = await fetchWithTimeout(NSA_ENDPOINT, {
     method: "POST",
     headers: {
       "content-type": "application/json; charset=utf-8",
@@ -164,7 +165,7 @@ export interface NaraSuperAppTopResponse {
 }
 
 export async function fetchNaraSuperAppTop(): Promise<NaraSuperAppTopResponse> {
-  const res = await fetch(NSA_ENDPOINT, {
+  const res = await fetchWithTimeout(NSA_ENDPOINT, {
     method: "POST",
     headers: {
       "content-type": "application/json; charset=utf-8",

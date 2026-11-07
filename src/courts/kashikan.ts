@@ -2,6 +2,7 @@
  * 「いつでも貸館」(PASTORALE 社 / k6.p-kashikan.jp) 系の公共施設予約サイトから
  * テニスコートの空き状況を取得する。ログイン不要の「目的で検索」画面を使う。
  */
+import { fetchWithTimeout } from "./http";
 
 export interface Slot {
   /** 開始時刻(時) */
@@ -83,7 +84,7 @@ export const isTennisCourt = (c: CourtAvailability) => isPlayingSpace(c);
 export const isOpen = (s: Slot) => /^[\u3007\u25cb\u25ef]$/.test(s.mark);
 
 async function request(url: string, body: URLSearchParams, cookie: string) {
-  const res = await fetch(url, {
+  const res = await fetchWithTimeout(url, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded", cookie },
     body,
@@ -99,7 +100,7 @@ export async function fetchDay(
   purpose = DEFAULT_PURPOSE,
 ): Promise<CourtAvailability[]> {
   const [y, m, d] = date.split("-");
-  const top = await fetch(site.url);
+  const top = await fetchWithTimeout(site.url);
   const cookie = (top.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
   const out: CourtAvailability[] = [];
   for (const code of purpose.codes) {
