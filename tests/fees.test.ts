@@ -101,3 +101,9 @@ test("斑鳩町「健民」と香芝市「健民」は、エリアが違うの�
   assert.equal(feeFor("斑鳩町", "香芝健民テニスコート").length, 0);
   assert.equal(feeFor("香芝市", "奈良県斑鳩健民運動場").length, 0);
 });
+
+test("大和郡山市: まほろば健康パークは1面1時間560円(照明+500円)", () => {
+  const f = feeFor("大和郡山市", "まほろば健康パーク");
+  assert.equal(f.length, 1);
+  assert.match(f[0].summary, /560円.*\+500円/);
+});
