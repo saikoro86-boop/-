@@ -44,6 +44,9 @@ jobs:
 
       - name: 空き状況を取得
         run: npm run courts:build
+        env:
+          # 前回公開したデータ。新しく空いた枠(🆕)を見つけるのに使う
+          PREV_URL: https://${{ github.repository_owner }}.github.io/${{ vars.SITE_REPO }}/data2.json
 
       - name: 取り込み用ブックマークレットを生成(公開URL向け)
         run: npm run bookmarklet

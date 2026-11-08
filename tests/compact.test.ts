@@ -46,3 +46,20 @@ test("空の入力でも動く", () => {
   assert.deepEqual(compactSlots([]), { courts: [], byDate: {} });
   assert.deepEqual(expandSlots({ courts: [], byDate: {} }), []);
 });
+
+// ---- 🆕 新しく空いた枠 ----
+import { markNew } from "../src/courts/compact";
+test("前回は埋まっていた時間を含む枠に🆕、同じ枠や先の新しい日には付けない", () => {
+  const prev = { courts: [["奈良市", "A", "1"]] as [string, string, string][], byDate: { "2026-11-10": [[0, 9, 12, 0]] as any } };
+  const cur = {
+    courts: [["奈良市", "A", "1"], ["奈良市", "A", "2"]] as [string, string, string][],
+    byDate: {
+      "2026-11-10": [[0, 9, 12, 0], [0, 13, 15, 0], [1, 9, 10, 0]] as any,
+      "2026-11-11": [[0, 9, 12, 0]] as any, // 前回より先の日(新しく公開された日)
+    },
+  };
+  const r = markNew(cur, prev);
+  assert.deepEqual(r.byDate["2026-11-10"].map((x) => x[4] ?? 0), [0, 1, 1]);
+  assert.deepEqual(r.byDate["2026-11-11"].map((x) => x[4] ?? 0), [0]);
+  assert.equal(markNew(cur, null), cur);
+});

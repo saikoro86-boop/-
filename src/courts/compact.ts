@@ -6,8 +6,8 @@
  */
 import type { OpenSlot } from "./types";
 
-/** [コートの番号, 開始, 終了, ネット予約の受付外(1)か通常(0)か] */
-export type CompactSlot = [number, number, number, 0 | 1];
+/** [コートの番号, 開始, 終了, ネット予約の受付外(1)か通常(0)か, 前回の更新から新しく空いた(1)] */
+export type CompactSlot = [number, number, number, 0 | 1] | [number, number, number, 0 | 1, 1];
 
 export interface CompactSlots {
   /** [エリア, 施設, コート] */
@@ -60,4 +60,39 @@ export function expandSlots(c: CompactSlots): OpenSlot[] {
     }
   }
   return out;
+}
+
+/**
+ * 前回公開したデータと比べて、新しく空いた枠に印(5番目 = 1)を付ける。
+ * - 同じ日・同じコートで、前回は空いていなかった時間を含む枠が「新しい」
+ * - 前回のデータに無かった先の日付(予約期間が1日進んで出てきた日)は、全部が新しくなってしまうので、印を付けない
+ * - 前回のデータがなければ(初回など)、何もしない
+ */
+export function markNew(cur: CompactSlots, prev: CompactSlots | null): CompactSlots {
+  if (!prev || !Object.keys(prev.byDate).length) return cur;
+  const prevMax = Object.keys(prev.byDate).sort().pop()!;
+  const cover = new Map<string, [number, number][]>();
+  for (const [date, list] of Object.entries(prev.byDate)) {
+    for (const [ci, s, e] of list) {
+      const c = prev.courts[ci]; if (!c) continue;
+      const k = `${date}|${c[0]}|${c[1]}|${c[2]}`;
+      (cover.get(k) ?? cover.set(k, []).get(k)!).push([s, e]);
+    }
+  }
+  const covered = (spans: [number, number][] | undefined, s: number, e: number) => {
+    if (!spans) return false;
+    let t = s;
+    for (const [a, b] of [...spans].sort((x, y) => x[0] - y[0])) { if (a <= t && b > t) t = b; if (t >= e) return true; }
+    return t >= e;
+  };
+  const byDate: Record<string, CompactSlot[]> = {};
+  for (const [date, list] of Object.entries(cur.byDate)) {
+    byDate[date] = list.map((x) => {
+      const [ci, s, e, off] = x;
+      if (date > prevMax) return [ci, s, e, off];
+      const c = cur.courts[ci];
+      return covered(cover.get(`${date}|${c[0]}|${c[1]}|${c[2]}`), s, e) ? [ci, s, e, off] : [ci, s, e, off, 1];
+    });
+  }
+  return { courts: cur.courts, byDate };
 }

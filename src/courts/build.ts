@@ -16,7 +16,7 @@ import {
   type NaraSuperAppResponse,
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
-import { compactSlots } from "./compact";
+import { compactSlots, markNew, type CompactSlots } from "./compact";
 import { fetchWeather } from "./weather";
 import { findContact, type Contact } from "./phone";
 import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
@@ -249,6 +249,8 @@ async function main() {
   } catch (e) {
     console.log("天気(気象庁)の取得に失敗:", (e as Error).message);
   }
+  // 施設名を押したときに開く、施設の公式ページ
+  const officialConfig = JSON.parse(readFileSync("config/official.json", "utf-8")) as { urls: Record<string, string> };
   const placeConfig = JSON.parse(readFileSync("config/places.json", "utf-8")) as {
     places: { site: string; match: string; dest: string; source: string }[];
   };
@@ -273,13 +275,25 @@ async function main() {
     coords: Object.fromEntries(Object.entries(coordConfig.coords).map(([k, v]) => [k, [v.lat, v.lng]])),
     courtInfo: Object.fromEntries(Object.entries(courtInfo.info).map(([k, v]) => [k, { s: v.surfaces, i: v.indoor ? 1 : 0, n: v.nighter == null ? null : v.nighter ? 1 : 0 }])),
     weather,
+    officialUrls: officialConfig.urls,
     places: placeConfig.places.map(({ site, match, dest }) => ({ site, match, dest })),
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],
     errors,
   };
   // data2.json: スマホ向けの小さな形式(いまの画面が読む)
-  const compact = compactSlots(slots);
+  // 前回公開したデータ(PREV_URL)と比べて、新しく空いた枠に印を付ける。取れなければ印なし
+  let prev: CompactSlots | null = null;
+  if (process.env.PREV_URL) {
+    try {
+      const r = await fetch(process.env.PREV_URL, { headers: { "cache-control": "no-cache" } });
+      if (r.ok) { const j = (await r.json()) as { v?: number } & CompactSlots; if (j.v === 2) prev = { courts: j.courts, byDate: j.byDate }; }
+    } catch (e) {
+      console.log("前回のデータを取得できませんでした(🆕の印なしで続けます):", (e as Error).message);
+    }
+  }
+  const compact = markNew(compactSlots(slots), prev);
+  console.log(`🆕 新しく空いた枠: ${Object.values(compact.byDate).flat().filter((x) => x[4] === 1).length} 件(前回データ ${prev ? "あり" : "なし"})`);
   const small = JSON.stringify({ v: 2, ...common, courts: compact.courts, byDate: compact.byDate });
   writeFileSync("public/data2.json", small);
   // data.json: 従来の形式。キャッシュに残った古い画面が読むために、しばらく残す(新しい画面は読まない)

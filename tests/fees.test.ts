@@ -155,3 +155,14 @@ test("南部は多目的コートの料金も出す / 新町公園の照明は1�
   assert.match(n.summary, /多目的コート 午前750円/);
   assert.match(feeFor("葛城市", "新町公園")[0].summary, /1,100円/);
 });
+
+test("夜の料金(照明込み)の数値は、料金の説明文と同じ金額を使っている", () => {
+  const withNight = (cfg.fees as any[]).filter((f) => f.night);
+  assert.ok(withNight.length >= 12);
+  for (const f of withNight) {
+    const n = f.night;
+    assert.ok([1, 2, 4].includes(n.unit) && n.court > 0 && n.light > 0, f.match);
+    const txt = f.summary + f.lines.join(" ");
+    assert.ok(txt.includes(n.court.toLocaleString("en-US") + "円"), `${f.match}: ${n.court}`);
+  }
+});

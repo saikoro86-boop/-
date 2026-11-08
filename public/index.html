@@ -60,10 +60,13 @@
   .hint { color:var(--sub); font-size:12px; padding:0 2px; }
   .btn.tel { margin:6px 8px 0 0; }
   .row[hidden] { display:none; }
+  .t.fresh { box-shadow:0 0 0 2px #f59e0b inset; }
+  .night { margin-top:8px; font-size:12px; color:var(--text); background:var(--chip); border-radius:10px; padding:6px 10px; }
   .day .wx { display:block; font-size:10px; color:var(--sub); margin-top:1px; }
   button[aria-pressed="true"] .wx { color:#fff; }
   .wx-h { margin-left:8px; font-size:13px; font-weight:400; color:var(--sub); }
-  #filterbar { flex-wrap:wrap; }
+  #filterbar { flex-wrap:wrap; gap:6px; }
+  #filterbar button { font-size:13px; padding:4px 10px; }
   #install { display:flex; align-items:center; gap:8px; justify-content:space-between; margin-top:8px; padding:8px 10px; border-radius:12px; background:var(--chip); font-size:13px; }
   #install[hidden] { display:none; }
   .card.multi h2.mday { font-size:15px; margin-bottom:6px; }
@@ -143,7 +146,7 @@ st.favOnly = prefs.favOnly;
 // ---- 前回の選択を覚える(このスマホだけ) ----
 // view: day=日付ごと / week=7日間 / weekend=土日、sort: def=いつもの順 / near=近い順
 st.view = "day"; st.sort = "def";
-st.filt = { omni: false, clay: false, hard: false, indoor: false, night: false }; st.filtOpen = false;
+st.filt = { omni: false, clay: false, hard: false, indoor: false, night: false, fresh: false, long: false }; st.filtOpen = false;
 const UI_KEY = "courtUI";
 try {
   const u = JSON.parse(localStorage.getItem(UI_KEY) || "{}");
@@ -168,7 +171,8 @@ function weatherOf(d) {
 const weatherText = (d) => { const w = weatherOf(d); return w ? `${w.icon}${w.pop != null ? w.pop + "%" : ""}` : ""; };
 
 // ---- コートの種類・屋内・ナイターで絞り込む ----
-const FILT = [["omni", "オムニ(砂入り人工芝)"], ["clay", "クレー"], ["hard", "全天候・ハード"], ["indoor", "屋内(体育館など)"], ["night", "ナイターあり"]];
+const FILT = [["fresh", "🆕 新しい空き"], ["long", "2時間以上"], ["omni", "オムニ"], ["clay", "クレー"], ["hard", "全天候"], ["indoor", "屋内"], ["night", "ナイター"]];
+const FILT_TITLE = { fresh: "前回の更新のあとに新しく空いた枠だけ", long: "2時間以上続けて空いている枠だけ", omni: "オムニ(砂入り人工芝)", clay: "クレー", hard: "全天候・ハード", indoor: "屋内(体育館など)", night: "ナイター(照明)がある施設" };
 const infoOf = (site, facility) => (data.courtInfo || {})[fkey(site, facility)] || null;
 /** コート名に種類が書いてあれば、それを優先(例: コートC(クレーコート)) */
 function surfacesOf(site, facility, court) {
@@ -179,7 +183,24 @@ function surfacesOf(site, facility, court) {
   }
   const i = infoOf(site, facility); return i ? i.s : [];
 }
-const filtOn = () => Object.values(st.filt).some(Boolean);
+const filtOn = () => ["omni", "clay", "hard", "indoor", "night"].some(k => st.filt[k]);
+// 枠ごとの条件(🆕・2時間以上)。同じコート・同じ日の、続いている空きをまとめて長さを見る(☎の枠も含めて続きとみなす)
+let runsFor = null, runs = new Map();
+function slotOk(x) {
+  if (st.filt.fresh && !x.fresh) return false;
+  if (st.filt.long) {
+    if (runsFor !== data) {
+      runs = new Map(); const g = new Map();
+      for (const y of data.slots) { const k = y.date + "|" + fkey(y.site, y.facility) + "|" + y.court; if (!g.has(k)) g.set(k, []); g.get(k).push([y.start, y.end]); }
+      for (const [k, sp] of g) { sp.sort((a, b) => a[0] - b[0]); const m = []; for (const [a, b] of sp) { const l = m[m.length - 1]; if (l && a <= l[1]) l[1] = Math.max(l[1], b); else m.push([a, b]); } runs.set(k, m); }
+      runsFor = data;
+    }
+    const m = runs.get(x.date + "|" + fkey(x.site, x.facility) + "|" + x.court) || [];
+    const r = m.find(([a, b]) => a <= x.start && x.end <= b);
+    if (!r || r[1] - r[0] < 2) return false;
+  }
+  return true;
+}
 function courtOk(site, facility, court) {
   if (!filtOn()) return true;
   const i = infoOf(site, facility);
@@ -302,6 +323,11 @@ const urlFor = (site, facility) => {
   const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl;
   return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
 };
+// 施設の公式ページ(施設名を押したとき)。無ければ null(そのときは予約サイトを開く)
+function officialFor(site, facility) {
+  const u = (data.officialUrls || {})[site + "|" + facility] || (feeLinkFor(site, facility) || {}).url;
+  return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
+}
 const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
 // 公式サイト(奈良市・生駒市)の検索フォームへ、選んだ日付と目的コードを入れて送信する。
 // 公式の画面で「日付を選ぶ→テニスを選ぶ→検索」と操作した状態と同じ結果が、新しいタブで開く。
@@ -339,6 +365,20 @@ function routeLink(site, facility, cls = "btn route") {
   a.title = facility + "まで、現在地からのルートを Google マップで開く";
   a.setAttribute("aria-label", a.title);
   return a;
+}
+
+// ---- 夜(照明あり)の料金の目安。公式で確かめたコート料金と照明料を足すだけ ----
+function nightLine(site, facility, date, spans) {
+  const fee = feeFor(site, facility); const n = fee && fee.night; if (!n || !date) return null;
+  const month = Number(date.slice(5, 7));
+  const from = n.fromSummer && month >= 3 && month <= 9 ? n.fromSummer : n.from;
+  if (!spans.some(x => x.end > from)) return null; // 夜の枠が出ていなければ出さない
+  const el = document.createElement("div"); el.className = "night";
+  if (n.months && !n.months.includes(month)) { el.textContent = `🌙 この時期は照明が使えません(${n.note || ""})`; return el; }
+  const unit = n.unit === 1 ? "1時間" : n.unit + "時間";
+  const yen = (v) => v.toLocaleString("ja-JP") + "円";
+  el.textContent = `🌙 夜(照明あり)の目安: 1面${unit} ${yen(n.court)}+照明${yen(n.light)}=${yen(n.court + n.light)}(${from}時以降。${n.note ? n.note + "。" : ""}市内料金)`;
+  return el;
 }
 
 // ---- 料金(公式の原本で確認できたものだけ。ない施設は、公式ページへのリンク) --------
@@ -442,12 +482,12 @@ function renderMulti(vis, dates) {
   let ds = future.slice(0, 7);
   if (st.view === "weekend") ds = future.filter(d => [0, 6].includes(wd(d))).slice(0, 4);
   const hint = document.createElement("div"); hint.className = "hint";
-  hint.textContent = (st.view === "weekend" ? "この先の土日" : "この先7日間") + "の空きをまとめています。施設の行を押すと、その日の詳しい空き(コートごと)が開きます。" + (st.favOnly ? "(お気に入りだけ)" : "") + (filtOn() ? "(絞り込み中)" : "");
+  hint.textContent = (st.view === "weekend" ? "この先の土日" : "この先7日間") + "の空きをまとめています。施設の行を押すと、その日の詳しい空き(コートごと)が開きます。" + (st.favOnly ? "(お気に入りだけ)" : "") + (filtOn() || st.filt.fresh || st.filt.long ? "(絞り込み中)" : "") + "🆕 は、前回の更新のあとに新しく空いた枠がある施設です。";
   if (data.weather) hint.textContent += `天気は気象庁の予報(${W_NAME[wArea()]}、降水確率は6〜18時の大きいほう)。`;
   list.appendChild(hint);
   let any = false;
   for (const d of ds) {
-    const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court));
+    const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court) && slotOk(s));
     const card = document.createElement("section"); card.className = "card multi";
     const h = document.createElement("h2"); h.className = "mday " + (wd(d) === 6 ? "sat" : wd(d) === 0 ? "sun" : "");
     h.textContent = dateLabel(d);
@@ -473,7 +513,7 @@ function renderMulti(vis, dates) {
       row.appendChild(favButton(f.site, f.facility));
       const main = document.createElement("button"); main.type = "button"; main.className = "mmain";
       main.title = dateLabel(d) + " " + f.facility + " の空きを詳しく見る";
-      const nm = document.createElement("span"); nm.className = "mname"; nm.textContent = f.facility;
+      const nm = document.createElement("span"); nm.className = "mname"; nm.textContent = (f.spans.some(x => x.fresh) ? "🆕 " : "") + f.facility;
       const sub = document.createElement("span"); sub.className = "msub";
       sub.textContent = f.site + (infoTag(f.site, f.facility) ? "・" + infoTag(f.site, f.facility) : "") + " ・ " + f.courts.size + "面 ・ " + merged.map(([a, b2, off]) => `${hm(a)}–${hm(b2)}${off ? "☎" : ""}`).join(" ");
       const dt = distTag(f.site, f.facility); if (dt) sub.append(" ・ ", dt);
@@ -541,7 +581,7 @@ function render() {
   pb.appendChild(fb);
   const fr = $("filterbar"); fr.innerHTML = ""; fr.hidden = !st.filtOpen;
   for (const [k, label] of FILT) {
-    const b = document.createElement("button"); b.type = "button"; b.textContent = label;
+    const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.title = FILT_TITLE[k];
     b.setAttribute("aria-pressed", st.filt[k]);
     b.onclick = () => { st.filt[k] = !st.filt[k]; render(); };
     fr.appendChild(b);
@@ -552,7 +592,7 @@ function render() {
   if (st.view !== "day") { renderMulti(vis, dates); return; }
 
   const [, z0, z1] = ZONES[st.zone];
-  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court));
+  const hits = vis.filter(s => s.date === st.date && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court) && slotOk(s));
   const byFac = new Map();
   for (const s of hits) {
     const k = s.site + "|" + s.facility;
@@ -565,7 +605,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "") + (weatherOf(st.date) ? `この日の天気(気象庁・${W_NAME[wArea()]}): ${weatherText(st.date)}(降水確率は6〜18時の大きいほう)。` : "") + (filtOn() ? "コートの種類などで絞り込み中です(種類が分からない施設は出ません)。" : "");
+    hint.textContent = "時間をタップすると予約サイト、施設名をタップすると施設の公式ページ(場所・駐車場・注意事項など)が開きます。予約サイトは、奈良市・生駒市ならこの日のテニスの空き一覧から、ほかは施設の予約画面から始まるので、日付は予約サイト側で選んでください。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "") + (weatherOf(st.date) ? `この日の天気(気象庁・${W_NAME[wArea()]}): ${weatherText(st.date)}(降水確率は6〜18時の大きいほう)。` : "") + (filtOn() ? "コートの種類などで絞り込み中です(種類が分からない施設は出ません)。" : "") + (hits.some(x => x.fresh) ? "🆕 は、前回の更新(約3時間前)のあとに新しく空いた枠です(キャンセルなど)。" : "") + (st.filt.long ? "2時間以上続けて空いている枠だけを出しています。" : "");
     list.appendChild(hint);
   }
   // お気に入りを先に(それ以外は、これまでどおりの順)
@@ -578,7 +618,9 @@ function render() {
     const tg = infoTag(f.site, f.facility); if (tg) card.querySelector(".city").append(" ・ " + tg);
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
-    if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
+    const oUrl = officialFor(f.site, f.facility);
+    if (oUrl) h2.appendChild(anchor(oUrl, f.facility, "", f.facility + "の公式ページ(場所・駐車場・注意事項など)を開く"));
+    else if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
     h2.prepend(favButton(f.site, f.facility));
     h2.appendChild(routeLink(f.site, f.facility));
@@ -588,21 +630,20 @@ function render() {
       const row = document.createElement("div");
       row.className = "court";
       const name = document.createElement("span");
-      if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く", postFor(f.site, f.facility, court)));
-      else name.textContent = court;
+      name.textContent = court; // コート名はリンクにしない(予約は時間の枠から)
       const times = document.createElement("span"); times.className = "times";
       // 連続する枠(9-10, 10-11 …)は 1 つにまとめる。ネット予約できる枠と、受付外(●・電話)の枠は分けて結合する
       const merged = [];
       for (const s of ss.sort((a, b) => a.start - b.start)) {
         const last = merged.filter(m => !!m.offline === !!s.offline).pop();
-        if (last && s.start <= last.end) last.end = Math.max(last.end, s.end);
-        else merged.push({ start: s.start, end: s.end, offline: !!s.offline });
+        if (last && s.start <= last.end) { last.end = Math.max(last.end, s.end); last.fresh = last.fresh || !!s.fresh; }
+        else merged.push({ start: s.start, end: s.end, offline: !!s.offline, fresh: !!s.fresh });
       }
       merged.sort((a, b) => a.start - b.start || a.end - b.end);
       for (const s of merged) {
         const label = `${hm(s.start)}–${hm(s.end)}`;
-        const cls = "t" + (s.offline ? " off" : "");
-        const text = s.offline ? label + " ☎" : label;
+        const cls = "t" + (s.offline ? " off" : "") + (s.fresh ? " fresh" : "");
+        const text = (s.fresh ? "🆕" : "") + (s.offline ? label + " ☎" : label);
         const title = s.offline ? `${court} ${label}(ネット予約は受付外・電話や窓口で予約)` : `${court} ${label} の予約サイトを開く`;
         if (fUrl) times.appendChild(anchor(fUrl, text, cls, title, postFor(f.site, f.facility, court)));
         else { const t = document.createElement("span"); t.className = cls; t.textContent = text; times.appendChild(t); }
@@ -634,6 +675,8 @@ function render() {
       }
       card.appendChild(box);
     }
+    const nl = nightLine(f.site, f.facility, st.date, [...f.courts.values()].flat());
+    if (nl) card.appendChild(nl);
     const feeEl = feeBlock(f.site, f.facility);
     if (feeEl) card.appendChild(feeEl);
     const foot = document.createElement("div"); foot.className = "card-foot"; foot.appendChild(hideButton(f.site, f.facility)); card.appendChild(foot);
@@ -673,9 +716,12 @@ function render() {
       const row = document.createElement("div"); row.className = "reason-row";
       row.appendChild(favButton(it.site, it.facility));
       const url = urlFor(it.site, it.facility);
-      const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
+      const ou = officialFor(it.site, it.facility);
+      const name = ou ? anchor(ou, it.facility, "cn", it.facility + "の公式ページを開く") : url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
       const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
-      row.append(name, area, routeLink(it.site, it.facility, "route-mini"));
+      row.append(name, area);
+      if (ou && url) { const rv = anchor(url, "予約", "route-mini", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)); row.appendChild(rv); }
+      row.appendChild(routeLink(it.site, it.facility, "route-mini"));
       det.appendChild(row);
     }
     card.appendChild(det);
@@ -813,9 +859,9 @@ function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = nul
 function expandV2(d) {
   const out = [];
   for (const [date, list] of Object.entries(d.byDate || {})) {
-    for (const [ci, start, end, off] of list) {
+    for (const [ci, start, end, off, nw] of list) {
       const c = d.courts[ci]; if (!c) continue;
-      out.push({ date, site: c[0], facility: c[1], court: c[2], start, end, ...(off ? { offline: true } : {}) });
+      out.push({ date, site: c[0], facility: c[1], court: c[2], start, end, ...(off ? { offline: true } : {}), ...(nw ? { fresh: true } : {}) });
     }
   }
   return out;
