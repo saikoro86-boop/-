@@ -109,6 +109,19 @@
   @media (prefers-reduced-motion: reduce) { .spin { animation:none; } }
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 16px; border-radius:999px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .3s; z-index:5; }
   #toast.show { opacity:.92; }
+  /* 予定に追加(カレンダー) */
+  #cal { border:0; border-radius:16px 16px 0 0; margin:auto auto 0; width:100%; max-width:520px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); background:var(--bg); color:var(--text); }
+  #cal::backdrop { background:rgba(0,0,0,.35); }
+  #cal h3 { margin:0 0 4px; font-size:16px; }
+  #cal .cal-sub { color:var(--sub); font-size:12px; margin-bottom:10px; }
+  #cal .cal-time { display:flex; align-items:center; gap:8px; margin:8px 0 12px; font-size:15px; }
+  #cal select { font-size:16px; padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--card, var(--bg)); color:var(--text); }
+  #cal .cal-btns { display:flex; flex-direction:column; gap:8px; }
+  #cal .cal-btns a, #cal .cal-btns button { display:block; text-align:center; padding:12px; border-radius:12px; font-size:15px; font-weight:600; text-decoration:none; border:0; }
+  #cal .cal-g { background:var(--accent); color:#fff; }
+  #cal .cal-i { background:var(--chip); color:var(--accent); }
+  #cal .cal-x { background:transparent; color:var(--sub); font-weight:400 !important; }
+  #cal .cal-note { color:var(--sub); font-size:12px; margin-top:10px; line-height:1.6; }
 </style>
 </head>
 <body>
@@ -130,6 +143,17 @@
 <div id="banner" role="status" aria-live="polite"></div>
 <main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
 <div id="toast" role="status"></div>
+<dialog id="cal" aria-labelledby="cal-title">
+  <h3 id="cal-title">予定に追加</h3>
+  <div class="cal-sub" id="cal-sub"></div>
+  <label class="cal-time"><select id="cal-from" aria-label="開始"></select>〜<select id="cal-to" aria-label="終了"></select></label>
+  <div class="cal-btns">
+    <a id="cal-g" class="cal-g" target="_blank" rel="noopener noreferrer">Google カレンダーに追加</a>
+    <a id="cal-i" class="cal-i" download="tennis.ics">iPhone のカレンダーに追加</a>
+    <button type="button" class="cal-x" id="cal-close">閉じる</button>
+  </div>
+  <div class="cal-note">予約が取れた時間を選んでから追加してください。予定には、予約サイト・公式ページ・ルートのリンクと料金の目安が入ります。iPhone の方は、1時間前に通知が出ます。</div>
+</dialog>
 <script>
 const $ = (id) => document.getElementById(id);
 const WD = ["日","月","火","水","木","金","土"];
@@ -442,6 +466,80 @@ function miniButton(label, aria, onclick) {
   return b;
 }
 
+// ---- 予定に追加(Google カレンダー / iPhone のカレンダー) -------------------------------
+// 予約が取れた枠を、自分のカレンダーに入れる。データはどこにも送らない(リンクとファイルを作るだけ)
+const pad2 = (n) => String(n).padStart(2, "0");
+/** "2026-11-08", 9.5 → "20261108T093000"(日本時間のまま。タイムゾーンは別に付ける) */
+function calStamp(date, h) {
+  const m = Math.round(h * 60);
+  return date.replace(/-/g, "") + "T" + pad2(Math.floor(m / 60)) + pad2(m % 60) + "00";
+}
+function calDetails(site, facility, court) {
+  const lines = [`${site} ${facility} ${court}`];
+  const fee = feeFor(site, facility); if (fee) lines.push("料金の目安: " + fee.summary);
+  const u = urlFor(site, facility); if (u) lines.push("予約サイト: " + u);
+  const o = officialFor(site, facility); if (o) lines.push("公式ページ: " + o);
+  lines.push("ルート: " + mapUrl(site, facility));
+  return lines.join("\n");
+}
+function googleCalUrl(ev) {
+  const q = new URLSearchParams({ action: "TEMPLATE", text: ev.title, dates: calStamp(ev.date, ev.start) + "/" + calStamp(ev.date, ev.end), ctz: "Asia/Tokyo", details: ev.details, location: ev.location });
+  return "https://calendar.google.com/calendar/render?" + q.toString();
+}
+/** iCalendar(.ics)。改行・カンマなどはエスケープし、75 バイトを超える行は折り返す */
+function icsText(ev) {
+  const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+  const fold = (line) => {
+    const out = []; let cur = "", bytes = 0;
+    for (const ch of line) {
+      const b = new TextEncoder().encode(ch).length;
+      if (bytes + b > 74) { out.push(cur); cur = " "; bytes = 1; }
+      cur += ch; bytes += b;
+    }
+    out.push(cur); return out.join("\r\n");
+  };
+  const now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const uid = calStamp(ev.date, ev.start) + "-" + Math.abs([...ev.title].reduce((a, c) => (a * 31 + c.codePointAt(0)) | 0, 7)) + "@tennis-courts";
+  return [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tennis-courts//ja", "CALSCALE:GREGORIAN",
+    "BEGIN:VTIMEZONE", "TZID:Asia/Tokyo", "BEGIN:STANDARD", "DTSTART:19700101T000000", "TZOFFSETFROM:+0900", "TZOFFSETTO:+0900", "TZNAME:JST", "END:STANDARD", "END:VTIMEZONE",
+    "BEGIN:VEVENT", "UID:" + uid, "DTSTAMP:" + now,
+    "DTSTART;TZID=Asia/Tokyo:" + calStamp(ev.date, ev.start), "DTEND;TZID=Asia/Tokyo:" + calStamp(ev.date, ev.end),
+    "SUMMARY:" + esc(ev.title), "LOCATION:" + esc(ev.location), "DESCRIPTION:" + esc(ev.details),
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc(ev.title), "TRIGGER:-PT1H", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR", ""
+  ].map(fold).join("\r\n");
+}
+/** 予定に追加の画面を開く。spans はそのコートの、その日の空き(ネット予約できる枠を先に) */
+function openCal(site, facility, court, date, spans) {
+  const dlg = $("cal"); if (!dlg || !spans.length) return;
+  const STEP = 0.5;
+  const opts = [];
+  for (const s of spans) for (let h = s.start; h < s.end - 1e-9; h += STEP) opts.push({ h, span: s });
+  const from = $("cal-from"), to = $("cal-to");
+  from.innerHTML = ""; opts.forEach((o, i) => from.add(new Option(fmtT(o.h), i)));
+  const fillTo = () => {
+    const o = opts[+from.value]; const prev = +to.value;
+    to.innerHTML = "";
+    for (let h = o.h + STEP; h <= o.span.end + 1e-9; h += STEP) to.add(new Option(fmtT(h), h));
+    const want = [...to.options].find(x => Math.abs(+x.value - prev) < 1e-9) || [...to.options].find(x => Math.abs(+x.value - Math.min(o.h + 2, o.span.end)) < 1e-9) || to.options[to.options.length - 1];
+    to.value = want.value;
+  };
+  const update = () => {
+    const o = opts[+from.value];
+    const ev = { date, start: o.h, end: +to.value, title: `🎾 テニス ${facility} ${court}`, location: mapDest(site, facility), details: calDetails(site, facility, court) };
+    $("cal-g").href = googleCalUrl(ev);
+    $("cal-i").href = "data:text/calendar;charset=utf-8," + encodeURIComponent(icsText(ev));
+  };
+  from.onchange = () => { fillTo(); update(); };
+  to.onchange = update;
+  from.value = 0; to.innerHTML = ""; fillTo(); update();
+  $("cal-sub").textContent = `${dateLabel(date)} ${facility} ${court}`;
+  $("cal-close").onclick = () => dlg.close();
+  dlg.onclick = (e) => { if (e.target === dlg) dlg.close(); }; // 外側を押したら閉じる
+  if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", "");
+}
+
 function anchor(url, text, cls, title, post) {
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -654,6 +752,7 @@ function render() {
       const act = document.createElement("span"); act.className = "court-actions";
       act.appendChild(miniButton("コピー", court + "の空きをコピー", async () => toast((await copyText(text)) ? "コピーしました" : "コピーできませんでした")));
       if (navigator.share) act.appendChild(miniButton("共有", court + "の空きを共有", async () => { try { await navigator.share({ text }); } catch {} }));
+      act.appendChild(miniButton("📅 予定", court + "の予約をカレンダーに追加", () => openCal(f.site, f.facility, court, st.date, [...merged.filter(m => !m.offline), ...merged.filter(m => m.offline)])));
       name.appendChild(act);
       row.append(name, times); card.appendChild(row);
     }
