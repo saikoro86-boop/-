@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { generatePosts } from "./generate";
-import { publishers, xWeightedLength } from "./publishers";
+import { publishers, RETRY_DELAYS_MS, withRetry, xWeightedLength } from "./publishers";
 import { loadDrafts, newId, saveDrafts } from "./store";
 import { PLATFORMS, type Draft, type DraftStatus, type Platform } from "./types";
 
@@ -135,23 +135,37 @@ async function publishCommand(dryRun: boolean): Promise<void> {
     return;
   }
 
+  const failed: Draft[] = [];
   for (const draft of due) {
     if (dryRun) {
       console.log(`[dry-run] ${draft.id} を ${draft.platform} に投稿します`);
       continue;
     }
     try {
-      draft.postedId = await publishers[draft.platform](draft);
+      draft.postedId = await withRetry(
+        () => publishers[draft.platform](draft),
+        RETRY_DELAYS_MS,
+        undefined,
+        (error, attempt, delayMs) =>
+          console.warn(`… ${draft.id} 一時的なエラー(${error.message})。${delayMs / 1000}秒後に再試行します (${attempt}/${RETRY_DELAYS_MS.length})`)
+      );
       draft.status = "posted";
       draft.postedAt = new Date().toISOString();
       console.log(`✔ ${draft.id} を ${draft.platform} に投稿しました (${draft.postedId})`);
     } catch (error) {
       draft.status = "failed";
       draft.error = error instanceof Error ? error.message : String(error);
+      failed.push(draft);
       console.error(`✖ ${draft.id} の投稿に失敗しました: ${draft.error}`);
     }
     // 1件ごとに保存して、途中で落ちても二重投稿しないようにする
     saveDrafts(drafts);
+  }
+
+  if (failed.length > 0) {
+    console.error(`\n投稿に失敗した下書き: ${failed.length}件 (${failed.map((d) => d.id).join(", ")})`);
+    // cron などから失敗を検知できるように、終了コードを 0 以外にする
+    process.exitCode = 1;
   }
 }
 

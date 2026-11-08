@@ -108,6 +108,49 @@ async function postToInstagram(draft: Draft): Promise<string> {
   return published.id;
 }
 
+/** 再試行の設定: 最大3回まで試す(初回 + 再試行2回)。間隔は5秒 → 15秒 */
+export const RETRY_DELAYS_MS = [5_000, 15_000];
+
+/**
+ * 一時的な失敗(ネットワークエラー、HTTP 429 / 5xx)かどうか。
+ * 認証エラーや文字数超過など、再試行しても直らないものは false。
+ */
+export function isTransientError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const code = (error as { code?: unknown }).code;
+  // twitter-api-v2 の ApiResponseError は HTTP ステータスを code に持つ
+  if (typeof code === "number") return code === 429 || code >= 500;
+  if (typeof code === "string" && /^(ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|EPIPE|UND_ERR_\w+)$/.test(code)) {
+    return true;
+  }
+  // graphPost のエラーは「<ステータス> <メッセージ>」の形式
+  if (/^(429|5\d\d) /.test(error.message)) return true;
+  // fetch のネットワーク失敗
+  if (error instanceof TypeError && /fetch failed/i.test(error.message)) return true;
+  return false;
+}
+
+/**
+ * 一時的な失敗だけを、delaysMs の回数まで再試行する。
+ * 成功した時点で返すので、成功済みの投稿を再試行することはない。
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  delaysMs: number[] = RETRY_DELAYS_MS,
+  wait: (ms: number) => Promise<void> = sleep,
+  onRetry?: (error: Error, attempt: number, delayMs: number) => void
+): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt >= delaysMs.length || !isTransientError(error)) throw error;
+      onRetry?.(error as Error, attempt + 1, delaysMs[attempt]);
+      await wait(delaysMs[attempt]);
+    }
+  }
+}
+
 export const publishers: Record<Platform, (draft: Draft) => Promise<string>> = {
   x: postToX,
   threads: postToThreads,
