@@ -110,7 +110,8 @@
   #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 16px; border-radius:999px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .3s; z-index:5; }
   #toast.show { opacity:.92; }
   /* 予定に追加(カレンダー) */
-  #cal { border:0; border-radius:16px 16px 0 0; margin:auto auto 0; width:100%; max-width:520px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); background:var(--bg); color:var(--text); }
+  #cal { border:0; border-radius:16px 16px 0 0; margin:auto auto 0; width:100%; max-width:520px; padding:0; background:var(--bg); color:var(--text); }
+  #cal .cal-in { padding:16px 16px calc(16px + env(safe-area-inset-bottom)); }
   #cal::backdrop { background:rgba(0,0,0,.35); }
   #cal h3 { margin:0 0 4px; font-size:16px; }
   #cal .cal-sub { color:var(--sub); font-size:12px; margin-bottom:10px; }
@@ -148,6 +149,16 @@
   header { padding:12px 16px 4px; }
   .controls button { font-size:14px; padding:7px 13px; }
   .controls .row { padding:3px 0; }
+  .mtimes { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  #viewbar { flex-wrap:wrap; gap:6px; }
+  #viewbar button, #zones button { padding:7px 10px; }
+  #zones { gap:6px; }
+  #viewbar button.on { border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .day small { font-size:12px; } .day .wx { font-size:12px; } .route-mini { font-size:12px; }
+  #toast.act { pointer-events:auto; display:flex; align-items:center; gap:10px; padding:6px 8px 6px 16px; }
+  #toast button { background:transparent; color:inherit; border:1px solid currentColor; padding:6px 12px; font-size:13px; }
+  #cal select { padding:10px 10px; }
+  #banner.info { color:var(--text); }
   footer.src { color:var(--sub); font-size:12px; padding:0 16px 32px; }
 </style>
 </head>
@@ -173,21 +184,22 @@
 <main id="list"><div class="empty"><span class="spin"></span>読み込み中…</div></main>
 <footer class="src">天気: 気象庁の予報(奈良県北部・京都府南部。降水確率は6〜18時の大きいほう) / 施設の位置: テニスナビ・国土地理院</footer>
 <div id="toast" role="status"></div>
-<dialog id="cal" aria-labelledby="cal-title">
+<dialog id="cal" aria-labelledby="cal-title"><div class="cal-in">
   <h3 id="cal-title">予定に追加</h3>
   <div class="cal-sub" id="cal-sub"></div>
   <label class="cal-time"><select id="cal-from" aria-label="開始"></select>〜<select id="cal-to" aria-label="終了"></select></label>
   <div class="cal-btns">
-    <a id="cal-g" class="cal-g" target="_blank" rel="noopener noreferrer">Google カレンダーに追加</a>
-    <a id="cal-i" class="cal-i" download="tennis.ics">iPhone のカレンダーに追加</a>
+    <a id="cal-i" class="cal-g" download="tennis.ics">iPhone のカレンダーに追加</a>
+    <a id="cal-g" class="cal-i" target="_blank" rel="noopener noreferrer">Google カレンダーに追加</a>
     <button type="button" class="cal-x" id="cal-close">閉じる</button>
   </div>
-  <div class="cal-note">予約が取れた時間を選んでから追加してください。予定には、予約サイト・公式ページ・ルートのリンクと料金の目安が入ります。iPhone の方は、1時間前に通知が出ます。</div>
+  <div class="cal-note">予約が取れた時間を選んで追加してください(iPhone のカレンダーは1時間前に通知)。</div>
+</div>
 </dialog>
 <script>
 const $ = (id) => document.getElementById(id);
 const WD = ["日","月","火","水","木","金","土"];
-const ZONES = { "all":["すべて",0,24], "am":["午前",0,12], "pm":["午後",12,17], "ev":["夜",17,24] };
+const ZONES = { "all":["終日",0,24], "am":["〜12時",0,12], "pm":["12〜17時",12,17], "ev":["17時〜",17,24] };
 const st = { date:null, city:"all", zone:"all", favOnly:false };
 // ---- お気に入り・非表示(このスマホだけに保存。ほかの人とは共有しない) ----
 const PREF_KEY = "courtPrefs";
@@ -225,7 +237,7 @@ function weatherOf(d) {
 const weatherText = (d) => { const w = weatherOf(d); return w ? `${w.icon}${w.pop != null ? w.pop + "%" : ""}` : ""; };
 
 // ---- コートの種類・屋内・ナイターで絞り込む ----
-const FILT = [["fresh", "🆕 新しい空き"], ["long", "2時間以上"], ["omni", "オムニ"], ["clay", "クレー"], ["hard", "全天候"], ["indoor", "屋内"], ["night", "ナイター"]];
+const FILT = [["fresh", "🆕 最近空いた"], ["long", "2時間以上"], ["omni", "オムニ"], ["clay", "クレー"], ["hard", "ハード"], ["indoor", "屋内"], ["night", "ナイター"]];
 const FILT_TITLE = { fresh: "前回の更新のあとに新しく空いた枠だけ", long: "2時間以上続けて空いている枠だけ", omni: "オムニ(砂入り人工芝)", clay: "クレー", hard: "全天候・ハード", indoor: "屋内(体育館など)", night: "ナイター(照明)がある施設" };
 const infoOf = (site, facility) => (data.courtInfo || {})[fkey(site, facility)] || null;
 /** コート名に種類が書いてあれば、それを優先(例: コートC(クレーコート)) */
@@ -277,7 +289,7 @@ function facilityOk(site, facility) {
 }
 function infoTag(site, facility) {
   const i = infoOf(site, facility); if (!i) return "";
-  const L = { omni: "オムニ", clay: "クレー", hard: "全天候" };
+  const L = { omni: "オムニ", clay: "クレー", hard: "ハード" };
   const parts = i.i ? ["屋内"] : i.s.map(x => L[x]).filter(Boolean);
   if (i.n === 1) parts.push("ナイターあり"); else if (i.n === 0 && !i.i) parts.push("ナイターなし");
   return parts.join("・");
@@ -329,14 +341,15 @@ function favButton(site, facility) {
   const on = isFav(site, facility);
   b.className = "fav" + (on ? " on" : ""); b.textContent = on ? "★" : "☆";
   b.title = on ? facility + "をお気に入りから外す" : facility + "をお気に入りにする";
-  b.setAttribute("aria-label", b.title); b.setAttribute("aria-pressed", on);
+  b.setAttribute("aria-label", "お気に入り"); b.setAttribute("aria-pressed", on);
   b.onclick = (e) => { e.preventDefault(); const k = fkey(site, facility); on ? prefs.fav.delete(k) : prefs.fav.add(k); savePrefs(); render(); toast(on ? "お気に入りから外しました" : "お気に入りにしました"); };
   return b;
 }
 function hideButton(site, facility) {
   const b = document.createElement("button"); b.type = "button"; b.className = "mini hide-btn";
   b.textContent = "非表示"; b.title = facility + "を一覧に出さない(あとで戻せます)";
-  b.onclick = () => { prefs.hidden.add(fkey(site, facility)); prefs.fav.delete(fkey(site, facility)); savePrefs(); render(); toast("非表示にしました(下の「非表示にした施設」から戻せます)"); };
+  b.onclick = () => { const k = fkey(site, facility), wasFav = prefs.fav.has(k); prefs.hidden.add(k); prefs.fav.delete(k); savePrefs(); render();
+    toast("非表示にしました", "元に戻す", () => { prefs.hidden.delete(k); if (wasFav) prefs.fav.add(k); savePrefs(); render(); }); };
   return b;
 }
 let data = { slots:[], sites:[], links:[], errors:[] };
@@ -417,7 +430,7 @@ function routeLink(site, facility, cls = "btn route") {
   a.href = mapUrl(site, facility); a.target = "_blank"; a.rel = "noopener noreferrer";
   a.className = cls; a.textContent = "🧭 ルート";
   a.title = facility + "まで、現在地からのルートを Google マップで開く";
-  a.setAttribute("aria-label", a.title);
+  a.setAttribute("aria-label", "ルート(Google マップ)");
   return a;
 }
 
@@ -431,7 +444,8 @@ function nightLine(site, facility, date, spans) {
   if (n.months && !n.months.includes(month)) { el.textContent = `🌙 この時期は照明が使えません(${n.note || ""})`; return el; }
   const unit = n.unit === 1 ? "1時間" : n.unit + "時間";
   const yen = (v) => v.toLocaleString("ja-JP") + "円";
-  el.textContent = `🌙 夜(照明あり)の目安: 1面${unit} ${yen(n.court)}+照明${yen(n.light)}=${yen(n.court + n.light)}(${from}時以降。${n.note ? n.note + "。" : ""}市内料金)`;
+  el.textContent = `🌙 ${from}時以降は照明代 +${yen(n.light)}/${unit}(1面${unit} 計${yen(n.court + n.light)})`;
+  el.title = (n.note ? n.note + "。" : "") + "市内料金の目安";
   return el;
 }
 
@@ -442,7 +456,7 @@ function feeBlock(site, facility) {
   const fee = feeFor(site, facility);
   if (fee) {
     const det = document.createElement("details"); det.className = "fee";
-    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary + (fee.crossCheck ? (fee.crossCheck.status === "match" ? " ✓" : " ⚠") : ""); det.appendChild(sum);
+    const sum = document.createElement("summary"); sum.textContent = "料金: " + fee.summary + (fee.crossCheck && fee.crossCheck.status !== "match" ? "(要確認)" : ""); det.appendChild(sum);
     const lines = document.createElement("div"); lines.className = "fee-lines";
     for (const t of fee.lines) { const d = document.createElement("div"); d.textContent = t; lines.appendChild(d); }
     det.appendChild(lines);
@@ -641,9 +655,11 @@ function renderMulti(vis, dates) {
       main.title = dateLabel(d) + " " + f.facility + " の空きを詳しく見る";
       const nm = document.createElement("span"); nm.className = "mname"; nm.textContent = (f.spans.some(x => x.fresh) ? "🆕 " : "") + f.facility;
       const sub = document.createElement("span"); sub.className = "msub";
-      sub.textContent = f.site + (infoTag(f.site, f.facility) ? "・" + infoTag(f.site, f.facility) : "") + " ・ " + f.courts.size + "面 ・ " + merged.map(([a, b2, off]) => `${hm(a)}–${hm(b2)}${off ? "☎" : ""}`).join(" ");
+      sub.textContent = f.site + " ・ " + f.courts.size + "面";
       const dt = distTag(f.site, f.facility); if (dt) sub.append(" ・ ", dt);
-      main.append(nm, sub);
+      const tm = document.createElement("span"); tm.className = "mtimes";
+      for (const [a, b2, off] of merged) { const c = document.createElement("span"); c.className = "t" + (off ? " off" : ""); c.textContent = `${hm(a)}–${hm(b2)}${off ? " ☎" : ""}`; tm.appendChild(c); }
+      main.append(nm, sub, tm);
       main.onclick = () => { st.view = "day"; st.date = d; render(); scrollTo(0, 0); };
       row.append(main);
       card.appendChild(row);
@@ -658,6 +674,13 @@ function renderMulti(vis, dates) {
 }
 
 function render() {
+  // 押したボタンが作り直されても、フォーカスを同じ位置に戻す(読み上げが先頭に飛ばないように)
+  const ae = document.activeElement, rowEl = ae && ae.closest && ae.closest(".row");
+  const keep = rowEl && rowEl.id ? [rowEl.id, [...rowEl.children].indexOf(ae)] : null;
+  renderInner();
+  if (keep) { const r = $(keep[0]); const el = r && r.children[keep[1]]; if (el && el.focus) el.focus({ preventScroll: true }); }
+}
+function renderInner() {
   const { today: todayJ, hour: hourJ } = nowJst();
   const isPast = (x) => x.date === todayJ && x.end <= hourJ;
   const vis = data.slots.filter(x => !isPast(x));   // 表示する枠(終わった枠を除く)
@@ -676,19 +699,19 @@ function render() {
     b.className = "day " + (w === 6 ? "sat" : w === 0 ? "sun" : "");
     b.innerHTML = `<small>${WD[w]}</small><b>${dt.getUTCMonth()+1}/${dt.getUTCDate()}</b>` + (weatherText(d) ? `<span class="wx">${weatherText(d)}</span>` : "");
     b.setAttribute("aria-pressed", st.date === d);
+    const w0 = weatherOf(d); b.setAttribute("aria-label", `${dt.getUTCMonth()+1}月${dt.getUTCDate()}日(${WD[w]})` + (w0 && w0.pop != null ? ` 降水確率${w0.pop}%` : ""));
     b.onclick = () => { st.date = d; render(); };
     $("days").appendChild(b);
   }
   chips($("cities"), [["all","全エリア"], ...data.sites.map(s => [s, s])], "city");
   chips($("zones"), Object.entries(ZONES).map(([k, v]) => [k, v[0]]), "zone");
   const pb = $("viewbar"); pb.innerHTML = "";
-  for (const [v, label] of [["day", "日付ごと"], ["week", "7日間"], ["weekend", "土日"]]) {
+  for (const [v, label] of [["day", "1日ずつ"], ["week", "1週間"], ["weekend", "土日"]]) {
     const b = document.createElement("button"); b.type = "button"; b.textContent = label;
     b.setAttribute("aria-pressed", st.view === v);
     b.onclick = () => { st.view = v; render(); };
     pb.appendChild(b);
   }
-  const sep = document.createElement("span"); sep.className = "sep"; pb.appendChild(sep);
   const fo = document.createElement("button"); fo.type = "button";
   fo.textContent = "★ お気に入り" + (prefs.fav.size ? `(${prefs.fav.size})` : "");
   fo.setAttribute("aria-pressed", st.favOnly);
@@ -696,10 +719,10 @@ function render() {
   pb.appendChild(fo);
   const nf = Object.values(st.filt).filter(Boolean).length;
   const fb = document.createElement("button"); fb.type = "button";
-  fb.textContent = "⚙ 絞り込み" + (nf ? `(${nf})` : ""); fb.setAttribute("aria-pressed", nf > 0 || st.filtOpen);
+  fb.textContent = "絞り込み" + (nf ? `(${nf})` : "") + (st.filtOpen ? " ▴" : " ▾"); fb.setAttribute("aria-expanded", !!st.filtOpen); if (nf) fb.classList.add("on");
   fb.onclick = () => { st.filtOpen = !st.filtOpen; render(); };
   const nb = document.createElement("button"); nb.type = "button";
-  nb.textContent = "📍 近い順"; nb.setAttribute("aria-pressed", st.sort === "near");
+  nb.textContent = "近い順"; nb.setAttribute("aria-pressed", st.sort === "near");
   nb.onclick = () => {
     if (st.sort === "near") { st.sort = "def"; render(); return; }
     st.sort = "near";
@@ -747,7 +770,7 @@ function render() {
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
     const oUrl = officialFor(f.site, f.facility);
-    if (oUrl) h2.appendChild(anchor(oUrl, f.facility, "", f.facility + "の公式ページ(場所・駐車場・注意事項など)を開く"));
+    if (oUrl) { const a = anchor(oUrl, f.facility, ""); a.title = f.facility + "の公式ページ(場所・駐車場・注意事項など)を開く"; h2.appendChild(a); }
     else if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
     h2.prepend(favButton(f.site, f.facility));
@@ -964,9 +987,17 @@ function showBanner(kind, html) {
   b.innerHTML = html || "";
 }
 let toastTimer;
-function toast(msg) {
-  const el = $("toast"); el.textContent = msg; el.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 3500);
+// 短いお知らせ。action を渡すと「元に戻す」などのボタンが付く(そのときは少し長く出す)
+function toast(msg, actionLabel, action) {
+  const el = $("toast"); clearTimeout(toastTimer);
+  el.textContent = ""; // 同じ文でも読み上げ直されるように、一度空にする
+  requestAnimationFrame(() => {
+    el.textContent = msg;
+    if (actionLabel) { const b = document.createElement("button"); b.type = "button"; b.textContent = actionLabel; b.onclick = () => { el.classList.remove("show", "act"); el.textContent = ""; action(); }; el.appendChild(b); el.classList.add("act"); }
+    else el.classList.remove("act");
+    el.classList.add("show");
+    toastTimer = setTimeout(() => { el.classList.remove("show", "act"); setTimeout(() => { if (!el.classList.contains("show")) el.textContent = ""; }, 400); }, actionLabel ? 6000 : 3500);
+  });
 }
 
 let pollTimer = null, pollUntil = 0, lastUpdatedAt = 0;
@@ -976,13 +1007,13 @@ function applyStatus(updatedAtMs) {
   $("updated").textContent = `最終更新 ${mdhm(t)} ・ 次の更新は ${hhmm(next)} 頃`;
   const f = freshness(updatedAtMs, now);
   if (f === "updating") {
-    showBanner("info", '<span class="spin"></span>データを更新中です。数分で反映されます(自動で確認しています)。<button type="button" onclick="load(false)">今すぐ確認</button>');
+    showBanner("info", '<span class="spin"></span>データを更新中です。数分で反映されます(自動で確認しています)。<button type="button" onclick="load(false)">最新を読み込む</button>');
     if (!pollTimer) { pollUntil = now + 20 * 60e3; pollTimer = setInterval(() => { if (Date.now() > pollUntil) stopPoll(); else load(true); }, 45e3); }
   } else {
     stopPoll();
     if (f === "stale") {
       const h = Math.floor((now - updatedAtMs) / 3600e3);
-      showBanner("warn", `データが古い可能性があります(最終更新から約${h}時間)。更新が止まっているかもしれません。<button type="button" onclick="load(false)">再読み込み</button>`);
+      showBanner("warn", `データが古い可能性があります(最終更新から約${h}時間)。更新が止まっているかもしれません。<button type="button" onclick="load(false)">最新を読み込む</button>`);
     } else showBanner("", "");
   }
 }
@@ -1028,7 +1059,7 @@ function load(silent) {
     lastUpdatedAt = updatedAt;
     render();
     applyStatus(updatedAt);
-    if (d._offline) showBanner("warn", "電波がないため、前回保存した空き状況を表示しています(最新ではありません)。<button type=\"button\" onclick=\"load(false)\">再読み込み</button>");
+    if (d._offline) showBanner("warn", "電波がないため、前回保存した空き状況を表示しています(最新ではありません)。<button type=\"button\" onclick=\"load(false)\">最新を読み込む</button>");
     if (justImported) { toast("木津川市の空きを取り込みました"); justImported = false; }
     else if (!firstLoad && changed) toast("最新のデータに更新しました");
     return changed;
@@ -1036,7 +1067,7 @@ function load(silent) {
     if (silent) return null; // 自動確認の失敗は静かに無視(次回また試す)
     $("updated").textContent = "";
     if (!lastUpdatedAt) $("list").innerHTML = "";
-    showBanner("error", 'データを読み込めませんでした。通信状況を確認してください。<button type="button" onclick="load(false)">再試行</button>');
+    showBanner("error", 'データを読み込めませんでした。通信状況を確認してください。<button type="button" onclick="load(false)">もう一度読み込む</button>');
     return null;
   });
 }
