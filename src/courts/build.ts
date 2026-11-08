@@ -249,6 +249,8 @@ async function main() {
   } catch (e) {
     console.log("天気(気象庁)の取得に失敗:", (e as Error).message);
   }
+  // 施設名を押したときに開く、施設の公式ページ
+  const officialConfig = JSON.parse(readFileSync("config/official.json", "utf-8")) as { urls: Record<string, string> };
   const placeConfig = JSON.parse(readFileSync("config/places.json", "utf-8")) as {
     places: { site: string; match: string; dest: string; source: string }[];
   };
@@ -273,6 +275,7 @@ async function main() {
     coords: Object.fromEntries(Object.entries(coordConfig.coords).map(([k, v]) => [k, [v.lat, v.lng]])),
     courtInfo: Object.fromEntries(Object.entries(courtInfo.info).map(([k, v]) => [k, { s: v.surfaces, i: v.indoor ? 1 : 0, n: v.nighter == null ? null : v.nighter ? 1 : 0 }])),
     weather,
+    officialUrls: officialConfig.urls,
     places: placeConfig.places.map(({ site, match, dest }) => ({ site, match, dest })),
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],

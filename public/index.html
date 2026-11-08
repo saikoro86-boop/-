@@ -323,6 +323,11 @@ const urlFor = (site, facility) => {
   const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl;
   return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
 };
+// 施設の公式ページ(施設名を押したとき)。無ければ null(そのときは予約サイトを開く)
+function officialFor(site, facility) {
+  const u = (data.officialUrls || {})[site + "|" + facility] || (feeLinkFor(site, facility) || {}).url;
+  return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
+}
 const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
 // 公式サイト(奈良市・生駒市)の検索フォームへ、選んだ日付と目的コードを入れて送信する。
 // 公式の画面で「日付を選ぶ→テニスを選ぶ→検索」と操作した状態と同じ結果が、新しいタブで開く。
@@ -600,7 +605,7 @@ function render() {
   list.innerHTML = "";
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
-    hint.textContent = "コート名や時間をタップすると、予約サイトが開きます(奈良市・生駒市は、この日のテニスの空き一覧が最初から表示されます。ほかは、施設の予約画面までで、日時は予約サイト側で選び直してください)。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "") + (weatherOf(st.date) ? `この日の天気(気象庁・${W_NAME[wArea()]}): ${weatherText(st.date)}(降水確率は6〜18時の大きいほう)。` : "") + (filtOn() ? "コートの種類などで絞り込み中です(種類が分からない施設は出ません)。" : "") + (hits.some(x => x.fresh) ? "🆕 は、前回の更新(約3時間前)のあとに新しく空いた枠です(キャンセルなど)。" : "") + (st.filt.long ? "2時間以上続けて空いている枠だけを出しています。" : "");
+    hint.textContent = "時間をタップすると予約サイト、施設名をタップすると施設の公式ページ(場所・駐車場・注意事項など)が開きます。予約サイトは、奈良市・生駒市ならこの日のテニスの空き一覧から、ほかは施設の予約画面から始まるので、日付は予約サイト側で選んでください。" + (hits.some(x => x.offline) ? "点線(☎)の枠は、ネット予約の受付外です(電話・窓口)。" : "") + (st.date === todayJ && data.slots.some(x => x.date === todayJ && isPast(x)) ? "今日の、すでに終わった時間の枠は、表示していません。" : "") + (weatherOf(st.date) ? `この日の天気(気象庁・${W_NAME[wArea()]}): ${weatherText(st.date)}(降水確率は6〜18時の大きいほう)。` : "") + (filtOn() ? "コートの種類などで絞り込み中です(種類が分からない施設は出ません)。" : "") + (hits.some(x => x.fresh) ? "🆕 は、前回の更新(約3時間前)のあとに新しく空いた枠です(キャンセルなど)。" : "") + (st.filt.long ? "2時間以上続けて空いている枠だけを出しています。" : "");
     list.appendChild(hint);
   }
   // お気に入りを先に(それ以外は、これまでどおりの順)
@@ -613,7 +618,9 @@ function render() {
     const tg = infoTag(f.site, f.facility); if (tg) card.querySelector(".city").append(" ・ " + tg);
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
-    if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
+    const oUrl = officialFor(f.site, f.facility);
+    if (oUrl) h2.appendChild(anchor(oUrl, f.facility, "", f.facility + "の公式ページ(場所・駐車場・注意事項など)を開く"));
+    else if (fUrl) h2.appendChild(anchor(fUrl, f.facility, "", "予約サイトを開く", postFor(f.site, f.facility)));
     else h2.textContent = f.facility;
     h2.prepend(favButton(f.site, f.facility));
     h2.appendChild(routeLink(f.site, f.facility));
@@ -623,8 +630,7 @@ function render() {
       const row = document.createElement("div");
       row.className = "court";
       const name = document.createElement("span");
-      if (fUrl) name.appendChild(anchor(fUrl, court, "cn", court + "の予約サイトを開く", postFor(f.site, f.facility, court)));
-      else name.textContent = court;
+      name.textContent = court; // コート名はリンクにしない(予約は時間の枠から)
       const times = document.createElement("span"); times.className = "times";
       // 連続する枠(9-10, 10-11 …)は 1 つにまとめる。ネット予約できる枠と、受付外(●・電話)の枠は分けて結合する
       const merged = [];
@@ -710,9 +716,12 @@ function render() {
       const row = document.createElement("div"); row.className = "reason-row";
       row.appendChild(favButton(it.site, it.facility));
       const url = urlFor(it.site, it.facility);
-      const name = url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
+      const ou = officialFor(it.site, it.facility);
+      const name = ou ? anchor(ou, it.facility, "cn", it.facility + "の公式ページを開く") : url ? anchor(url, it.facility, "cn", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)) : document.createTextNode(it.facility);
       const area = document.createElement("small"); area.textContent = it.site + (it.label ? "・" + it.label : "");
-      row.append(name, area, routeLink(it.site, it.facility, "route-mini"));
+      row.append(name, area);
+      if (ou && url) { const rv = anchor(url, "予約", "route-mini", it.facility + "の予約サイトを開く", postFor(it.site, it.facility)); row.appendChild(rv); }
+      row.appendChild(routeLink(it.site, it.facility, "route-mini"));
       det.appendChild(row);
     }
     card.appendChild(det);
