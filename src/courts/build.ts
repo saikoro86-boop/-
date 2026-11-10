@@ -1,5 +1,5 @@
 /**
- * 設定した全サイトの今後 N 日分の空きを取得し、public/data2.json(と従来形式の data.json)に書き出す。
+ * 設定した全サイトの今後 N 日分の空きを取得し、public/data2.json に書き出す。
  *   npm run courts:build
  * 1サイトの失敗で全体を止めず、失敗は errors / failures に記録する(取得の詳細は collect/、公開の形は publish.ts)。
  */
@@ -53,14 +53,11 @@ async function main() {
   // data2.json: スマホ向けの小さな形式(いまの画面が読む)
   const small = JSON.stringify({ v: 2, ...common, courts: compact.courts, byDate: compact.byDate });
   writeFileSync("public/data2.json", small);
-  // data.json: 従来の形式。キャッシュに残った古い画面が読むために、しばらく残す(新しい画面は読まない)
-  const legacy = JSON.stringify({ ...common, slots: acc.slots });
-  writeFileSync("public/data.json", legacy);
   const kb = (t: string) => Math.round(Buffer.byteLength(t) / 1024);
   console.log(
     `空き ${acc.slots.length} 件(うちネット予約外 ${acc.slots.filter((x) => x.offline).length}) → まとめて ${count(compact)} 件 / エリア ${common.sites.length} / エラー ${acc.errors.length} 件`,
   );
-  console.log(`public/data2.json ${kb(small)}KB(画面が読む) / public/data.json ${kb(legacy)}KB(従来形式)`);
+  console.log(`public/data2.json ${kb(small)}KB`);
   if (acc.errors.length) console.log(`失敗: ${acc.errors.length} 件(詳細は上のログ)`);
 }
 

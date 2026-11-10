@@ -1,7 +1,7 @@
 name: テニスコート空き状況の更新
 
 # 取得プログラム(このリポジトリ・非公開)で画面とデータを作り、
-# 画面と data.json だけを、公開用の別リポジトリ(vars.SITE_REPO)に書き出す。
+# 画面とデータだけを、公開用の別リポジトリ(vars.SITE_REPO)に書き出す。
 #
 # 事前設定(Settings → Secrets and variables → Actions):
 #   Variables: SITE_REPO        公開用リポジトリ名(例: tc-xxxxxxxx。owner は付けない)
@@ -76,7 +76,7 @@ jobs:
           # (空のリポジトリでも動く。データの変更履歴は不要)
           mkdir site && cd site
           git init -q -b publish
-          cp ../public/index.html ../public/bookmarklet.html ../public/data.json ../public/data2.json .
+          cp ../public/index.html ../public/bookmarklet.html ../public/data2.json .
           cp ../public/manifest.webmanifest ../public/sw.js .
           cp -r ../public/icons .
           cp ../public/refresh-config.json . 2>/dev/null || true

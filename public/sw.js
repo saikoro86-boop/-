@@ -36,7 +36,7 @@ self.addEventListener("fetch", (e) => {
   if (url.origin !== self.location.origin) return; // 予約サイトや地図などの外部は、さわらない
   if (req.mode === "navigate") { e.respondWith(networkFirst(req, "index.html")); return; }
   const name = url.pathname.split("/").pop();
-  if (name === "data2.json" || name === "data.json") { e.respondWith(networkFirst(req, name)); return; }
+  if (name === "data2.json") { e.respondWith(networkFirst(req, name)); return; }
   if (name === "refresh-config.json") return;
   e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
 });

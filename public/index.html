@@ -978,7 +978,7 @@ window.addEventListener("hashchange", () => { if (/^#import=/.test(location.hash
 // 実行は数分〜数十分遅れることがあるので「目安」として扱う。
 const EVERY_MS = 3 * 3600e3, MINUTE_MS = 17 * 60e3;
 const UPDATING_WINDOW_MS = 40 * 60e3; // 予定時刻からこの間は「更新中かも」と案内する
-const DATA_STALE_MS = 6 * 3600e3; // data.json がこれより古いと警告
+const DATA_STALE_MS = 6 * 3600e3; // データがこれより古いと警告
 const hhmm = (t) => `${String(t.getHours()).padStart(2,"0")}:${String(t.getMinutes()).padStart(2,"0")}`;
 const mdhm = (t) => `${t.getMonth()+1}/${t.getDate()} ${hhmm(t)}`;
 
@@ -1033,7 +1033,7 @@ function applyStatus(updatedAtMs) {
 function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
 // ---- 読み込み ----------------------------------------------------------
-// 小さな形式(v2)を、画面が使う「1枠ごとの配列」に戻す。data.json の枠と同じ形
+// 小さな形式(v2)を、画面が使う「1枠ごとの配列」に戻す。保存前の「1枠ごと」の形
 function expandV2(d) {
   const out = [];
   for (const [date, list] of Object.entries(d.byDate || {})) {
@@ -1045,8 +1045,7 @@ function expandV2(d) {
   return out;
 }
 async function fetchData() {
-  let r = await fetch("data2.json", { cache: "no-store" });
-  if (!r.ok) r = await fetch("data.json", { cache: "no-store" }); // v2 がまだ無い場合の保険
+  const r = await fetch("data2.json", { cache: "no-store" });
   if (!r.ok) throw new Error(r.status);
   const d = await r.json();
   if (d.v === 2) d.slots = expandV2(d);

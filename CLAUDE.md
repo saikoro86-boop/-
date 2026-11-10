@@ -23,7 +23,7 @@
 npm test                 # 全テスト(tests/*.test.ts)
 npm run typecheck        # tsc --noEmit(本体と worker の両方)
 npm run courts -- 2026-11-14 [市名]   # 指定日の空きを端末で確認(実サイトにアクセスする)
-npm run courts:build     # 全サイトを取得して public/data.json・data2.json を作る(実サイトにアクセスする)
+npm run courts:build     # 全サイトを取得して public/data2.json を作る(実サイトにアクセスする。コミットしない)
 npm run bookmarklet      # public/bookmarklet.html を作る(木津川市の取り込み用)
 npm run worker:build     # worker/src/*.ts → worker/worker.js(Cloudflare に貼る1ファイル)
 ```
@@ -61,7 +61,7 @@ node --require ts-node/register --test tests/fees.test.ts
 | `worker/` | 手動更新ボタンの中継役(Cloudflare Worker)。`src/` が元、`worker.js` は生成物 |
 | `.github/workflows/courts.yml` | 3時間ごとの取得と公開 |
 
-生成物は手で編集しません: `worker/worker.js`、`public/bookmarklet.html`、`public/data.json`、`public/data2.json`、`dist/`。
+生成物は手で編集せず、`public/data2.json` と `dist/` はコミットもしません: `worker/worker.js`、`public/bookmarklet.html`、`public/data2.json`、`dist/`。画面を確かめるときのデータは、`npm run courts:build` で作るか、公開サイトの `data2.json` を `public/` に置きます。
 
 ## 設計と書き方
 
@@ -71,7 +71,7 @@ node --require ts-node/register --test tests/fees.test.ts
 - **通信は `http.ts` を通す**(`fetchChecked` は20秒の時間制限と応答コードの確認、`withRetry` は最大3回)。`fetch` を直接書かないこと。
 - **設定は `config.ts` の `loadConfigs()` で読む。** `JSON.parse(...) as {...}` で直接読まない。設定の項目を足すときは、そこのスキーマも直します(料金は、出典・確認日・裏付けが必須)。
 - **先方に負荷をかけない。** リクエストの間に待ち時間(300ms〜1.5秒)を入れ、やり直しは最大3回。並列に投げません。
-- 配信データは `data2.json`(コートの表 + `byDate` の `[ci, start, end, off, new?]`)。形を変えるときは `compact.ts`、`build.ts`、`index.html` の `expandV2`、テストを同時に直します。
+- 配信データは `data2.json`(コートの表 + `byDate` の `[ci, start, end, off, new?]`)。形を変えるときは `compact.ts`、`publish.ts`、`index.html` の `expandV2`、テストを同時に直します。
 - 時刻は「時」の小数(9.5 = 9:30)。日付は `YYYY-MM-DD` の文字列のまま扱い、端末のタイムゾーンに頼りません(画面は日本時間を自前で計算)。
 - 施設は「エリア名|施設名」で識別します(作るのは `keys.ts` の `facilityKey()`。名前のそろえ方は `normName()`)(お気に入り・非表示・`official.json`・`coords.json` の鍵)。施設名の表記を変えると、利用者の設定が外れます。
 - 命名: 変数・関数は camelCase、型は PascalCase、ファイルは小文字。export する関数・型には、日本語で1〜2行の説明を付けます。

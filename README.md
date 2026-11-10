@@ -1,6 +1,7 @@
-# puppeteer-form-automation
+# テニスコート空き検索(tennis-court-finder)
 
-Puppeteer (stealth) + TypeScript によるフォーム自動化のボイラープレートと、SNS 投稿を「下書き → 承認 → 予約投稿」で管理する AI 社員(`npm run sns`)です。
+奈良県・木津川市のテニスコートの空き状況を、スマホ向けの1つの画面にまとめます(「3. テニスコート空き検索」)。
+ほかに、Puppeteer (stealth) + TypeScript によるフォーム自動化のひな形と、SNS 投稿を「下書き → 承認 → 予約投稿」で管理する AI 社員(`npm run sns`)も入っています。
 
 ## セットアップ
 
@@ -65,15 +66,15 @@ npm run sns -- publish [--dry-run]                              # 投稿時刻�
 
 ```bash
 npm run courts -- 2026-11-14 [市名]   # 指定日の空きをコマンドで確認
-npm run courts:build                  # 今後30日分を public/data.json に出力
+npm run courts:build                  # 今後30日分を public/data2.json に出力(コミットしません)
 ```
 
-- `public/index.html` が画面です。`data.json` と同じ場所に置いて開きます(日付・エリア・時間帯で絞り込み)。
+- `public/index.html` が画面です。`data2.json` と同じ場所に置いて開きます(日付・エリア・時間帯で絞り込み)。
 - 対象サイトは `config/courts.json` で追加できます。同じ「いつでも貸館」方式の市なら URL を足すだけです。
-- `.github/workflows/courts.yml` が3時間ごとに取得し、**画面と `data.json` だけを、公開用の別リポジトリ**に書き出します(このリポジトリは非公開のまま、取得の仕組みを隠せます)。
+- `.github/workflows/courts.yml` が3時間ごとに取得し、**画面と `data2.json` だけを、公開用の別リポジトリ**に書き出します(このリポジトリは非公開のまま、取得の仕組みを隠せます)。
   - 公開用リポジトリ: 新しく作って Public にし、Settings → Pages で「Deploy from a branch」→ `main` / `/(root)` を選びます。
   - このリポジトリの Settings → Secrets and variables → Actions に、Variables: `SITE_REPO`(公開用リポジトリ名、ownerなし)、Secrets: `SITE_REPO_TOKEN`(公開用リポジトリの Contents 書き込み権限だけを持つ fine-grained トークン)を登録します。
-  - 公開される `data.json` には、取得元のURL・IDやエラー詳細は含めません。
+  - 公開される `data2.json` には、取得元のURL・IDやエラー詳細は含めません。
 - 空き状況の取得にはログインや予約操作を行いません。サーバに負荷をかけないよう、1リクエストごとに待ち時間を入れています。
 
 ### 奈良スーパーアプリ(県内の多数の施設を自動で拾う)
@@ -173,7 +174,6 @@ npm run courts:build                  # 今後30日分を public/data.json に�
 
 ### データの大きさ(スマホ向け)
 画面が読むデータは `data2.json` です(約170KB)。コート名を一覧に1回だけ持ち、連続する枠(9-10、10-11 …)を1つにまとめた形式で、従来の `data.json`(約1.9MB)より、約91%小さくなっています(`src/courts/compact.ts`)。まとめても、空いている時間帯は同じです(テストと、実データの全組み合わせで確認)。
-- `data.json`(従来の形式)は、キャッシュに残った古い画面が読むために、しばらく残しています。新しい画面は読みません。しばらくしたら、削除できます。
 - 今日の、すでに終わった時間の枠は、表示しません(日本時間のいまの時刻で判定。範囲全体が終わった枠だけを隠します)。
 
 ### 取得に失敗したとき
