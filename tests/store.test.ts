@@ -32,3 +32,17 @@ test("saveDrafts/loadDrafts: ディレクトリを作成して往復でき、一
 test("newId: プラットフォーム名をプレフィックスに持つ", () => {
   assert.match(newId("threads"), /^threads-[0-9a-f]+$/);
 });
+
+test("newId: 既存のIDと重ならないIDを返す", () => {
+  const original = Math.random;
+  const values = [0.1, 0.1, 0.2]; // 1・2回目は同じID、3回目で別のID
+  Math.random = () => values.shift() ?? 0.9;
+  try {
+    const first = newId("x");
+    const second = newId("x", [first]);
+    assert.notEqual(second, first);
+    assert.match(second, /^x-[0-9a-f]+$/);
+  } finally {
+    Math.random = original;
+  }
+});
