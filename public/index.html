@@ -97,12 +97,13 @@
   .card.none h2 { color:var(--sub); font-weight:600; }
   .empty, .err { text-align:center; color:var(--sub); padding:32px 0; }
   .err { color:#c0392b; font-size:13px; }
+  .failnote { padding:8px 12px; border-radius:10px; background:#fff4e0; color:#8a5a00; font-size:13px; line-height:1.5; }
   #banner { display:none; margin:0 16px 8px; padding:8px 12px; border-radius:10px; font-size:13px; line-height:1.5; }
   #banner.show { display:block; }
   #banner.info { background:var(--chip); color:var(--accent); }
   #banner.warn { background:#fff4e0; color:#8a5a00; }
   #banner.error { background:#fdeaea; color:#b03030; }
-  @media (prefers-color-scheme: dark) { #banner.warn { background:#3a2f12; color:#f0c674; } #banner.error { background:#3a1b1b; color:#ff9d9d; } }
+  @media (prefers-color-scheme: dark) { .failnote { background:#3a2f12; color:#f0c674; } #banner.warn { background:#3a2f12; color:#f0c674; } #banner.error { background:#3a1b1b; color:#ff9d9d; } }
   #banner button { margin-left:8px; padding:2px 10px; font-size:12px; }
   .spin { display:inline-block; width:12px; height:12px; margin-right:6px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; vertical-align:-2px; animation:spin .8s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
@@ -613,6 +614,16 @@ function nowJst() {
   return { today: j.toISOString().slice(0, 10), hour: j.getUTCHours() + j.getUTCMinutes() / 60 };
 }
 
+// ---- 取得できなかった範囲の知らせ(「空きなし」ではないことを伝える) ----
+function failNote(dates) {
+  const names = [...new Set((data.failures || []).filter(f => (st.city === "all" || f.s === st.city) && (!f.d || dates.includes(f.d))).map(f => f.s))];
+  if (!names.length) return null;
+  const el = document.createElement("div"); el.className = "failnote"; el.setAttribute("role", "note");
+  const shown = names.length > 3 ? names.slice(0, 3).join("・") + `ほか${names.length - 3}エリア` : names.join("・");
+  el.textContent = `⚠ ${shown}は、取得できなかった分があります。出ていない施設は「空きなし」ではありません。予約サイトで確認してください。`;
+  return el;
+}
+
 // ---- 何日かまとめて表示(7日間 / 土日) ------------------------------------
 // 日付ごとに、空きのある施設を1行ずつ。行を押すと、その日の「日付ごと」の画面に移る
 function renderMulti(vis, dates) {
@@ -626,6 +637,7 @@ function renderMulti(vis, dates) {
   const hint = document.createElement("div"); hint.className = "hint";
   hint.textContent = "施設を押すと、その日のコートごとの空きが出ます。" + (vis.some(x => x.fresh) ? "🆕 は、この3時間ほどで新しく空いた枠がある施設です。" : "");
   list.appendChild(hint);
+  const fn = failNote(ds); if (fn) list.appendChild(fn);
   let any = false;
   for (const d of ds) {
     const hits = vis.filter(s => s.date === d && (st.city === "all" || s.site === st.city) && s.start < z1 && s.end > z0 && shown(s.site, s.facility) && courtOk(s.site, s.facility, s.court) && slotOk(s));
@@ -754,6 +766,7 @@ function renderInner() {
   }
   const list = $("list");
   list.innerHTML = "";
+  const fn = failNote([st.date]); if (fn) list.appendChild(fn);
   if (byFac.size) {
     const hint = document.createElement("div"); hint.className = "hint";
     hint.textContent = "時間を押すと予約サイト、施設名を押すと施設の案内が開きます。" + (hits.some(x => x.fresh) ? "🆕 は、この3時間ほどで新しく空いた枠です。" : "");
@@ -950,7 +963,7 @@ function renderInner() {
     }
     list.appendChild(card);
   }
-  if (data.errors.length) {
+  if (data.errors.length && !data.failures) { // 古い形式のデータ(失敗した場所の記録がない)のときだけ
     const e = document.createElement("div"); e.className = "err";
     e.textContent = `取得に失敗した日があります(${data.errors.length}件)。空き表示が不完全な可能性があります。`;
     list.appendChild(e);

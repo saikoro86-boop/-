@@ -13,7 +13,8 @@ test("fetchChecked: 200 台以外は、URL とコードつきの例外", async (
 test("fetchChecked: 応答がないときは、時間制限で止まる", async () => {
   global.fetch = ((_u: unknown, init?: RequestInit) =>
     new Promise((_res, rej) => init?.signal?.addEventListener("abort", () => rej(new Error("timeout"))))) as typeof fetch;
-  try { await assert.rejects(fetchChecked("https://example.test/slow", {}, 20), /timeout/); } finally { restore(); }
+  const keepAlive = setTimeout(() => {}, 1000); // AbortSignal.timeout のタイマーだけでは、テストが先に終わってしまう
+  try { await assert.rejects(fetchChecked("https://example.test/slow", {}, 20), /timeout/); } finally { clearTimeout(keepAlive); restore(); }
 });
 
 test("withRetry: 2回失敗して3回目に成功すれば、結果を返す", async () => {

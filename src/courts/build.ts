@@ -4,7 +4,7 @@
  * 1サイトの失敗で全体を止めず、失敗したサイトは errors に記録する。
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import type { OpenSlot } from "./types";
+import type { Failure, OpenSlot } from "./types";
 import {
   fetchNaraSuperAppRaw,
   fetchNaraSuperAppTop,
@@ -17,6 +17,7 @@ import {
 } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 import { compactSlots, markNew, type CompactSlots } from "./compact";
+import { shouldRefusePublish } from "./guard";
 import { fetchWeather } from "./weather";
 import { findContact, type Contact } from "./phone";
 import { fetchChecked, sleep, withRetry } from "./http";
@@ -69,6 +70,8 @@ async function main() {
   /** 「エリア|施設名」→ ネット予約の受付外の枠があるときの問い合わせ先 */
   const contacts: Record<string, { tel?: string; hours?: string; via?: string; unconfirmed?: boolean }> = {};
   const errors: string[] = [];
+  /** 取得できなかったエリア・日(画面で「空きなし」と区別して見せる) */
+  const failures: Failure[] = [];
   const today = new Date();
   const first = jst(today);
   const last = jst(new Date(today.getTime() + (cfg.days - 1) * 86400e3));
@@ -138,6 +141,7 @@ async function main() {
           // 公開する data.json には、取得元がわかる情報(URL・ID・エラー詳細)を入れない。詳細はログにだけ出す
           console.error(`${site.name} ${t.note ?? t.buildingId}: ${(e as Error).message}`);
           errors.push(`${site.name}: 取得に失敗`);
+          failures.push({ s: site.name });
         }
         await sleep(1500); // 先方に負荷をかけない
       }
@@ -160,12 +164,14 @@ async function main() {
           } catch (e) {
             console.error(`${t.municipality} ${t.facilityName}: ${(e as Error).message}`);
             errors.push(`${t.municipality}: 取得に失敗`);
+            failures.push({ s: t.municipality });
           }
           await sleep(1500);
         }
       } catch (e) {
         console.error(`${site.name} 施設一覧: ${(e as Error).message}`);
         errors.push(`${site.name}: 施設一覧の取得に失敗`);
+        failures.push({ s: site.name });
       }
       continue;
     }
@@ -203,6 +209,7 @@ async function main() {
       } catch (e) {
         console.error(`${site.name} ${date}: ${(e as Error).message}`);
         errors.push(`${site.name} ${date}: 取得に失敗`);
+        failures.push({ s: site.name, d: date });
       }
       await sleep(300); // 先方サーバに負荷をかけない
     }
@@ -267,20 +274,26 @@ async function main() {
     // 空きがない施設・日の理由(d=日付, s=エリア, f=施設, t=full|closed|unpub, l=ラベル)
     status: [...statusMap.values()],
     errors,
+    failures,
   };
   // data2.json: スマホ向けの小さな形式(いまの画面が読む)
   // 前回公開したデータ(PREV_URL)と比べて、新しく空いた枠に印を付ける。取れなければ印なし
   let prev: CompactSlots | null = null;
+  let prevFailures: Failure[] = [];
   if (process.env.PREV_URL) {
     try {
       const r = await fetchChecked(process.env.PREV_URL, { headers: { "cache-control": "no-cache" } });
-      const j = (await r.json()) as { v?: number } & CompactSlots;
-      if (j.v === 2) prev = { courts: j.courts, byDate: j.byDate };
+      const j = (await r.json()) as { v?: number; failures?: Failure[] } & CompactSlots;
+      if (j.v === 2) { prev = { courts: j.courts, byDate: j.byDate }; prevFailures = j.failures ?? []; }
     } catch (e) {
       console.log("前回のデータを取得できませんでした(🆕の印なしで続けます):", (e as Error).message);
     }
   }
-  const compact = markNew(compactSlots(slots), prev);
+  const count = (c: CompactSlots) => Object.values(c.byDate).reduce((n, l) => n + l.length, 0);
+  const compact = markNew(compactSlots(slots), prev, prevFailures);
+  // 取得に失敗した回は、本物でない「空きなし」を公開しない(前回のデータが残る)
+  const refuse = shouldRefusePublish({ errors: errors.length, curCount: count(compact), prevCount: prev ? count(prev) : 0 });
+  if (refuse) { console.error(`公開を見送ります: ${refuse}`); process.exitCode = 1; return; }
   console.log(`🆕 新しく空いた枠: ${Object.values(compact.byDate).flat().filter((x) => x[4] === 1).length} 件(前回データ ${prev ? "あり" : "なし"})`);
   const small = JSON.stringify({ v: 2, ...common, courts: compact.courts, byDate: compact.byDate });
   writeFileSync("public/data2.json", small);
@@ -295,4 +308,4 @@ async function main() {
   if (errors.length) console.log(`失敗: ${errors.length} 件(詳細は上のログ)`);
 }
 
-main();
+main().catch((e) => { console.error(e); process.exit(1); });
