@@ -4,7 +4,7 @@
  *   - 連続する枠(9-10, 10-11 …)は1つにまとめる(画面も、もともとまとめて表示している)
  * 展開すると、まとめ前と「同じ時間帯が空いている」ことは変わらない(compact.test.ts で確認)。
  */
-import type { OpenSlot } from "./types";
+import type { Failure, OpenSlot } from "./types";
 
 /** [コートの番号, 開始, 終了, ネット予約の受付外(1)か通常(0)か, 前回の更新から新しく空いた(1)] */
 export type CompactSlot = [number, number, number, 0 | 1] | [number, number, number, 0 | 1, 1];
@@ -67,18 +67,23 @@ export function expandSlots(c: CompactSlots): OpenSlot[] {
  * - 同じ日・同じコートで、前回は空いていなかった時間を含む枠が「新しい」
  * - 前回のデータに無かった先の日付(予約期間が1日進んで出てきた日)は、全部が新しくなってしまうので、印を付けない
  * - 前回のデータがなければ(初回など)、何もしない
+ * - 前回、取得に失敗していた範囲(prevFailures)は、前回の枠が抜けているだけなので、印を付けない。
+ *   失敗の記録がなくても、前回まったく枠のなかったエリアには、印を付けない(取得できていなかった可能性が高い)
  */
-export function markNew(cur: CompactSlots, prev: CompactSlots | null): CompactSlots {
+export function markNew(cur: CompactSlots, prev: CompactSlots | null, prevFailures: Failure[] = []): CompactSlots {
   if (!prev || !Object.keys(prev.byDate).length) return cur;
   const prevMax = Object.keys(prev.byDate).sort().pop()!;
   const cover = new Map<string, [number, number][]>();
+  const prevSites = new Set<string>();
   for (const [date, list] of Object.entries(prev.byDate)) {
     for (const [ci, s, e] of list) {
       const c = prev.courts[ci]; if (!c) continue;
+      prevSites.add(c[0]);
       const k = `${date}|${c[0]}|${c[1]}|${c[2]}`;
       (cover.get(k) ?? cover.set(k, []).get(k)!).push([s, e]);
     }
   }
+  const wasFailed = (site: string, date: string) => prevFailures.some((f) => f.s === site && (!f.d || f.d === date));
   const covered = (spans: [number, number][] | undefined, s: number, e: number) => {
     if (!spans) return false;
     let t = s;
@@ -91,6 +96,7 @@ export function markNew(cur: CompactSlots, prev: CompactSlots | null): CompactSl
       const [ci, s, e, off] = x;
       if (date > prevMax) return [ci, s, e, off];
       const c = cur.courts[ci];
+      if (!prevSites.has(c[0]) || wasFailed(c[0], date)) return [ci, s, e, off];
       return covered(cover.get(`${date}|${c[0]}|${c[1]}|${c[2]}`), s, e) ? [ci, s, e, off] : [ci, s, e, off, 1];
     });
   }

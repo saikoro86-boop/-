@@ -3,6 +3,8 @@
  * テニスコートの空き状況を取得する。ログイン不要の「目的で検索」画面を使う。
  */
 
+import { fetchChecked, TIMEOUT_MS } from "./http";
+
 export interface Slot {
   /** 開始時刻(時) */
   start: number;
@@ -82,15 +84,8 @@ export const isTennisCourt = (c: CourtAvailability) => isPlayingSpace(c);
 // 〇(U+3007) / ○(U+25CB) / ◯(U+25EF) の表記ゆれを吸収する
 export const isOpen = (s: Slot) => /^[\u3007\u25cb\u25ef]$/.test(s.mark);
 
-async function request(url: string, body: URLSearchParams, cookie: string) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", cookie },
-    body,
-  });
-  if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
-  return res;
-}
+const request = (url: string, body: URLSearchParams, cookie: string) =>
+  fetchChecked(url, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", cookie }, body });
 
 /** 指定日(YYYY-MM-DD)・目的コードの空きを取得する */
 export async function fetchDay(
@@ -99,7 +94,8 @@ export async function fetchDay(
   purpose = DEFAULT_PURPOSE,
 ): Promise<CourtAvailability[]> {
   const [y, m, d] = date.split("-");
-  const top = await fetch(site.url);
+  // 最初のアクセスは Cookie をもらうだけ。応答コードは見ない(本当に拒まれていれば、次の検索で失敗する)。待つ時間にだけ上限を付ける
+  const top = await fetch(site.url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   const cookie = (top.headers.getSetCookie?.() ?? []).map((c) => c.split(";")[0]).join("; ");
   const out: CourtAvailability[] = [];
   for (const code of purpose.codes) {

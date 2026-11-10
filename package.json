@@ -1,7 +1,7 @@
 {
-  "name": "puppeteer-form-automation",
+  "name": "tennis-court-finder",
   "version": "1.0.0",
-  "description": "Puppeteer (stealth) + TypeScript boilerplate for form automation",
+  "description": "奈良県・木津川市のテニスコート空き状況をまとめて見る(ほかに、フォーム自動化・SNS 下書き管理のひな形を含む)",
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
