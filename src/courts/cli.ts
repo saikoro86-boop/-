@@ -1,5 +1,5 @@
 /** 使い方: npm run courts -- 2026-11-14 [市名の一部] */
-import { readFileSync } from "node:fs";
+import { loadConfigs } from "./config";
 import { fetchNaraSuperAppRaw, fetchNaraSuperAppTop, nsaCourtFilter, parseNaraSuperApp, pickNaraSuperAppTargets } from "./narasuperapp";
 import { fetchDay, isOpen, isTennisCourt, type CourtAvailability } from "./kashikan";
 
@@ -9,8 +9,8 @@ async function main() {
     console.error("使い方: npm run courts -- YYYY-MM-DD [市名]");
     process.exit(1);
   }
-  const cfg = JSON.parse(readFileSync("config/courts.json", "utf-8"));
-  for (const site of cfg.sites.filter((s: { name: string; type: string }) => s.type === "nsa-auto" || (s.type === "kashikan" && (!filter || s.name.includes(filter))))) {
+  const cfg = loadConfigs().courts;
+  for (const site of cfg.sites.filter((s) => s.type === "nsa-auto" || (s.type === "kashikan" && (!filter || s.name.includes(filter))))) {
     console.log(`\n■ ${site.type === "nsa-auto" ? (filter ?? "奈良スーパーアプリ全体") : site.name} ${date}`);
     let n = 0;
     let courts: CourtAvailability[];
@@ -23,7 +23,8 @@ async function main() {
         courts.push(...parseNaraSuperApp(raw, date).filter(nsaCourtFilter(raw).pred));
         await new Promise((r) => setTimeout(r, 1000));
       }
-    } else courts = await fetchDay(site, date, cfg.purpose);
+    } else if (site.type === "kashikan") courts = await fetchDay(site, date, cfg.purpose);
+    else courts = [];
     for (const c of site.type === "nsa-auto" ? courts : courts.filter(isTennisCourt)) {
       const open = c.slots.filter(isOpen).map((s) => `${s.start}-${s.end}時`);
       if (open.length) { console.log(`  ${c.facility} ${c.court}: ${open.join(", ")}`); n++; }

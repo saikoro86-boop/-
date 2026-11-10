@@ -34,7 +34,11 @@ npm run worker:build     # worker/src/*.ts → worker/worker.js(Cloudflare に�
 node --require ts-node/register --test tests/fees.test.ts
 ```
 
-変更したら、**`npm test` と `npm run typecheck` の両方**を通してから commit します。
+変更したら、**`npm test` と `npm run typecheck` の両方**を通してから commit します(`.github/workflows/ci.yml` が PR で、`courts.yml` が公開の前に、同じ2つを実行します)。
+
+### 取得の部分を変えたとき
+
+`build.ts`・`collect/`・`publish.ts` などを変えて「出力は変わらないはず」のときは、**変更の前後で `data2.json` を比べます**。実サイトには繋がず、`tests/fixtures/` の実物を返す `fetch` の差し替えと、待ち時間を飛ばす `setTimeout` の差し替えを `--require` で読み込んで `build.ts` を動かし、`updatedAt` 以外が同じことを確かめます(奈良スーパーアプリは2建物だけ応答させ、ほかは 503 にします)。日付をまたぐと取得する日が変わるので、前後は同じ日に取ります。
 
 ### 画面の確認
 
@@ -49,7 +53,7 @@ node --require ts-node/register --test tests/fees.test.ts
 
 | 場所 | 中身 |
 |---|---|
-| `src/courts/` | 取得と整形。`kashikan.ts`(奈良市・生駒市)、`narasuperapp.ts`(奈良スーパーアプリ)、`kizugawa.ts`(木津川市・HTML の解析だけ)、`status.ts`(空きなしの理由)、`compact.ts`(配信用の圧縮と 🆕)、`weather.ts`(気象庁)、`phone.ts`、`build.ts`(全体のまとめ役)、`cli.ts` |
+| `src/courts/` | 取得・整形・公開データの組み立て。`build.ts`(全体の流れだけ: 設定を読む → 集める → 組み立てる → 書き出す)、`collect/`(サイトの種類ごとの取得: `kashikan.ts`・`nsa.ts`、結果の入れ物 `collected.ts`)、`publish.ts`(公開データの形 `PublishedCommon` と前回データの取得)、`config.ts`(設定の読み込みと検査)、`http.ts`(時間制限・やり直し・待ち)、`guard.ts`(公開を見送る判断)、`keys.ts`(施設の鍵と名前のそろえ方)。低レベルの取得・解析は `kashikan.ts`(奈良市・生駒市)、`narasuperapp.ts`、`kizugawa.ts`(木津川市・HTML の解析だけ)。ほかに `status.ts`(空きなしの理由)、`compact.ts`(配信用の圧縮と 🆕)、`weather.ts`、`phone.ts`、`cli.ts` |
 | `src/bookmarklet/` | 木津川市の取り込み用ブックマークレットの生成 |
 | `config/` | 手で管理するデータ。`courts.json`(対象サイト・電話番号)、`fees.json`(料金)、`official.json`(公式ページ)、`places.json`・`coords.json`(場所)、`courtinfo.json`(コートの種類) |
 | `public/` | 公開される画面。`index.html`、`sw.js`、`manifest.webmanifest`、`icons/` |
@@ -62,11 +66,14 @@ node --require ts-node/register --test tests/fees.test.ts
 ## 設計と書き方
 
 - **解析は純粋関数にする。** 「取得する関数」と「HTML/JSON を読む関数」を分け、読む側は `tests/fixtures/` の実物でテストします。新しいサイトや画面の変更に対応するときは、まず実物を fixtures に保存します(ファイル名は `サイト-YYYYMMDD.拡張子`)。
-- **1つの失敗で全体を止めない。** `build.ts` はサイト・建物・日付ごとに `try/catch` し、失敗は `errors` に「◯◯: 取得に失敗」と記録して先へ進みます。公開するデータに、取得元の URL・ID・エラーの詳細は入れません。
+- **1つの失敗で全体を止めない。** `collect/` はサイト・建物・日付ごとに `try/catch` し、`acc.fail(...)` で記録して先へ進みます。記録は2つ: `errors`(画面の件数)と `failures`(取得できなかったエリア・日。画面が「空きなしではありません」と知らせ、`markNew` が偽の 🆕 を避けるのに使う)。公開するデータに、取得元の URL・ID・エラーの詳細は入れません。
+- **失敗が多い回は公開しない。** 失敗があって、しかも枠が0件、または前回の3割未満に減ったら、`guard.ts` が公開を見送ります(ジョブが失敗し、前回のデータが残る)。
+- **通信は `http.ts` を通す**(`fetchChecked` は20秒の時間制限と応答コードの確認、`withRetry` は最大3回)。`fetch` を直接書かないこと。
+- **設定は `config.ts` の `loadConfigs()` で読む。** `JSON.parse(...) as {...}` で直接読まない。設定の項目を足すときは、そこのスキーマも直します(料金は、出典・確認日・裏付けが必須)。
 - **先方に負荷をかけない。** リクエストの間に待ち時間(300ms〜1.5秒)を入れ、やり直しは最大3回。並列に投げません。
 - 配信データは `data2.json`(コートの表 + `byDate` の `[ci, start, end, off, new?]`)。形を変えるときは `compact.ts`、`build.ts`、`index.html` の `expandV2`、テストを同時に直します。
 - 時刻は「時」の小数(9.5 = 9:30)。日付は `YYYY-MM-DD` の文字列のまま扱い、端末のタイムゾーンに頼りません(画面は日本時間を自前で計算)。
-- 施設は「エリア名|施設名」で識別します(お気に入り・非表示・`official.json`・`coords.json` の鍵)。施設名の表記を変えると、利用者の設定が外れます。
+- 施設は「エリア名|施設名」で識別します(作るのは `keys.ts` の `facilityKey()`。名前のそろえ方は `normName()`)(お気に入り・非表示・`official.json`・`coords.json` の鍵)。施設名の表記を変えると、利用者の設定が外れます。
 - 命名: 変数・関数は camelCase、型は PascalCase、ファイルは小文字。export する関数・型には、日本語で1〜2行の説明を付けます。
 - **コメント・テスト名・コミットメッセージ・PR・画面の文言は日本語**。コメントは「なぜそうしているか」を書きます。
 - `public/index.html`: 外から来た文字列(施設名など)は `textContent` で入れます。`innerHTML` は固定の文字列だけ。色は CSS 変数(`--accent`、`--on-accent` など)を使い、`@media (prefers-color-scheme: dark)` でも読めることを確かめます。

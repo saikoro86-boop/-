@@ -13,12 +13,11 @@
  *       <tr><th class="th_sticky">09:00 - 10:00</th><td><img alt="空いています"></td>...
  */
 import type { OpenSlot } from "./types";
+import { normName as norm } from "./keys";
 
 const stripTags = (s: string) =>
   s.replace(/<img[^>]*>/g, "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
 
-// コート名の全角英数(テニスコートＡ)を半角に揃える。奈良市・生駒市の表記と合わせるため
-const norm = (s: string) => s.normalize("NFKC").trim();
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

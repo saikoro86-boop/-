@@ -23,6 +23,7 @@ export const NSA_ENDPOINT =
 const APEX_CLASS = "@udd/01p5i00000X9eij";
 
 import { fetchChecked, USER_AGENT } from "./http";
+import { normName as norm } from "./keys";
 
 export interface NaraSuperAppRequest {
   namespace: "";
@@ -112,8 +113,6 @@ const jstHour = (iso: string) => {
   return d.getUTCHours() + d.getUTCMinutes() / 60;
 };
 
-/** 全角英数(テニスコートＡ)を半角にそろえる。奈良市・生駒市・木津川市の表記と合わせるため */
-const norm = (s: string) => s.normalize("NFKC").trim();
 
 /** データに含まれる日付の一覧(昇順) */
 export function listNaraSuperAppDates(raw: NaraSuperAppResponse): string[] {
