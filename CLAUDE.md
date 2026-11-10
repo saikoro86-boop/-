@@ -56,7 +56,7 @@ node --require ts-node/register --test tests/fees.test.ts
 | `src/courts/` | 取得・整形・公開データの組み立て。`build.ts`(全体の流れだけ: 設定を読む → 集める → 組み立てる → 書き出す)、`collect/`(サイトの種類ごとの取得: `kashikan.ts`・`nsa.ts`、結果の入れ物 `collected.ts`)、`publish.ts`(公開データの形 `PublishedCommon` と前回データの取得)、`config.ts`(設定の読み込みと検査)、`http.ts`(時間制限・やり直し・待ち)、`guard.ts`(公開を見送る判断)、`keys.ts`(施設の鍵と名前のそろえ方)。低レベルの取得・解析は `kashikan.ts`(奈良市・生駒市)、`narasuperapp.ts`、`kizugawa.ts`(木津川市・HTML の解析だけ)。ほかに `status.ts`(空きなしの理由)、`compact.ts`(配信用の圧縮と 🆕)、`weather.ts`、`phone.ts`、`cli.ts` |
 | `src/bookmarklet/` | 木津川市の取り込み用ブックマークレットの生成 |
 | `config/` | 手で管理するデータ。`courts.json`(対象サイト・電話番号)、`fees.json`(料金)、`official.json`(公式ページ)、`places.json`・`coords.json`(場所)、`courtinfo.json`(コートの種類) |
-| `public/` | 公開される画面。`index.html`、`sw.js`、`manifest.webmanifest`、`icons/` |
+| `public/` | 公開される画面。`index.html`(画面の組み立て)、`app-logic.js`(画面に触らない処理: 日付・時間・距離・枠のまとめ・カレンダーの文。`tests/app-logic.test.ts` でテスト)、`sw.js`、`manifest.webmanifest`、`icons/` |
 | `tests/` | `*.test.ts` と `fixtures/`(実サイトの画面・応答を保存したもの) |
 | `worker/` | 手動更新ボタンの中継役(Cloudflare Worker)。`src/` が元、`worker.js` は生成物 |
 | `.github/workflows/courts.yml` | 3時間ごとの取得と公開 |
@@ -76,6 +76,7 @@ node --require ts-node/register --test tests/fees.test.ts
 - 施設は「エリア名|施設名」で識別します(作るのは `keys.ts` の `facilityKey()`。名前のそろえ方は `normName()`)(お気に入り・非表示・`official.json`・`coords.json` の鍵)。施設名の表記を変えると、利用者の設定が外れます。
 - 命名: 変数・関数は camelCase、型は PascalCase、ファイルは小文字。export する関数・型には、日本語で1〜2行の説明を付けます。
 - **コメント・テスト名・コミットメッセージ・PR・画面の文言は日本語**。コメントは「なぜそうしているか」を書きます。
+- 画面の処理は、DOM・`localStorage`・通信に触らないものを `public/app-logic.js` に置き、`index.html` はそれを使う(テストできるように)。ビルドなしの素の JavaScript で書く。`public/` にファイルを足したら、`courts.yml` のコピーと `sw.js`(保存するもの・ネット優先にするもの)も直す。
 - `public/index.html`: 外から来た文字列(施設名など)は `textContent` で入れます。`innerHTML` は固定の文字列だけ。色は CSS 変数(`--accent`、`--on-accent` など)を使い、`@media (prefers-color-scheme: dark)` でも読めることを確かめます。
 
 ## 守ること(このプロジェクト独自の制約)

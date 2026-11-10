@@ -197,9 +197,11 @@
   <div class="cal-note">予約が取れた時間を選んで追加してください(iPhone のカレンダーは1時間前に通知)。</div>
 </div>
 </dialog>
+<script src="app-logic.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
-const WD = ["日","月","火","水","木","金","土"];
+// 画面に触らない処理(日付・時間・距離・枠のまとめ・カレンダーの文)は app-logic.js
+const { WD, weekday, dateLabel, nowJst, visibleDates, hm, fmtT, expandV2, mergeCourtSpans, mergeFacilitySpans, failedAreas, haversineKm, shareText, calStamp, googleCalUrl, icsText } = AppLogic;
 const ZONES = { "all":["終日",0,24], "am":["〜12時",0,12], "pm":["12〜17時",12,17], "ev":["17時〜",17,24] };
 const st = { date:null, city:"all", zone:"all", favOnly:false };
 // ---- お気に入り・非表示(このスマホだけに保存。ほかの人とは共有しない) ----
@@ -310,10 +312,7 @@ function locate(then) {
 function distKm(site, facility) {
   const c = (data.coords || {})[fkey(site, facility)];
   if (!myPos || !c) return null;
-  const R = 6371, rad = (x) => x * Math.PI / 180;
-  const dLat = rad(c[0] - myPos.lat), dLng = rad(c[1] - myPos.lng);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(myPos.lat)) * Math.cos(rad(c[0])) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
+  return haversineKm(myPos.lat, myPos.lng, c[0], c[1]);
 }
 const kmLabel = (km) => km == null ? "" : km < 1 ? "約" + Math.round(km * 10) / 10 + "km" : "約" + (km < 10 ? km.toFixed(1) : Math.round(km)) + "km";
 /** 並べ順: お気に入りが先。近い順のときは、その中で近い順(位置が分からない施設は後ろ) */
@@ -384,7 +383,6 @@ function loadImport() {
   try { return validateImport(JSON.parse(localStorage.getItem(IMPORT_KEY) || "null")); } catch { return null; }
 }
 
-const hm = (h) => { const m = Math.round((h % 1) * 60); return Math.floor(h) + (m ? ":" + String(m).padStart(2,"0") : ""); };
 
 // 施設の予約サイトのURL。施設ごとに分かればそれ、なければエリアの入口(木津川市など)
 const urlFor = (site, facility) => {
@@ -485,19 +483,6 @@ function feeBlock(site, facility) {
 }
 
 // ---- 空き枠の共有・コピー ------------------------------------------------
-const fmtT = (h) => Math.floor(h) + ":" + String(Math.round((h % 1) * 60)).padStart(2, "0");
-function dateLabel(d) {
-  const [y, m, dd] = d.split("-").map(Number);
-  return `${m}/${dd}(${WD[new Date(Date.UTC(y, m - 1, dd)).getUTCDay()]})`;
-}
-/** LINE やメモに貼れる文。ネット予約の受付外(☎)の枠は、そう分かるようにして、電話番号も付ける */
-function shareText({ facility, court, date, spans, url, tel }) {
-  const times = spans.map(x => `${fmtT(x.start)}〜${fmtT(x.end)}${x.offline ? "(ネット予約外・電話)" : ""}`).join(" / ");
-  const lines = ["【テニスコートの空き】", `${dateLabel(date)} ${facility} ${court}`, times];
-  if (tel && spans.some(x => x.offline)) lines.push("電話: " + tel);
-  if (url) lines.push("予約サイト: " + url);
-  return lines.join("\n");
-}
 async function copyText(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch {}
   try { // 古いブラウザ向けの保険
@@ -513,12 +498,6 @@ function miniButton(label, aria, onclick) {
 
 // ---- 予定に追加(Google カレンダー / iPhone のカレンダー) -------------------------------
 // 予約が取れた枠を、自分のカレンダーに入れる。データはどこにも送らない(リンクとファイルを作るだけ)
-const pad2 = (n) => String(n).padStart(2, "0");
-/** "2026-11-08", 9.5 → "20261108T093000"(日本時間のまま。タイムゾーンは別に付ける) */
-function calStamp(date, h) {
-  const m = Math.round(h * 60);
-  return date.replace(/-/g, "") + "T" + pad2(Math.floor(m / 60)) + pad2(m % 60) + "00";
-}
 function calDetails(site, facility, court) {
   const lines = [`${site} ${facility} ${court}`];
   const fee = feeFor(site, facility); if (fee) lines.push("料金の目安: " + fee.summary);
@@ -526,34 +505,6 @@ function calDetails(site, facility, court) {
   const o = officialFor(site, facility); if (o) lines.push("公式ページ: " + o);
   lines.push("ルート: " + mapUrl(site, facility));
   return lines.join("\n");
-}
-function googleCalUrl(ev) {
-  const q = new URLSearchParams({ action: "TEMPLATE", text: ev.title, dates: calStamp(ev.date, ev.start) + "/" + calStamp(ev.date, ev.end), ctz: "Asia/Tokyo", details: ev.details, location: ev.location });
-  return "https://calendar.google.com/calendar/render?" + q.toString();
-}
-/** iCalendar(.ics)。改行・カンマなどはエスケープし、75 バイトを超える行は折り返す */
-function icsText(ev) {
-  const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
-  const fold = (line) => {
-    const out = []; let cur = "", bytes = 0;
-    for (const ch of line) {
-      const b = new TextEncoder().encode(ch).length;
-      if (bytes + b > 74) { out.push(cur); cur = " "; bytes = 1; }
-      cur += ch; bytes += b;
-    }
-    out.push(cur); return out.join("\r\n");
-  };
-  const now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-  const uid = calStamp(ev.date, ev.start) + "-" + Math.abs([...ev.title].reduce((a, c) => (a * 31 + c.codePointAt(0)) | 0, 7)) + "@tennis-courts";
-  return [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//tennis-courts//ja", "CALSCALE:GREGORIAN",
-    "BEGIN:VTIMEZONE", "TZID:Asia/Tokyo", "BEGIN:STANDARD", "DTSTART:19700101T000000", "TZOFFSETFROM:+0900", "TZOFFSETTO:+0900", "TZNAME:JST", "END:STANDARD", "END:VTIMEZONE",
-    "BEGIN:VEVENT", "UID:" + uid, "DTSTAMP:" + now,
-    "DTSTART;TZID=Asia/Tokyo:" + calStamp(ev.date, ev.start), "DTEND;TZID=Asia/Tokyo:" + calStamp(ev.date, ev.end),
-    "SUMMARY:" + esc(ev.title), "LOCATION:" + esc(ev.location), "DESCRIPTION:" + esc(ev.details),
-    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc(ev.title), "TRIGGER:-PT1H", "END:VALARM",
-    "END:VEVENT", "END:VCALENDAR", ""
-  ].map(fold).join("\r\n");
 }
 /** 予定に追加の画面を開く。spans はそのコートの、その日の空き(ネット予約できる枠を先に) */
 function openCal(site, facility, court, date, spans) {
@@ -608,15 +559,9 @@ function chips(el, items, key) {
   }
 }
 
-// 日本時間の「今日」と「いまの時刻(時)」。今日の、すでに終わった時間の枠は、出さない
-function nowJst() {
-  const j = new Date(Date.now() + 9 * 3600e3);
-  return { today: j.toISOString().slice(0, 10), hour: j.getUTCHours() + j.getUTCMinutes() / 60 };
-}
-
 // ---- 取得できなかった範囲の知らせ(「空きなし」ではないことを伝える) ----
 function failNote(dates) {
-  const names = [...new Set((data.failures || []).filter(f => (st.city === "all" || f.s === st.city) && (!f.d || dates.includes(f.d))).map(f => f.s))];
+  const names = failedAreas(data.failures, st.city, dates);
   if (!names.length) return null;
   const el = document.createElement("div"); el.className = "failnote"; el.setAttribute("role", "note");
   const shown = names.length > 3 ? names.slice(0, 3).join("・") + `ほか${names.length - 3}エリア` : names.join("・");
@@ -629,7 +574,7 @@ function failNote(dates) {
 function renderMulti(vis, dates) {
   const list = $("list"); list.innerHTML = "";
   const [, z0, z1] = ZONES[st.zone];
-  const wd = (d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd)).getUTCDay(); };
+  const wd = weekday;
   const todayJ = nowJst().today;
   const future = dates.filter(d => d >= todayJ);
   let ds = future.slice(0, 7);
@@ -659,9 +604,7 @@ function renderMulti(vis, dates) {
     any = true;
     for (const f of [...byFac.values()].sort(facCompare)) {
       // 施設全体で、空いている時間帯をまとめる(どこかのコートが空いていれば空き)
-      const sp = f.spans.map(x => [x.start, x.end, !!x.offline]).sort((a, b) => a[0] - b[0]);
-      const merged = [];
-      for (const [a, b2, off] of sp) { const l = merged[merged.length - 1]; if (l && a <= l[1]) { l[1] = Math.max(l[1], b2); l[2] = l[2] && off; } else merged.push([a, b2, off]); }
+      const merged = mergeFacilitySpans(f.spans);
       const row = document.createElement("div"); row.className = "mrow";
       const main = document.createElement("button"); main.type = "button"; main.className = "mmain";
       main.title = dateLabel(d) + " " + f.facility + " の空きを詳しく見る";
@@ -698,8 +641,7 @@ function renderInner() {
   const vis = data.slots.filter(x => !isPast(x));   // 表示する枠(終わった枠を除く)
   // 日付ストリップ(空きがある日にマーク)
   const allDates = [...new Set([...data.slots.map(s => s.date), ...(data.status || []).map(x => x.d)])].sort();
-  // 昨日より前の日は出さない(データの更新前でも、今日から選べるように)。全部過去なら、そのまま出す
-  const dates = allDates.some(d => d >= todayJ) ? allDates.filter(d => d >= todayJ) : allDates;
+  const dates = visibleDates(allDates, todayJ); // 昨日より前の日は出さない
   if (!st.date || !dates.includes(st.date)) st.date = dates[0] || null;
   $("days").innerHTML = "";
   $("days").hidden = st.view !== "day";
@@ -796,13 +738,7 @@ function renderInner() {
       name.textContent = court; // コート名はリンクにしない(予約は時間の枠から)
       const times = document.createElement("span"); times.className = "times";
       // 連続する枠(9-10, 10-11 …)は 1 つにまとめる。ネット予約できる枠と、受付外(●・電話)の枠は分けて結合する
-      const merged = [];
-      for (const s of ss.sort((a, b) => a.start - b.start)) {
-        const last = merged.filter(m => !!m.offline === !!s.offline).pop();
-        if (last && s.start <= last.end) { last.end = Math.max(last.end, s.end); last.fresh = last.fresh || !!s.fresh; }
-        else merged.push({ start: s.start, end: s.end, offline: !!s.offline, fresh: !!s.fresh });
-      }
-      merged.sort((a, b) => a.start - b.start || a.end - b.end);
+      const merged = mergeCourtSpans(ss);
       for (const s of merged) {
         const label = `${hm(s.start)}–${hm(s.end)}`;
         const cls = "t" + (s.offline ? " off" : "") + (s.fresh ? " fresh" : "");
@@ -1034,16 +970,6 @@ function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = nul
 
 // ---- 読み込み ----------------------------------------------------------
 // 小さな形式(v2)を、画面が使う「1枠ごとの配列」に戻す。保存前の「1枠ごと」の形
-function expandV2(d) {
-  const out = [];
-  for (const [date, list] of Object.entries(d.byDate || {})) {
-    for (const [ci, start, end, off, nw] of list) {
-      const c = d.courts[ci]; if (!c) continue;
-      out.push({ date, site: c[0], facility: c[1], court: c[2], start, end, ...(off ? { offline: true } : {}), ...(nw ? { fresh: true } : {}) });
-    }
-  }
-  return out;
-}
 async function fetchData() {
   const r = await fetch("data2.json", { cache: "no-store" });
   if (!r.ok) throw new Error(r.status);
