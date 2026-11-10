@@ -90,16 +90,21 @@ async function draftCommand(positional: string[], options: Record<string, string
   const posts = await generatePosts(theme, platforms);
 
   const drafts = loadDrafts();
-  const created: Draft[] = platforms.map((platform) => ({
-    id: newId(platform),
-    platform,
-    theme,
-    text: posts[platform].trim(),
-    imageUrl: options.image,
-    scheduledAt,
-    status: "pending",
-    createdAt: new Date().toISOString(),
-  }));
+  const usedIds = new Set(drafts.map((d) => d.id));
+  const created: Draft[] = platforms.map((platform) => {
+    const id = newId(platform, usedIds);
+    usedIds.add(id);
+    return {
+      id,
+      platform,
+      theme,
+      text: posts[platform].trim(),
+      imageUrl: options.image,
+      scheduledAt,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    };
+  });
   saveDrafts([...drafts, ...created]);
 
   created.forEach(printDraft);

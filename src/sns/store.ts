@@ -17,7 +17,14 @@ export function saveDrafts(drafts: Draft[]): void {
   fs.renameSync(tmpPath, STORE_PATH);
 }
 
-/** 短くて打ちやすいID（例: x-3f9a1c） */
-export function newId(platform: string): string {
-  return `${platform}-${Math.random().toString(16).slice(2, 8)}`;
+/**
+ * 短くて打ちやすいID（例: x-3f9a1c）。
+ * existing を渡すと、すでにあるIDと重ならないものを返す（重なると show/approve が別の下書きに当たるため）。
+ */
+export function newId(platform: string, existing: Iterable<string> = []): string {
+  const used = new Set(existing);
+  for (;;) {
+    const id = `${platform}-${Math.random().toString(16).slice(2, 8)}`;
+    if (!used.has(id)) return id;
+  }
 }
