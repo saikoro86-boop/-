@@ -13,11 +13,21 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-/** ネット優先。失敗したら保存分を返す(保存分には、そうと分かる印を付ける) */
+/** ネットを待つ上限。電波が弱くて応答が来ないときは、ここで諦めて、保存分を出す */
+const NETWORK_TIMEOUT_MS = 8000;
+/** 直前に時間切れになったばかりなら、次(画面のあとのデータなど)は短く待つ。2回続けて長く待たせない */
+const RETRY_TIMEOUT_MS = 2500;
+let lastTimeoutAt = 0;
+
+/** ネット優先。失敗したら(または時間切れなら)保存分を返す(保存分には、そうと分かる印を付ける) */
 async function networkFirst(req, key) {
   const cache = await caches.open(CACHE);
+  const ctl = new AbortController();
+  const wait = Date.now() - lastTimeoutAt < 60000 ? RETRY_TIMEOUT_MS : NETWORK_TIMEOUT_MS;
+  const timer = setTimeout(() => { lastTimeoutAt = Date.now(); ctl.abort(); }, wait);
   try {
-    const res = await fetch(req, { cache: "no-store" });
+    // no-cache: 毎回サーバーに確かめるが、変わっていなければ本文は送られない
+    const res = await fetch(req, { cache: "no-cache", signal: ctl.signal });
     if (res.ok) await cache.put(key, res.clone());
     return res;
   } catch (err) {
@@ -26,6 +36,8 @@ async function networkFirst(req, key) {
     const h = new Headers(hit.headers);
     h.set("x-from-cache", "1");
     return new Response(await hit.blob(), { status: 200, headers: h });
+  } finally {
+    clearTimeout(timer);
   }
 }
 

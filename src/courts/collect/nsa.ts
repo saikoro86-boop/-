@@ -12,7 +12,7 @@ import {
 import { isOpen } from "../kashikan";
 import { nsaDayState } from "../status";
 import { facilityKey, normName } from "../keys";
-import { sleep, withRetry } from "../http";
+import { BlockCounter, sleep, withRetry } from "../http";
 import type { NsaAutoConfig, NsaConfig } from "../config";
 import type { CollectContext, Collected } from "./collected";
 
@@ -69,7 +69,8 @@ export async function collectNsaAuto(site: NsaAutoConfig, ctx: CollectContext, a
   try {
     const targets = pickNaraSuperAppTargets(await withRetry("施設一覧", () => fetchNaraSuperAppTop()), site.purpose ?? "テニス");
     await sleep(1000);
-    for (const t of targets) {
+    const blocks = new BlockCounter();
+    for (const [i, t] of targets.entries()) {
       try {
         const raw = await withRetry(t.facilityName, () => fetchNaraSuperAppRaw(t.buildingId, t.facilityId));
         if (hasTennisCourt(raw)) {
@@ -79,9 +80,17 @@ export async function collectNsaAuto(site: NsaAutoConfig, ctx: CollectContext, a
           if (info && !acc.nsaInfoLinks.some((x) => x.site === t.municipality && x.match === match)) acc.nsaInfoLinks.push({ site: t.municipality, match, url: info });
           addNsa(t.municipality, raw, ctx, acc);
         }
+        blocks.ok();
       } catch (e) {
         console.error(`${t.municipality} ${t.facilityName}: ${(e as Error).message}`);
         acc.fail(t.municipality, `${t.municipality}: 取得に失敗`);
+        if (blocks.failed(e)) {
+          console.error(`${site.name}: 続けて断られたため、残りの施設の取得をやめます`);
+          acc.errors.push(`${site.name}: 先方に断られたため、取得を中止`);
+          // まだ取りに行っていない市町村も、「取得できなかった」と記録する(「空きなし」に見せない)
+          for (const area of new Set(targets.slice(i + 1).map((r) => r.municipality))) acc.failures.push({ s: area });
+          return;
+        }
       }
       await sleep(1500);
     }

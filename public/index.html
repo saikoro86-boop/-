@@ -957,7 +957,7 @@ function applyStatus(updatedAtMs) {
   const f = freshness(updatedAtMs, now);
   if (f === "updating") {
     showBanner("info", '<span class="spin"></span>データを更新中です。数分で反映されます(自動で確認しています)。<button type="button" onclick="load(false)">最新を読み込む</button>');
-    if (!pollTimer) { pollUntil = now + 20 * 60e3; pollTimer = setInterval(() => { if (Date.now() > pollUntil) stopPoll(); else load(true); }, 45e3); }
+    if (!pollTimer) { pollUntil = now + 20 * 60e3; pollTimer = setInterval(() => { if (Date.now() > pollUntil) stopPoll(); else if (!document.hidden) load(true); }, 45e3); } // 画面を見ていない間は確認しない(戻ったときに確認する)
   } else {
     stopPoll();
     if (f === "stale") {
@@ -970,8 +970,15 @@ function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = nul
 
 // ---- 読み込み ----------------------------------------------------------
 // 小さな形式(v2)を、画面が使う「1枠ごとの配列」に戻す。保存前の「1枠ごと」の形
+const LOAD_TIMEOUT_MS = 15000;
+/** 時間制限つきの signal(電波が悪いときに「読み込み中…」のまま止まらないように)。古いブラウザでは制限なし */
+function timeoutSignal(ms) {
+  if (typeof AbortController !== "function") return undefined;
+  const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal;
+}
 async function fetchData() {
-  const r = await fetch("data2.json", { cache: "no-store" });
+  // no-cache: 毎回サーバーに確かめるが、変わっていなければ本文は送られない(自動確認のたびに全部を落とさない)
+  const r = await fetch("data2.json", { cache: "no-cache", signal: timeoutSignal(LOAD_TIMEOUT_MS) });
   if (!r.ok) throw new Error(r.status);
   const d = await r.json();
   if (d.v === 2) d.slots = expandV2(d);
@@ -979,9 +986,14 @@ async function fetchData() {
   return d;
 }
 
+let loadSeq = 0;
 function load(silent) {
   if (!silent) showBanner("info", '<span class="spin"></span>読み込み中…');
+  // 読み込みが重なったとき(自動確認・画面に戻った・ボタン)は、最後に始めたものだけを画面に反映する。
+  // 遅れて届いた古い応答で、新しいデータを上書きしないため
+  const seq = ++loadSeq;
   return fetchData().then(d => {
+    if (seq !== loadSeq) return false;
     const updatedAt = Date.parse(d.updatedAt);
     const firstLoad = !lastUpdatedAt;
     const changed = updatedAt !== lastUpdatedAt;
@@ -1002,7 +1014,7 @@ function load(silent) {
     else if (!firstLoad && changed) toast("最新のデータに更新しました");
     return changed;
   }).catch(() => {
-    if (silent) return null; // 自動確認の失敗は静かに無視(次回また試す)
+    if (silent || seq !== loadSeq) return null; // 自動確認の失敗は静かに無視(次回また試す)
     $("updated").textContent = "";
     if (!lastUpdatedAt) $("list").innerHTML = "";
     showBanner("error", 'データを読み込めませんでした。通信状況を確認してください。<button type="button" onclick="load(false)">もう一度読み込む</button>');
@@ -1040,7 +1052,7 @@ function startPolling(ms) {
     if (Date.now() > pollUntil) {
       stopPoll();
       showBanner("warn", "取得に時間がかかっています。しばらくしてから「最新を読み込む」を押してください。うまくいかないときは、更新に失敗した可能性があります。");
-    } else load(true);
+    } else if (!document.hidden) load(true);
   }, 45e3);
 }
 

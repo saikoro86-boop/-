@@ -3,12 +3,13 @@ import { fetchDay, isOpen, isTennisCourt } from "../kashikan";
 import { findContact } from "../phone";
 import { kashikanFacilityState } from "../status";
 import { courtKey, facilityKey } from "../keys";
-import { sleep, withRetry } from "../http";
+import { BlockCounter, sleep, withRetry } from "../http";
 import type { KashikanConfig } from "../config";
 import type { CollectContext, Collected } from "./collected";
 
 export async function collectKashikan(site: KashikanConfig, ctx: CollectContext, acc: Collected): Promise<void> {
   const offlineMarks = site.offlineMarks ?? [];
+  const blocks = new BlockCounter();
   for (const date of ctx.dates) {
     try {
       const courts = (await withRetry(`${site.name} ${date}`, () => fetchDay(site, date, ctx.purpose))).filter(isTennisCourt);
@@ -38,9 +39,16 @@ export async function collectKashikan(site: KashikanConfig, ctx: CollectContext,
         const st = kashikanFacilityState(cs, offlineMarks);
         if (st && (st.state === "full" || st.state === "closed")) acc.setStatus(site.name, facility, date, st.state, st.label);
       }
+      blocks.ok();
     } catch (e) {
       console.error(`${site.name} ${date}: ${(e as Error).message}`);
       acc.fail(site.name, `${site.name} ${date}: 取得に失敗`, date);
+      if (blocks.failed(e)) {
+        // 先方に断られている。残りの日を取りに行っても同じなので、ここでやめる(負荷をかけない・防御を回避しない)
+        console.error(`${site.name}: 続けて断られたため、残りの日の取得をやめます`);
+        acc.fail(site.name, `${site.name}: 先方に断られたため、取得を中止`);
+        return;
+      }
     }
     await sleep(300); // 先方サーバに負荷をかけない
   }
