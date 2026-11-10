@@ -7,6 +7,8 @@
  * 出典の表示: 「天気: 気象庁」
  */
 
+import { fetchChecked, USER_AGENT } from "./http";
+
 export interface DayWeather { pop: number | null; icon: string }
 export type AreaWeather = Record<string, DayWeather>; // "2026-11-08" -> { pop: 30, icon: "☁" }
 
@@ -61,10 +63,7 @@ export function parseJma(json: JmaForecast, shortName: string, weekName: string)
 export async function fetchWeather(): Promise<Record<keyof typeof JMA_AREAS, AreaWeather>> {
   const res: Partial<Record<keyof typeof JMA_AREAS, AreaWeather>> = {};
   for (const [k, a] of Object.entries(JMA_AREAS) as [keyof typeof JMA_AREAS, (typeof JMA_AREAS)[keyof typeof JMA_AREAS]][]) {
-    const r = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${a.office}.json`, {
-      headers: { "user-agent": "tennis-court-finder (personal use; low frequency)" },
-    });
-    if (!r.ok) throw new Error(`気象庁 ${a.office} -> HTTP ${r.status}`);
+    const r = await fetchChecked(`https://www.jma.go.jp/bosai/forecast/data/forecast/${a.office}.json`, { headers: { "user-agent": USER_AGENT } });
     res[k] = parseJma((await r.json()) as JmaForecast, a.short, a.week);
   }
   return res as Record<keyof typeof JMA_AREAS, AreaWeather>;

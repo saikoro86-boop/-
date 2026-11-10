@@ -42,6 +42,12 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: "true"
 
+      # テストと型チェックが通らないときは、公開しない(前回のデータが残る)
+      - name: テストと型チェック
+        run: |
+          npm run typecheck
+          npm test
+
       - name: 空き状況を取得
         run: npm run courts:build
         env:

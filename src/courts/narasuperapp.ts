@@ -22,6 +22,8 @@ export const NSA_ENDPOINT =
 /** `getResultList` を呼ぶ Apex クラス(画面が使っているもの) */
 const APEX_CLASS = "@udd/01p5i00000X9eij";
 
+import { fetchChecked, USER_AGENT } from "./http";
+
 export interface NaraSuperAppRequest {
   namespace: "";
   classname: string;
@@ -75,6 +77,21 @@ export interface NaraSuperAppResponse {
   };
 }
 
+/**
+ * 奈良スーパーアプリの画面が使っている API(ログイン不要のゲスト用)を1回呼ぶ。
+ * 応答が期待した形かどうか(isOk)は、呼ぶ側が決める(空き照会は isSuccess、施設一覧は一覧の有無)
+ */
+async function callApex<T>(request: object, isOk: (json: T) => boolean, what: string): Promise<T> {
+  const res = await fetchChecked(NSA_ENDPOINT, {
+    method: "POST",
+    headers: { "content-type": "application/json; charset=utf-8", "user-agent": USER_AGENT },
+    body: JSON.stringify(request),
+  });
+  const json = (await res.json()) as T;
+  if (!isOk(json)) throw new Error(`奈良スーパーアプリ: ${what}の応答が想定と違います`);
+  return json;
+}
+
 /** 生データを1回で取得する。施設ごとに1回呼べば全日付分が含まれる */
 export async function fetchNaraSuperAppRaw(buildingId: string, facilityId: string): Promise<NaraSuperAppResponse> {
   const body: NaraSuperAppRequest = {
@@ -85,19 +102,7 @@ export async function fetchNaraSuperAppRaw(buildingId: string, facilityId: strin
     params: { buildingId, facilityId, isForStaff: false, rsvId: null },
     cacheable: false,
   };
-  const res = await fetch(NSA_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      // ブラウザを装わず、個人用ツールであることを示す
-      "user-agent": "tennis-court-finder (personal use; low frequency)",
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`${NSA_ENDPOINT} -> HTTP ${res.status}`);
-  const json = (await res.json()) as NaraSuperAppResponse;
-  if (!json.returnValue?.isSuccess) throw new Error("奈良スーパーアプリ: isSuccess=false");
-  return json;
+  return callApex<NaraSuperAppResponse>(body, (j) => !!j.returnValue?.isSuccess, "空き状況");
 }
 
 const JST_MS = 9 * 3600e3;
@@ -163,18 +168,12 @@ export interface NaraSuperAppTopResponse {
   };
 }
 
-export async function fetchNaraSuperAppTop(): Promise<NaraSuperAppTopResponse> {
-  const res = await fetch(NSA_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "user-agent": "tennis-court-finder (personal use; low frequency)",
-    },
-    body: JSON.stringify({ namespace: "", classname: TOP_APEX_CLASS, method: "getTopInfo", isContinuation: false, cacheable: false }),
-  });
-  if (!res.ok) throw new Error(`${NSA_ENDPOINT} -> HTTP ${res.status}`);
-  return (await res.json()) as NaraSuperAppTopResponse;
-}
+export const fetchNaraSuperAppTop = () =>
+  callApex<NaraSuperAppTopResponse>(
+    { namespace: "", classname: TOP_APEX_CLASS, method: "getTopInfo", isContinuation: false, cacheable: false },
+    (j) => Array.isArray(j.returnValue?.facilitiesResultList),
+    "施設一覧",
+  );
 
 /** 「利用目的」に purpose(既定: テニス)を含む建物を、施設一覧から取り出す(純粋関数) */
 export function pickNaraSuperAppTargets(top: NaraSuperAppTopResponse, purpose = "テニス"): NsaTarget[] {

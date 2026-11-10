@@ -19,6 +19,7 @@ import { fetchDay, isOpen, isTennisCourt, type KashikanSite } from "./kashikan";
 import { compactSlots, markNew, type CompactSlots } from "./compact";
 import { fetchWeather } from "./weather";
 import { findContact, type Contact } from "./phone";
+import { fetchChecked, sleep, withRetry } from "./http";
 import { kashikanFacilityState, mergeStates, nsaDayState, type FacilityState } from "./status";
 
 interface KashikanConfig extends KashikanSite {
@@ -60,20 +61,6 @@ interface Config {
   days: number;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-/** 一時的な通信エラーで施設が丸ごと抜けないよう、最大3回(2秒・4秒あけて)やり直す */
-async function withRetry<T>(label: string, fn: () => Promise<T>, tries = 3): Promise<T> {
-  for (let i = 1; ; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i >= tries) throw e;
-      console.error(`${label}: ${(e as Error).message}(${i}回目。やり直します)`);
-      await sleep(2000 * i);
-    }
-  }
-}
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
 
 async function main() {
@@ -186,7 +173,7 @@ async function main() {
     for (let i = 0; i < cfg.days; i++) {
       const date = jst(new Date(today.getTime() + i * 86400e3));
       try {
-        const courts = (await fetchDay(site, date, cfg.purpose)).filter(isTennisCourt);
+        const courts = (await withRetry(`${site.name} ${date}`, () => fetchDay(site, date, cfg.purpose))).filter(isTennisCourt);
         for (const c of courts) {
           for (const s of c.slots) {
             const online = isOpen(s);
@@ -286,8 +273,9 @@ async function main() {
   let prev: CompactSlots | null = null;
   if (process.env.PREV_URL) {
     try {
-      const r = await fetch(process.env.PREV_URL, { headers: { "cache-control": "no-cache" } });
-      if (r.ok) { const j = (await r.json()) as { v?: number } & CompactSlots; if (j.v === 2) prev = { courts: j.courts, byDate: j.byDate }; }
+      const r = await fetchChecked(process.env.PREV_URL, { headers: { "cache-control": "no-cache" } });
+      const j = (await r.json()) as { v?: number } & CompactSlots;
+      if (j.v === 2) prev = { courts: j.courts, byDate: j.byDate };
     } catch (e) {
       console.log("前回のデータを取得できませんでした(🆕の印なしで続けます):", (e as Error).message);
     }
