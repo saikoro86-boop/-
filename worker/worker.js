@@ -1,8 +1,11 @@
 // 自動生成: npm run worker:build(worker/src/*.ts から作られます。直接は編集しないでください)
 /**
- * 「手動更新ボタン」の中継役(Cloudflare Worker)の、判断の部分。
+ * 「手動更新ボタン」と「3時間おきの時計」の中継役(Cloudflare Worker)の、判断の部分。
  * 画面には GitHub の鍵を置けないので、鍵はこの中継役だけが持つ。
  *   画面のボタン → 中継役(合言葉・連続実行の確認) → GitHub Actions を起動
+ *   時計(Cron Trigger) → 中継役(直近の実行が新しければ何もしない) → GitHub Actions を起動
+ * GitHub の定期実行(schedule)は、混んでいると遅れたり飛ばされたりする(実際に8〜10時間おきになった)。
+ * 時計は、それが予定どおり動かなかったときだけ、補う。
  */
 const ACTIVE = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
 /** 直近の実行の状態から、新しく起動してよいかを決める(純粋関数) */
@@ -14,6 +17,22 @@ function decideRefresh(last, nowMs, cooldownSec = 600) {
     const finished = Date.parse(last.updated_at);
     const wait = Math.ceil(cooldownSec - (nowMs - finished) / 1000);
     return wait > 0 ? { result: "cooldown", waitSec: wait } : { result: "go" };
+}
+/** 時計が、起動を見送る目安(分)。直近の実行が終わってから、これより新しければ何もしない */
+const FRESH_MIN = 150;
+/**
+ * 時計(3時間おき)が起動してよいかを決める(純粋関数)。
+ *   実行中 → 見送る(GitHub の定期実行が動いている)
+ *   直近の実行が終わってから freshMin 分未満 → 見送る(GitHub の定期実行が、予定どおり動いた)
+ *   それより古い(または実行の記録がない) → 起動する(GitHub の定期実行が飛ばされた)
+ */
+function decideScheduled(last, nowMs, freshMin = FRESH_MIN) {
+    if (!last)
+        return { result: "go" };
+    if (ACTIVE.has(last.status))
+        return { result: "running", since: last.created_at };
+    const ageMin = (nowMs - Date.parse(last.updated_at)) / 60000;
+    return ageMin < freshMin ? { result: "cooldown", waitSec: Math.ceil((freshMin - ageMin) * 60) } : { result: "go" };
 }
 /** 呼び出し元(画面を置いているサイト)だけを許可する */
 function isAllowedOrigin(origin, allowed) {
@@ -60,7 +79,28 @@ async function lastRun(env) {
     const j = (await res.json());
     return j.workflow_runs?.[0];
 }
+/** 取得の実行を GitHub に頼む。GitHub の応答コードを返す(成功は 204) */
+async function dispatch(env) {
+    const res = await fetch(`https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`, { method: "POST", headers: { ...ghHeaders(env.GH_TOKEN), "content-type": "application/json" }, body: JSON.stringify({ ref: env.GH_REF }) });
+    return res.status;
+}
+/** 時計(Cron Trigger)から呼ばれる。GitHub の定期実行が動いていなければ、起動する。結果は、ログにだけ出す */
+async function runScheduled(env, nowMs = Date.now()) {
+    try {
+        const d = decideScheduled(await lastRun(env), nowMs);
+        if (d.result !== "go")
+            return `見送り: ${d.result}`;
+        const status = await dispatch(env);
+        return status === 204 ? "起動しました" : `起動に失敗(GitHub の応答 ${status}。鍵の期限切れ・権限を確認)`;
+    }
+    catch {
+        return "失敗(GitHub に繋がらない、または鍵の期限切れ)";
+    }
+}
 export default {
+    async scheduled(event, env, ctx) {
+        ctx.waitUntil(runScheduled(env).then((m) => console.log(`時計 ${event.cron ?? ""}: ${m}`)));
+    },
     async fetch(request, env) {
         const origin = request.headers.get("origin");
         // 画面を置いているサイト以外からは、受け付けない
@@ -93,9 +133,9 @@ export default {
                 const d = decideRefresh(await lastRun(env), Date.now(), Number(env.COOLDOWN_SEC ?? 600));
                 if (d.result !== "go")
                     return json(d, 200, o);
-                const res = await fetch(`https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`, { method: "POST", headers: { ...ghHeaders(env.GH_TOKEN), "content-type": "application/json" }, body: JSON.stringify({ ref: env.GH_REF }) });
-                if (res.status !== 204)
-                    return json({ error: "github_dispatch", status: res.status }, 502, o);
+                const status = await dispatch(env);
+                if (status !== 204)
+                    return json({ error: "github_dispatch", status }, 502, o);
                 return json({ result: "started" }, 200, o);
             }
             return json({ error: "not_found" }, 404, o);

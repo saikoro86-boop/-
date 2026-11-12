@@ -1,4 +1,4 @@
-import { decideRefresh, ghHeaders, isAllowedOrigin, safeEqual, type Env, type RunInfo } from "./logic";
+import { decideRefresh, decideScheduled, ghHeaders, isAllowedOrigin, safeEqual, type Env, type RunInfo } from "./logic";
 
 const json = (body: unknown, status: number, origin: string) =>
   new Response(status === 204 ? null : JSON.stringify(body), { // 204 は本文を持てない
@@ -22,7 +22,35 @@ async function lastRun(env: Env): Promise<RunInfo | undefined> {
   return j.workflow_runs?.[0];
 }
 
+/** 取得の実行を GitHub に頼む。GitHub の応答コードを返す(成功は 204) */
+async function dispatch(env: Env): Promise<number> {
+  const res = await fetch(
+    `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`,
+    { method: "POST", headers: { ...ghHeaders(env.GH_TOKEN), "content-type": "application/json" }, body: JSON.stringify({ ref: env.GH_REF }) },
+  );
+  return res.status;
+}
+
+// Cloudflare の型を読み込まずに済むよう、使う分だけ宣言する
+interface CronEvent { cron?: string; scheduledTime?: number }
+interface Ctx { waitUntil(p: Promise<unknown>): void }
+
+/** 時計(Cron Trigger)から呼ばれる。GitHub の定期実行が動いていなければ、起動する。結果は、ログにだけ出す */
+export async function runScheduled(env: Env, nowMs = Date.now()): Promise<string> {
+  try {
+    const d = decideScheduled(await lastRun(env), nowMs);
+    if (d.result !== "go") return `見送り: ${d.result}`;
+    const status = await dispatch(env);
+    return status === 204 ? "起動しました" : `起動に失敗(GitHub の応答 ${status}。鍵の期限切れ・権限を確認)`;
+  } catch {
+    return "失敗(GitHub に繋がらない、または鍵の期限切れ)";
+  }
+}
+
 export default {
+  async scheduled(event: CronEvent, env: Env, ctx: Ctx): Promise<void> {
+    ctx.waitUntil(runScheduled(env).then((m) => console.log(`時計 ${event.cron ?? ""}: ${m}`)));
+  },
   async fetch(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get("origin");
     // 画面を置いているサイト以外からは、受け付けない
@@ -54,11 +82,8 @@ export default {
         }
         const d = decideRefresh(await lastRun(env), Date.now(), Number(env.COOLDOWN_SEC ?? 600));
         if (d.result !== "go") return json(d, 200, o);
-        const res = await fetch(
-          `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/actions/workflows/${env.GH_WORKFLOW}/dispatches`,
-          { method: "POST", headers: { ...ghHeaders(env.GH_TOKEN), "content-type": "application/json" }, body: JSON.stringify({ ref: env.GH_REF }) },
-        );
-        if (res.status !== 204) return json({ error: "github_dispatch", status: res.status }, 502, o);
+        const status = await dispatch(env);
+        if (status !== 204) return json({ error: "github_dispatch", status }, 502, o);
         return json({ result: "started" }, 200, o);
       }
       return json({ error: "not_found" }, 404, o);

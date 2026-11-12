@@ -58,7 +58,7 @@ node --require ts-node/register --test tests/fees.test.ts
 | `config/` | 手で管理するデータ。`courts.json`(対象サイト・電話番号)、`fees.json`(料金)、`official.json`(公式ページ)、`places.json`・`coords.json`(場所)、`courtinfo.json`(コートの種類) |
 | `public/` | 公開される画面。`index.html`(画面の組み立て)、`app-logic.js`(画面に触らない処理: 日付・時間・距離・枠のまとめ・カレンダーの文。`tests/app-logic.test.ts` でテスト)、`sw.js`、`manifest.webmanifest`、`icons/` |
 | `tests/` | `*.test.ts` と `fixtures/`(実サイトの画面・応答を保存したもの) |
-| `worker/` | 手動更新ボタンの中継役(Cloudflare Worker)。`src/` が元、`worker.js` は生成物 |
+| `worker/` | 中継役(Cloudflare Worker): 手動更新ボタンと、3時間おきの「時計」(GitHub の定期実行が飛ばされたときだけ補う)。`src/` が元、`worker.js` は生成物。`worker/src` を変えたら `npm run worker:build` で作り直し、Cloudflare に貼り直す(`tests/refresh.test.ts` が、生成物を実際に動かして確かめる) |
 | `.github/workflows/courts.yml` | 3時間ごとの取得と公開 |
 
 生成物は手で編集せず、`public/data2.json` と `dist/` はコミットもしません: `worker/worker.js`、`public/bookmarklet.html`、`public/data2.json`、`dist/`。画面を確かめるときのデータは、`npm run courts:build` で作るか、公開サイトの `data2.json` を `public/` に置きます。
