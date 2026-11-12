@@ -108,3 +108,59 @@ test("icsText: 日本時間・1時間前の通知・エスケープ・75バイ�
   const body = ics.replace(/\r\n /g, "");
   assert.ok(body.includes("a\\,b\\;c\\n"));
 });
+
+// ---- 自分のスマホで取り込んだ空き ----
+const slotOf = (site: string, date: string, start = 9, end = 10, extra: object = {}) => ({ date, site, facility: "F", court: "C", start, end, ...extra });
+const imp = (slots: object[], covers: object[] | undefined, importedAt = "2026-11-12T05:00:00.000Z") => ({ source: "import", importedAt, slots, ...(covers ? { covers } : {}) });
+
+test("validateImport: 形の合わないものは捨てる。☎(offline)と、入れ替える範囲(covers)は通す", () => {
+  const v = L.validateImport(imp([slotOf("奈良市", "2026-11-14", 9, 12, { offline: true, evil: "<script>" }), { date: "x" }, slotOf("奈良市", "2026-11-14", 12, 9)], [{ s: "奈良市", d: "2026-11-14" }, { s: "", d: "x" }, { s: "生駒市", d: "だめ" }]));
+  assert.deepEqual(v.slots, [{ date: "2026-11-14", site: "奈良市", facility: "F", court: "C", start: 9, end: 12, offline: true }]);
+  assert.deepEqual(v.covers, [{ s: "奈良市", d: "2026-11-14" }]);
+  assert.equal(L.validateImport({ source: "other", slots: [] }), null);
+  assert.equal(L.validateImport(imp([], undefined)), null);                              // 枠も範囲もない
+  assert.ok(L.validateImport(imp([], [{ s: "奈良市", d: "2026-11-14" }])));              // 空きなしの日(範囲だけ)は通す
+  assert.equal(L.validateImport(imp(new Array(5001).fill(slotOf("奈良市", "2026-11-14")), undefined)), null);
+});
+
+test("mergeImport: 取り込んだ日だけを入れ替え、ほかの日・ほかのエリアは残す。今日より前は捨てる", () => {
+  const today = "2026-11-12";
+  let st = L.mergeImport(null, L.validateImport(imp([slotOf("奈良市", "2026-11-14")], [{ s: "奈良市", d: "2026-11-14" }])), today);
+  st = L.mergeImport(st, L.validateImport(imp([slotOf("奈良市", "2026-11-15"), slotOf("奈良市", "2026-11-11")], [{ s: "奈良市", d: "2026-11-15" }], "2026-11-12T06:00:00.000Z")), today);
+  st = L.mergeImport(st, L.validateImport(imp([slotOf("木津川市", "2026-11-14")], [{ s: "木津川市" }], "2026-11-12T07:00:00.000Z")), today);
+  assert.deepEqual(st.slots.map((s: { site: string; date: string }) => s.site + s.date).sort(), ["奈良市2026-11-14", "奈良市2026-11-15", "木津川市2026-11-14"]);
+  assert.equal(st.at["奈良市"], "2026-11-12T06:00:00.000Z");
+  assert.deepEqual(Object.keys(st.days).sort(), ["奈良市|2026-11-14", "奈良市|2026-11-15"]);
+  // 同じ日をもう一度取り込むと、その日だけ入れ替わる(空きなしになった)
+  st = L.mergeImport(st, L.validateImport(imp([], [{ s: "奈良市", d: "2026-11-14" }], "2026-11-12T08:00:00.000Z")), today);
+  assert.deepEqual(st.slots.map((s: { site: string; date: string }) => s.site + s.date).sort(), ["奈良市2026-11-15", "木津川市2026-11-14"]);
+  assert.equal(st.days["奈良市|2026-11-14"], "2026-11-12T08:00:00.000Z");
+  // 保存したものは、もう一度検証を通る(読み直せる)
+  assert.deepEqual(L.validateImport(JSON.parse(JSON.stringify(st))).slots, st.slots);
+});
+
+test("mergeImport: 以前の形(covers なし)の取り込みは、出てきたエリアを丸ごと入れ替える", () => {
+  const old = L.validateImport(imp([slotOf("木津川市", "2026-11-14"), slotOf("木津川市", "2026-11-15")], undefined));
+  const st = L.mergeImport(old, L.validateImport(imp([slotOf("木津川市", "2026-11-16")], undefined, "2026-11-12T09:00:00.000Z")), "2026-11-12");
+  assert.deepEqual(st.slots.map((s: { date: string }) => s.date), ["2026-11-16"]);
+});
+
+test("importedSlotsToShow: 自動取得にそのエリアの枠があれば、取り込んだ分は足さない。足す枠には取り込んだ時刻が付く", () => {
+  const st = L.mergeImport(null, L.validateImport(imp([slotOf("奈良市", "2026-11-14"), slotOf("生駒市", "2026-11-14")], [{ s: "奈良市", d: "2026-11-14" }, { s: "生駒市", d: "2026-11-14" }])), "2026-11-12");
+  const add = L.importedSlotsToShow([slotOf("生駒市", "2026-11-20")], st, "2026-11-12");
+  assert.deepEqual(add.map((s: { site: string }) => s.site), ["奈良市"]);
+  assert.equal(add[0].imported, "2026-11-12T05:00:00.000Z");
+  assert.deepEqual(L.importedSlotsToShow([], null, "2026-11-12"), []);
+});
+
+test("failedAreas: その日を自分で取り込んであるエリアは、「取得できなかった」から外す", () => {
+  const f = [{ s: "奈良市" }, { s: "生駒市" }];
+  const days = { "奈良市|2026-11-14": "2026-11-12T05:00:00.000Z" };
+  assert.deepEqual(L.failedAreas(f, "all", ["2026-11-14"], days), ["生駒市"]);
+  assert.deepEqual(L.failedAreas(f, "all", ["2026-11-14", "2026-11-15"], days), ["奈良市", "生駒市"]); // 一部の日だけでは外さない
+});
+
+test("importLabel", () => {
+  assert.equal(L.importLabel([{ s: "奈良市", d: "2026-11-14" }]), "奈良市 11/14(土)");
+  assert.equal(L.importLabel([{ s: "木津川市" }]), "木津川市");
+});

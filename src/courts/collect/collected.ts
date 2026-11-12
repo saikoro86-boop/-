@@ -48,8 +48,6 @@ export class Collected {
   namedFacilities = new Set<string>();
   /** 「エリア|施設名|コート名」→ 公式サイトの検索で使う目的コード(奈良市・生駒市) */
   courtCodes: Record<string, string> = {};
-  /** エリア → 公式サイトの検索フォームの送り先(奈良市・生駒市。日付つきで開くために使う) */
-  postLinks: Record<string, { url: string; type: string }> = {};
   /** 奈良スーパーアプリの施設の、案内ページ(公式。料金などが載っていることが多い) */
   nsaInfoLinks: { site: string; match: string; url: string }[] = [];
   /** 「エリア|施設名」→ その施設の予約サイトのURL(時間をタップしたときの行き先) */

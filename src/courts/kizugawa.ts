@@ -13,7 +13,7 @@
  *       <tr><th class="th_sticky">09:00 - 10:00</th><td><img alt="空いています"></td>...
  */
 import type { OpenSlot } from "./types";
-import { normName as norm } from "./keys";
+import { normName } from "./keys";
 
 const stripTags = (s: string) =>
   s.replace(/<img[^>]*>/g, "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
@@ -31,11 +31,11 @@ export function parseKizugawaHtml(html: string): OpenSlot[] {
     const [site, facility] = section
       .slice(0, headEnd)
       .split(/<br\s*\/?>/i)
-      .map((x) => norm(stripTags(x)));
+      .map((x) => normName(stripTags(x)));
     if (!site || !facility) continue;
 
     for (const block of section.slice(headEnd).split('<div class="box_title">').slice(1)) {
-      const court = norm(stripTags(block.match(/<h4>([\s\S]*?)<\/h4>/)?.[1] ?? ""));
+      const court = normName(stripTags(block.match(/<h4>([\s\S]*?)<\/h4>/)?.[1] ?? ""));
       const table = block.match(/<table class="box_calendar">([\s\S]*?)<\/table>/)?.[1];
       if (!court || !table) continue;
 
