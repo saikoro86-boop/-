@@ -56,7 +56,7 @@ export function parseAvailability(html: string): CourtAvailability[] {
       for (const c of cells) {
         const attrs = c[1];
         if (/class="name"/.test(attrs)) continue;
-        const width = attrs.match(/width:(\d+)px/);
+        const width = attrs.match(/width:\s*(\d+)px/); // ブラウザが書き直した形(width: 49px)も読む
         if (!width) continue;
         // 1時間 = 49px。複数時間にまたがるセルは 49 + 50*(n-1) px
         const hours = Math.max(1, Math.round((Number(width[1]) + 1) / 50));

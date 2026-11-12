@@ -21,7 +21,6 @@ export async function collectKashikan(site: KashikanConfig, ctx: CollectContext,
           acc.slots.push({ date, site: site.name, facility: c.facility, court: c.court, start: s.start, end: s.end, ...(offline ? { offline: true as const } : {}) });
           acc.facilityUrls[facilityKey(site.name, c.facility)] = site.url; // 施設ごとの直接URLは無いので、予約サイトのトップへ
           if (c.code) acc.courtCodes[courtKey(site.name, c.facility, c.court)] = c.code;
-          acc.postLinks[site.name] = { url: site.url, type: ctx.purpose.type };
           if (offline) {
             const ct = findContact(site.contacts ?? [], c.facility);
             acc.contacts[facilityKey(site.name, c.facility)] = ct

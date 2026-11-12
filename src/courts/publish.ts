@@ -20,7 +20,10 @@ export interface PublishedCommon {
   links: { name: string; entryUrl: string; facilities: { name: string; hint?: string }[] }[];
   facilityUrls: Record<string, string>;
   courtCodes: Record<string, string>;
-  postLinks: Record<string, { url: string; type: string }>;
+  /** エリア → 予約サイトの検索の送り先(奈良市・生駒市)。code は、コートごとの目的コードが分からないときの既定 */
+  postLinks: Record<string, { url: string; type: string; code: string }>;
+  /** エリア → ☎の枠の問い合わせ先の対応表。取得できなかった回でも、自分で取り込んだ枠に電話番号を出すため */
+  contactRules: Record<string, { list: { match: string; tel: string; hours?: string; via?: string; unconfirmed?: boolean }[]; fallback?: { label: string; tel: string } }>;
   facilityNotes: Record<string, string>;
   contacts: Record<string, ContactInfo>;
   fees: FeesConfig["fees"];
@@ -44,6 +47,19 @@ export function buildCommon(configs: Configs, acc: Collected, weather: Weather |
   // エリアのボタン: 設定した順 + 自動で見つけた市町村(五十音順)。同じ名前は1つにまとめる
   const configured = cfg.sites.filter((s) => s.type !== "nsa-auto").map((s) => s.name);
   const sites = [...new Set([...configured, ...[...acc.discovered].sort((a, b) => a.localeCompare(b, "ja"))])];
+  // 奈良市・生駒市の送り先と問い合わせ先は、取得できたかどうかに関係なく、設定から出す
+  // (先方に断られている間も、自分で取り込んだ枠から、予約サイトと電話番号へ案内できるように)
+  const kashikan = cfg.sites.flatMap((s) => (s.type === "kashikan" ? [s] : []));
+  const postLinks = Object.fromEntries(kashikan.map((s) => [s.name, { url: s.url, type: cfg.purpose.type, code: cfg.purpose.codes[0] }]));
+  const contactRules = Object.fromEntries(
+    kashikan.map((s) => [
+      s.name,
+      {
+        list: (s.contacts ?? []).map(({ match, tel, hours, via, unconfirmed }) => ({ match, tel, hours, via, unconfirmed })),
+        ...(s.fallbackContact ? { fallback: { label: s.fallbackContact.label, tel: s.fallbackContact.tel } } : {}),
+      },
+    ]),
+  );
   return {
     updatedAt,
     sites,
@@ -51,7 +67,8 @@ export function buildCommon(configs: Configs, acc: Collected, weather: Weather |
     links: cfg.sites.flatMap((s) => (s.type === "link" ? [{ name: s.name, entryUrl: s.entryUrl, facilities: s.facilities }] : [])),
     facilityUrls: acc.facilityUrls,
     courtCodes: acc.courtCodes,
-    postLinks: acc.postLinks,
+    postLinks,
+    contactRules,
     // 体育館・競技場だけの施設にだけ付ける(テニスコートと同居する施設には付けない)
     facilityNotes: Object.fromEntries([...acc.gymFacilities].filter((k) => !acc.namedFacilities.has(k)).map((k) => [k, GYM_NOTE])),
     contacts: acc.contacts,

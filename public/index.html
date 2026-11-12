@@ -201,7 +201,7 @@
 <script>
 const $ = (id) => document.getElementById(id);
 // 画面に触らない処理(日付・時間・距離・枠のまとめ・カレンダーの文)は app-logic.js
-const { WD, weekday, dateLabel, nowJst, visibleDates, hm, fmtT, expandV2, mergeCourtSpans, mergeFacilitySpans, failedAreas, haversineKm, shareText, calStamp, googleCalUrl, icsText } = AppLogic;
+const { WD, weekday, dateLabel, nowJst, visibleDates, hm, fmtT, expandV2, mergeCourtSpans, mergeFacilitySpans, failedAreas, validateImport, mergeImport, importedSlotsToShow, importLabel, haversineKm, shareText, calStamp, googleCalUrl, icsText } = AppLogic;
 const ZONES = { "all":["終日",0,24], "am":["〜12時",0,12], "pm":["12〜17時",12,17], "ev":["17時〜",17,24] };
 const st = { date:null, city:"all", zone:"all", favOnly:false };
 // ---- お気に入り・非表示(このスマホだけに保存。ほかの人とは共有しない) ----
@@ -353,40 +353,35 @@ function hideButton(site, facility) {
   return b;
 }
 let data = { slots:[], sites:[], links:[], errors:[] };
-let justImported = false;
+let justImported = null; // 取り込んだ直後に出すお知らせの文
 let imported = null; // ユーザーが自分のブラウザで取り込んだ空き(この端末だけに保存)
 const IMPORT_KEY = "courtImport";
 const STALE_MS = 24 * 3600e3;
 
-// 取り込みデータの検証。#hash は誰でも書き換えられるので、型と範囲を確かめてから使う
-function validateImport(x) {
-  if (!x || x.source !== "import" || !Array.isArray(x.slots) || x.slots.length > 5000) return null;
-  const slots = [];
-  for (const s of x.slots) {
-    if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s.date) || typeof s.site !== "string" || typeof s.facility !== "string" || typeof s.court !== "string") continue;
-    if (!(s.start >= 0 && s.end <= 30 && s.start < s.end)) continue;
-    slots.push({ date:s.date, site:s.site.slice(0, 30), facility:s.facility.slice(0, 60), court:s.court.slice(0, 60), start:+s.start, end:+s.end });
-  }
-  const t = Date.parse(x.importedAt);
-  return slots.length && !isNaN(t) ? { source:"import", importedAt:new Date(t).toISOString(), slots } : null;
-}
+// ブックマークレットが #import=<base64> で渡してきた取り込みを、保存してある分に重ねる(検証と重ね方は app-logic.js)
 function loadImport() {
-  // ブックマークレットが #import=<base64> で渡してくる
+  const read = () => { try { return validateImport(JSON.parse(localStorage.getItem(IMPORT_KEY) || "null")); } catch { return null; } };
   const m = location.hash.match(/^#import=([A-Za-z0-9+/=_-]+)$/);
   if (m) {
     try {
-      const imp = validateImport(JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/"))))));
-      if (imp) { localStorage.setItem(IMPORT_KEY, JSON.stringify(imp)); justImported = true; }
+      const inc = validateImport(JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,"+").replace(/_/g,"/"))))));
+      if (inc) {
+        const merged = mergeImport(read(), inc, nowJst().today);
+        localStorage.setItem(IMPORT_KEY, JSON.stringify(merged));
+        const covers = inc.covers.length ? inc.covers : [...new Set(inc.slots.map(x => x.site))].map(x => ({ s: x }));
+        justImported = importLabel(covers) + ` の空きを取り込みました(${inc.slots.length}件)`;
+        // 取り込んだ日・エリアを、そのまま開く
+        const c = covers[0]; if (c && c.d) { st.view = "day"; st.date = c.d; } if (c) st.city = c.s;
+      }
     } catch {}
     history.replaceState(null, "", location.pathname + location.search); // URL からデータを消す
   }
-  try { return validateImport(JSON.parse(localStorage.getItem(IMPORT_KEY) || "null")); } catch { return null; }
+  return read();
 }
-
 
 // 施設の予約サイトのURL。施設ごとに分かればそれ、なければエリアの入口(木津川市など)
 const urlFor = (site, facility) => {
-  const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl;
+  const u = (data.facilityUrls || {})[site + "|" + facility] || ((data.links || []).find(l => l.name === site) || {}).entryUrl || ((data.postLinks || {})[site] || {}).url;
   return typeof u === "string" && /^https?:\/\//.test(u) ? u : null;
 };
 // 施設の公式ページ(施設名を押したとき)。無ければ null(そのときは予約サイトを開く)
@@ -397,12 +392,20 @@ function officialFor(site, facility) {
 const telHref = (t) => "tel:" + t.replace(/[^0-9+]/g, "");
 // 公式サイト(奈良市・生駒市)の検索フォームへ、選んだ日付と目的コードを入れて送信する。
 // 公式の画面で「日付を選ぶ→テニスを選ぶ→検索」と操作した状態と同じ結果が、新しいタブで開く。
+// ☎の枠の問い合わせ先。取得したデータにあればそれ、なければ設定の対応表(自分で取り込んだ枠のため)
+function contactFor(site, facility) {
+  const c = (data.contacts || {})[site + "|" + facility]; if (c) return c;
+  const r = (data.contactRules || {})[site]; if (!r) return null;
+  const hit = (r.list || []).find(x => facility.includes(x.match));
+  return hit ? hit : r.fallback ? { tel: r.fallback.tel, via: r.fallback.label, unconfirmed: true } : {};
+}
 function postFor(site, facility, court) {
   const pl = (data.postLinks || {})[site];
   if (!pl) return null;
   const cc = data.courtCodes || {};
   let code = court ? cc[site + "|" + facility + "|" + court] : null;
   if (!code) { const pre = site + "|" + facility + "|"; const k = Object.keys(cc).find(x => x.startsWith(pre)); code = k ? cc[k] : null; }
+  code = code || pl.code; // どの目的か分からないとき(自分で取り込んだ枠)は、そのサイトの既定(硬式テニス)
   return code ? { url: pl.url, type: pl.type, code } : null;
 }
 function submitSearch(post, date) {
@@ -561,11 +564,13 @@ function chips(el, items, key) {
 
 // ---- 取得できなかった範囲の知らせ(「空きなし」ではないことを伝える) ----
 function failNote(dates) {
-  const names = failedAreas(data.failures, st.city, dates);
+  const names = failedAreas(data.failures, st.city, dates, imported && imported.days);
   if (!names.length) return null;
   const el = document.createElement("div"); el.className = "failnote"; el.setAttribute("role", "note");
   const shown = names.length > 3 ? names.slice(0, 3).join("・") + `ほか${names.length - 3}エリア` : names.join("・");
   el.textContent = `⚠ ${shown}は、取得できなかった分があります。出ていない施設は「空きなし」ではありません。予約サイトで確認してください。`;
+  // 自分のスマホで開いた画面から取り込める市(奈良市・生駒市)があれば、その案内を1つだけ
+  if (names.some(n => (data.postLinks || {})[n])) { const a = document.createElement("a"); a.href = "bookmarklet.html"; a.textContent = "自分で空きを取り込む方法 →"; a.style.cssText = "display:block;margin-top:4px;color:inherit;font-weight:600"; el.appendChild(a); }
   return el;
 }
 
@@ -722,6 +727,9 @@ function renderInner() {
     card.innerHTML = `<div class="city">${f.site}</div><h2></h2>`;
     const dt0 = distTag(f.site, f.facility); if (dt0) card.querySelector(".city").append(" ・ ", dt0);
     const tg = infoTag(f.site, f.facility); if (tg) card.querySelector(".city").append(" ・ " + tg);
+    // 自分で取り込んだ空きは、そう分かるように、取り込んだ時刻を出す(自動では更新されないため)
+    const impAt = [...f.courts.values()].flat().map(x => x.imported).find(Boolean);
+    if (impAt) { const t = new Date(impAt); card.querySelector(".city").append(` ・ 📥 ${mdhm(t)} に取り込み` + (Date.now() - t.getTime() > STALE_MS ? "(古い可能性)" : "")); }
     const fUrl = urlFor(f.site, f.facility);
     const h2 = card.querySelector("h2");
     const oUrl = officialFor(f.site, f.facility);
@@ -753,7 +761,7 @@ function renderInner() {
         else { const t = document.createElement("span"); t.className = cls; t.textContent = text; times.appendChild(t); }
       }
       // コピー・共有(友達に「ここどう?」と送る、メモに残す、など)
-      const ct = (data.contacts || {})[f.site + "|" + f.facility];
+      const ct = contactFor(f.site, f.facility);
       const text = shareText({ facility: f.facility, court, date: st.date, spans: merged, url: fUrl, tel: ct && ct.tel });
       const act = document.createElement("span"); act.className = "court-actions";
       // iPhone などは「共有」1つ(共有メニューにコピーもある)。共有がない端末だけ「コピー」
@@ -768,7 +776,7 @@ function renderInner() {
       const msg = document.createElement("div");
       msg.textContent = "点線(☎)の枠は空きですが、ネット予約の受付外です。電話や窓口でお申し込みください。";
       box.appendChild(msg);
-      const ct = (data.contacts || {})[f.site + "|" + f.facility];
+      const ct = contactFor(f.site, f.facility);
       if (ct && ct.tel) {
         if (ct.unconfirmed && ct.via) { const w = document.createElement("div"); w.textContent = "この施設の電話番号は確認できていません。まず " + ct.via + " にお問い合わせください。"; box.appendChild(w); }
         const a = document.createElement("a");
@@ -889,8 +897,8 @@ function renderInner() {
     imp.href = "bookmarklet.html"; imp.className = "city"; imp.style.cssText = "display:block;margin-top:8px";
     imp.textContent = "空きをこのアプリに取り込む方法 →";
     card.appendChild(imp);
-    if (imported && imported.slots.some(s => s.site === l.name)) {
-      const t = new Date(imported.importedAt);
+    if (imported && (imported.at[l.name] || imported.slots.some(s => s.site === l.name))) {
+      const t = new Date(imported.at[l.name] || imported.importedAt);
       const stale = Date.now() - t.getTime() > STALE_MS;
       const n = document.createElement("div");
       n.className = "city";
@@ -1002,15 +1010,16 @@ function load(silent) {
     data.links = data.links || [];
     imported = loadImport();
     if (imported) {
-      const today = new Date(Date.now() + 9*3600e3).toISOString().slice(0, 10);
-      data.slots = data.slots.concat(imported.slots.filter(s => s.date >= today));
-      for (const s of imported.slots) if (!data.sites.includes(s.site)) data.sites.push(s.site);
+      // 自動取得のデータにそのエリアの枠があれば、そちらを使う(取り込んだ分は足さない)
+      const add = importedSlotsToShow(data.slots, imported, nowJst().today);
+      data.slots = data.slots.concat(add);
+      for (const s of add) if (!data.sites.includes(s.site)) data.sites.push(s.site);
     }
     lastUpdatedAt = updatedAt;
     render();
     applyStatus(updatedAt);
     if (d._offline) showBanner("warn", "電波がないため、前回保存した空き状況を表示しています(最新ではありません)。<button type=\"button\" onclick=\"load(false)\">最新を読み込む</button>");
-    if (justImported) { toast("木津川市の空きを取り込みました"); justImported = false; }
+    if (justImported) { toast(justImported); justImported = null; }
     else if (!firstLoad && changed) toast("最新のデータに更新しました");
     return changed;
   }).catch(() => {

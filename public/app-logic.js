@@ -78,9 +78,75 @@
     }
     return merged;
   }
-  /** 取得できなかったエリアの名前(city が "all" 以外なら、そのエリアだけ。日付つきの失敗は、dates に含まれるときだけ) */
-  function failedAreas(failures, city, dates) {
-    return [...new Set((failures || []).filter((f) => (city === "all" || f.s === city) && (!f.d || dates.includes(f.d))).map((f) => f.s))];
+  /**
+   * 取得できなかったエリアの名前(city が "all" 以外なら、そのエリアだけ。日付つきの失敗は、dates に含まれるときだけ)。
+   * importedDays(「エリア|日付」→ 時刻)があれば、dates のすべての日を自分で取り込んであるエリアは、外す
+   */
+  function failedAreas(failures, city, dates, importedDays) {
+    const names = [...new Set((failures || []).filter((f) => (city === "all" || f.s === city) && (!f.d || dates.includes(f.d))).map((f) => f.s))];
+    if (!importedDays || !dates.length) return names;
+    return names.filter((n) => !dates.every((d) => importedDays[n + "|" + d]));
+  }
+
+  // ---- 自分のスマホで取り込んだ空き(ブックマークレット) ----------------------
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  /**
+   * 取り込みデータの検証。#import=… は誰でも書き換えられるので、型と範囲を確かめてから使う。
+   * 形: { source:"import", importedAt, slots, covers?, at?, days? }
+   *   covers: 今回の取り込みが入れ替える範囲 [{ s: エリア, d?: 日付 }](d がなければ、そのエリア全部)
+   *   at: エリア → 最後に取り込んだ時刻 / days: 「エリア|日付」→ 取り込んだ時刻(保存用)
+   */
+  function validateImport(x) {
+    if (!x || x.source !== "import" || !Array.isArray(x.slots) || x.slots.length > 5000) return null;
+    const str = (v, n) => typeof v === "string" && v.length > 0 && v.length <= n;
+    const slots = [];
+    for (const s of x.slots) {
+      if (!s || !DATE_RE.test(s.date) || !str(s.site, 30) || !str(s.facility, 60) || !str(s.court, 60)) continue;
+      if (!(s.start >= 0 && s.end <= 30 && s.start < s.end)) continue;
+      slots.push({ date: s.date, site: s.site, facility: s.facility, court: s.court, start: +s.start, end: +s.end, ...(s.offline === true ? { offline: true } : {}) });
+    }
+    const covers = [];
+    for (const c of Array.isArray(x.covers) ? x.covers.slice(0, 200) : []) {
+      if (c && str(c.s, 30) && (c.d === undefined || DATE_RE.test(c.d))) covers.push(c.d ? { s: c.s, d: c.d } : { s: c.s });
+    }
+    const times = (o, keyOk) => {
+      const out = {};
+      if (o && typeof o === "object") for (const [k, v] of Object.entries(o).slice(0, 500)) { if (keyOk(k) && !isNaN(Date.parse(v))) out[k] = new Date(Date.parse(v)).toISOString(); }
+      return out;
+    };
+    const t = Date.parse(x.importedAt);
+    if (isNaN(t) || (!slots.length && !covers.length)) return null;
+    return { source: "import", importedAt: new Date(t).toISOString(), slots, covers, at: times(x.at, (k) => str(k, 30)), days: times(x.days, (k) => str(k, 45)) };
+  }
+  /**
+   * 保存してある取り込み(stored)に、新しい取り込み(incoming)を重ねる。
+   * incoming の covers の範囲だけを入れ替え、ほかのエリア・ほかの日は残す。今日より前の日は捨てる
+   */
+  function mergeImport(stored, incoming, today) {
+    const old = stored || { slots: [], at: {}, days: {}, importedAt: incoming.importedAt };
+    // 古いブックマークレット(covers なし)は、出てきたエリアを丸ごと入れ替える
+    const covers = incoming.covers.length ? incoming.covers : [...new Set(incoming.slots.map((s) => s.site))].map((s) => ({ s }));
+    const covered = (site, date) => covers.some((c) => c.s === site && (!c.d || c.d === date));
+    const at = { ...old.at }, days = {};
+    // 以前の保存の形(at がない)は、全部を保存時刻のものとして扱う
+    for (const s of old.slots) if (!at[s.site]) at[s.site] = old.importedAt;
+    for (const [k, v] of Object.entries(old.days || {})) { const [site, date] = k.split("|"); if (date >= today && !covered(site, date)) days[k] = v; }
+    for (const c of covers) { at[c.s] = incoming.importedAt; if (c.d && c.d >= today) days[c.s + "|" + c.d] = incoming.importedAt; }
+    const slots = [...old.slots.filter((s) => s.date >= today && !covered(s.site, s.date)), ...incoming.slots.filter((s) => s.date >= today)];
+    return { source: "import", importedAt: incoming.importedAt, slots, covers: [], at, days };
+  }
+  /**
+   * 画面に足す、取り込んだ枠。自動取得のデータにそのエリアの枠があるときは、足さない(自動取得が戻ったら、そちらを使う)。
+   * 足す枠には imported(取り込んだ時刻)を付ける
+   */
+  function importedSlotsToShow(serverSlots, imp, today) {
+    if (!imp) return [];
+    const has = new Set(serverSlots.map((s) => s.site));
+    return imp.slots.filter((s) => s.date >= today && !has.has(s.site)).map((s) => ({ ...s, imported: (imp.at && imp.at[s.site]) || imp.importedAt }));
+  }
+  /** 取り込みの範囲を、人が読む形に("奈良市 11/14" / "木津川市") */
+  function importLabel(covers) {
+    return covers.map((c) => c.s + (c.d ? " " + dateLabel(c.d) : "")).join("・");
   }
 
   // ---- 距離 ----------------------------------------------------------------
@@ -138,5 +204,5 @@
     ].map(fold).join("\r\n");
   }
 
-  return { WD, weekday, dateLabel, nowJst, visibleDates, hm, fmtT, expandV2, mergeCourtSpans, mergeFacilitySpans, failedAreas, haversineKm, shareText, calStamp, googleCalUrl, icsText };
+  return { WD, weekday, dateLabel, nowJst, visibleDates, hm, fmtT, expandV2, mergeCourtSpans, mergeFacilitySpans, failedAreas, validateImport, mergeImport, importedSlotsToShow, importLabel, haversineKm, shareText, calStamp, googleCalUrl, icsText };
 });
