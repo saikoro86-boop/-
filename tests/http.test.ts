@@ -34,3 +34,39 @@ test("withRetry: 回数を使い切ったら、最後の例外を投げる", asy
     assert.equal(n, 2);
   } finally { console.error = quiet; }
 });
+
+// ---- 先方に断られたとき(403 など)は、やり直さず、早めにやめる ----
+import { BlockCounter, HttpError, isBlocked, isRetryable } from "../src/courts/http";
+
+test("withRetry: 403 は、やり直さない(同じ結果になるだけで、先方の負荷になる)", async () => {
+  let n = 0;
+  await assert.rejects(withRetry("t", async () => { n++; throw new HttpError("https://example.test", 403); }, 3, 1), /HTTP 403/);
+  assert.equal(n, 1);
+});
+test("withRetry: 503 と通信の失敗は、やり直す", async () => {
+  const quiet = console.error; console.error = () => {};
+  try {
+    let n = 0;
+    await assert.rejects(withRetry("t", async () => { n++; throw new HttpError("https://example.test", 503); }, 3, 1));
+    assert.equal(n, 3);
+  } finally { console.error = quiet; }
+  assert.equal(isRetryable(new Error("fetch failed")), true);
+  assert.equal(isRetryable(new HttpError("u", 404)), false);
+  assert.equal(isRetryable(new HttpError("u", 408)), true);
+});
+test("isBlocked: 401・403・429 だけ", () => {
+  for (const s of [401, 403, 429]) assert.equal(isBlocked(new HttpError("u", s)), true);
+  for (const s of [404, 500, 503]) assert.equal(isBlocked(new HttpError("u", s)), false);
+  assert.equal(isBlocked(new Error("timeout")), false);
+});
+test("BlockCounter: 断られた応答が2回続いたら「やめる」。間に成功や別の失敗があれば、数え直す", () => {
+  const b = new BlockCounter();
+  assert.equal(b.failed(new HttpError("u", 403)), false);
+  assert.equal(b.failed(new HttpError("u", 403)), true);
+  const c = new BlockCounter();
+  assert.equal(c.failed(new HttpError("u", 403)), false);
+  c.ok();
+  assert.equal(c.failed(new HttpError("u", 403)), false);
+  assert.equal(c.failed(new Error("timeout")), false); // 通信の失敗は、断られたのとは違う
+  assert.equal(c.failed(new HttpError("u", 403)), false);
+});
