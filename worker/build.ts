@@ -11,7 +11,8 @@ const tr = (file: string) =>
   }).outputText;
 
 const logic = tr("worker/src/logic.ts").replace(/\bexport\s+/g, "");
-const index = tr("worker/src/index.ts").replace(/^import .*$/gm, "");
+// 貼り付ける1ファイルには、Cloudflare が呼ぶ default(fetch / scheduled)だけを公開として残す
+const index = tr("worker/src/index.ts").replace(/^import .*$/gm, "").replace(/^export (?!default)/gm, "");
 writeFileSync(
   "worker/worker.js",
   `// 自動生成: npm run worker:build(worker/src/*.ts から作られます。直接は編集しないでください)\n${logic}\n${index}`,
