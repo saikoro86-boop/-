@@ -104,3 +104,69 @@ test("プリフライト(OPTIONS)は、許可したサイトにだけ通る", as
   const ng = await worker.fetch(new Request("https://w.example/refresh", { method: "OPTIONS", headers: { origin: "https://x.example" } }), env);
   assert.equal(ng.status, 403);
 });
+
+// ---- 時計(3時間おき)。GitHub の定期実行が動かなかったときだけ、補う ----
+import { decideScheduled } from "../worker/src/logic";
+import { runScheduled } from "../worker/src/index";
+
+test("時計: 直近の実行が新しければ見送り、古ければ(定期実行が飛ばされたなら)起動する", () => {
+  assert.deepEqual(decideScheduled(undefined, NOW), { result: "go" });
+  assert.equal(decideScheduled(run("in_progress", "2026-11-06T11:58:00Z"), NOW).result, "running");
+  assert.equal(decideScheduled(run("completed", "2026-11-06T11:50:00Z"), NOW).result, "cooldown");   // 10分前に終わった
+  assert.equal(decideScheduled(run("completed", "2026-11-06T09:31:00Z"), NOW).result, "cooldown");   // 2時間29分前
+  assert.deepEqual(decideScheduled(run("completed", "2026-11-06T09:29:00Z"), NOW), { result: "go" }); // 2時間31分前
+  assert.deepEqual(decideScheduled(run("completed", "2026-11-05T22:00:00Z"), NOW), { result: "go" }); // 14時間前(実際に起きた間隔)
+});
+
+test("時計: 起動するときは、鍵とブランチを渡して GitHub に頼む。見送るときは何も頼まない", async () => {
+  await withGithub([run("completed", "2026-11-05T22:00:00Z")], async (calls) => {
+    assert.equal(await runScheduled(env, NOW), "起動しました");
+    const d = calls.find((c) => c.url.includes("/dispatches"))!;
+    assert.equal((d.init!.headers as Record<string, string>).authorization, "Bearer ghp_TESTTOKEN");
+    assert.equal(JSON.parse(String(d.init!.body)).ref, "main-branch");
+  });
+  await withGithub([run("completed", "2026-11-06T11:40:00Z")], async (calls) => {
+    assert.match(await runScheduled(env, NOW), /見送り/);
+    assert.ok(!calls.some((c) => c.url.includes("/dispatches")));
+  });
+});
+
+test("時計: GitHub に繋がらなくても、例外を投げない(ログに理由だけ残す)", async () => {
+  const orig = globalThis.fetch;
+  globalThis.fetch = (async () => { throw new Error("network"); }) as typeof fetch;
+  try { assert.match(await runScheduled(env, NOW), /失敗/); } finally { globalThis.fetch = orig; }
+});
+
+test("時計: 鍵の期限が切れて GitHub が拒んだら、応答コードをログに残す。合言葉は不要", async () => {
+  const orig = globalThis.fetch;
+  globalThis.fetch = (async (u: string | URL | Request) => String(u).includes("/dispatches") ? new Response("x", { status: 401 }) : new Response(JSON.stringify({ workflow_runs: [] }), { status: 200 })) as typeof fetch;
+  try { assert.match(await runScheduled({ ...env, REFRESH_PASSCODE: "" }, NOW), /応答 401/); } finally { globalThis.fetch = orig; }
+});
+
+test("時計: scheduled から呼ばれ、完了まで待たせる(waitUntil)", async () => {
+  await withGithub([run("completed", "2026-11-05T22:00:00Z")], async (calls) => {
+    const waits: Promise<unknown>[] = [];
+    const log = console.log; console.log = () => {};
+    try { await worker.scheduled({ cron: "22 */3 * * *" }, env, { waitUntil: (p) => { waits.push(p); } }); await Promise.all(waits); } finally { console.log = log; }
+    assert.equal(waits.length, 1);
+    assert.ok(calls.some((c) => c.url.includes("/dispatches")));
+  });
+});
+
+// ---- Cloudflare に貼る1ファイル(worker/worker.js)を、実際に動かして確かめる ----
+import { readFileSync } from "node:fs";
+test("貼り付け用の worker.js: 単体で動き、default の fetch と scheduled だけを公開する", async () => {
+  const text = readFileSync(__dirname + "/../worker/worker.js", "utf-8");
+  assert.equal((text.match(/^export /gm) ?? []).length, 1);               // export default だけ
+  const w = new Function(text.replace(/^export default/m, "return ") + "\n")();
+  assert.equal(typeof w.fetch, "function");
+  assert.equal(typeof w.scheduled, "function");
+  await withGithub([run("completed", "2026-11-05T22:00:00Z")], async (calls) => {
+    const waits: Promise<unknown>[] = [];
+    const log = console.log; console.log = () => {};
+    try { await w.scheduled({ cron: "22 */3 * * *" }, env, { waitUntil: (p: Promise<unknown>) => { waits.push(p); } }); await Promise.all(waits); } finally { console.log = log; }
+    assert.ok(calls.some((c) => c.url.includes("/dispatches")));
+  });
+  const r = await w.fetch(new Request("https://w.example/refresh", { method: "OPTIONS", headers: { origin: "https://x.example" } }), env);
+  assert.equal(r.status, 403);
+});
