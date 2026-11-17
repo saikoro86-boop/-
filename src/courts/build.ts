@@ -11,6 +11,7 @@ import { collectNsaAuto, collectNsaTargets } from "./collect/nsa";
 import { compactSlots, markNew, type CompactSlots } from "./compact";
 import { shouldRefusePublish } from "./guard";
 import { buildCommon, fetchPrevious } from "./publish";
+import { fetchIngest, mergeIngest } from "./ingest";
 import { fetchWeather } from "./weather";
 
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -29,6 +30,14 @@ async function main() {
     else if (site.type === "nsa") await collectNsaTargets(site, ctx, acc);
     else if (site.type === "nsa-auto") await collectNsaAuto(site, ctx, acc);
     // link 型は自動取得しない(公式サイトへ案内するだけ)
+  }
+
+  // 自動取得が 403 で断られるエリア(奈良市・生駒市)は、自宅PCから取り込んだデータがあれば、それで置き換える。
+  // 古い/無いときは、何もしない(画面には「取得できなかった」のまま出る)
+  const ingested = await fetchIngest(process.env.INGEST_URL);
+  if (ingested) {
+    const allowed = cfg.sites.filter((x) => x.type === "kashikan").map((x) => x.name);
+    console.log(mergeIngest(acc, ingested, allowed));
   }
 
   // 天気(気象庁)。取れなくても空き状況の更新は止めない

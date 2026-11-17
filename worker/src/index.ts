@@ -1,4 +1,4 @@
-import { decideRefresh, decideScheduled, ghHeaders, isAllowedOrigin, safeEqual, type Env, type RunInfo } from "./logic";
+import { decideRefresh, decideScheduled, ghHeaders, isAllowedOrigin, safeEqual, validateIngest, type Env, type RunInfo } from "./logic";
 
 const json = (body: unknown, status: number, origin: string) =>
   new Response(status === 204 ? null : JSON.stringify(body), { // 204 は本文を持てない
@@ -52,6 +52,30 @@ export default {
     ctx.waitUntil(runScheduled(env).then((m) => console.log(`時計 ${event.cron ?? ""}: ${m}`)));
   },
   async fetch(request: Request, env: Env): Promise<Response> {
+    const path0 = new URL(request.url).pathname;
+
+    // --- ブラウザ以外(自宅PC・GitHub のビルド)用。Origin は見ない。CORS は "*"(公開データの読み書き) ---
+    // 自宅PCから、奈良市・生駒市の空きを受け取る(合言葉が必要)
+    if (request.method === "POST" && path0 === "/ingest") {
+      let body: unknown = null;
+      try { body = await request.json(); } catch { /* 壊れた本文 */ }
+      const pass = body && typeof (body as { passcode?: unknown }).passcode === "string" ? (body as { passcode: string }).passcode : "";
+      if (!env.REFRESH_PASSCODE || !(await safeEqual(pass, env.REFRESH_PASSCODE))) {
+        await new Promise((r) => setTimeout(r, 800));
+        return json({ error: "bad_passcode" }, 401, "*");
+      }
+      if (!env.INGEST) return json({ error: "kv_not_configured" }, 500, "*");
+      const data = validateIngest(body, ["奈良市", "生駒市"]);
+      if (!data) return json({ error: "bad_data" }, 400, "*");
+      await env.INGEST.put("kashikan", JSON.stringify(data), { expirationTtl: 86400 }); // 24時間で自然に消える
+      return json({ ok: true, updatedAt: data.updatedAt, sites: data.sites, slots: data.slots.length }, 200, "*");
+    }
+    // ビルドが、取り込んだデータを読む(公開データなので、合言葉は不要)
+    if (request.method === "GET" && path0 === "/ingest-data") {
+      const raw = env.INGEST ? await env.INGEST.get("kashikan") : null;
+      return json(raw ? JSON.parse(raw) : null, 200, "*");
+    }
+
     const origin = request.headers.get("origin");
     // 画面を置いているサイト以外からは、受け付けない
     if (!isAllowedOrigin(origin, env.ALLOWED_ORIGIN)) return new Response("forbidden", { status: 403 });

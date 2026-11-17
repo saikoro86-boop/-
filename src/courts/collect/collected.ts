@@ -52,6 +52,8 @@ export class Collected {
   nsaInfoLinks: { site: string; match: string; url: string }[] = [];
   /** 「エリア|施設名」→ その施設の予約サイトのURL(時間をタップしたときの行き先) */
   facilityUrls: Record<string, string> = {};
+  /** エリア → 自宅PCから取り込んだ時刻(自動取得できないエリアを、別回線で取り込んだとき) */
+  ingestedAt: Record<string, string> = {};
 
   private statusMap = new Map<string, StatusRow>();
 
@@ -66,6 +68,24 @@ export class Collected {
 
   get status(): StatusRow[] {
     return [...this.statusMap.values()];
+  }
+
+  /**
+   * あるエリアの、集めた結果をすべて消す(自宅PCから取り込んだデータで置き換えるため)。
+   * 自動取得が 403 で中止したときの「取得できなかった」の記録も、取り込みで埋まるので消す
+   */
+  dropSite(site: string) {
+    this.slots = this.slots.filter((s) => s.site !== site);
+    this.failures = this.failures.filter((f) => f.s !== site);
+    this.errors = this.errors.filter((e) => !e.startsWith(site));
+    for (const k of [...this.statusMap.keys()]) if (k.startsWith(site + "|")) this.statusMap.delete(k);
+    for (const rec of [this.contacts as Record<string, unknown>, this.courtCodes, this.facilityUrls])
+      for (const k of Object.keys(rec)) if (k.startsWith(site + "|")) delete rec[k];
+  }
+
+  /** 取り込んだ状態を、そのまま記録する(自宅PCで作った status を、ビルドで取り込むため) */
+  setStatusRow(r: StatusRow) {
+    this.setStatus(r.s, r.f, r.d, r.t, r.l);
   }
 
   /**
