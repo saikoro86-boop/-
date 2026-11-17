@@ -30,8 +30,8 @@ function addNsa(area: string, raw: NaraSuperAppResponse, ctx: CollectContext, ac
     const cs = parseNaraSuperApp(raw, date).filter(pred);
     const hasSlots = cs.some((c) => c.slots.length > 0);
     const hasOpen = cs.some((c) => c.slots.some(isOpen));
-    const t = nsaDayState({ hasOpen, hasSlots, inRange: !!firstSlot && date >= firstSlot && date <= lastSlot });
-    acc.setStatus(area, facility, date, t, t === "closed" ? "休館日など" : undefined);
+    const st = nsaDayState({ hasOpen, hasSlots, date, firstSlot, lastSlot });
+    acc.setStatus(area, facility, date, st.state, st.label);
   }
   for (const date of listNaraSuperAppDates(raw).filter((d) => d >= ctx.first && d <= ctx.last)) {
     for (const c of parseNaraSuperApp(raw, date).filter(pred)) {
