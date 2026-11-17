@@ -7,6 +7,43 @@
  * GitHub の定期実行(schedule)は、混んでいると遅れたり飛ばされたりする(実際に8〜10時間おきになった)。
  * 時計は、それが予定どおり動かなかったときだけ、補う。
  */
+/** 自宅PCから届く、奈良市・生駒市の空き。合言葉で認証したあと、型と範囲を検査してから保存する */
+function validateIngest(body, allowedSites, maxItems = 20000) {
+    const b = body;
+    if (!b || typeof b !== "object")
+        return null;
+    const str = (v, n) => typeof v === "string" && v.length > 0 && v.length <= n;
+    const sites = (Array.isArray(b.sites) ? b.sites : []).filter((x) => allowedSites.includes(x));
+    if (!sites.length)
+        return null;
+    const inSites = new Set(sites);
+    const slots = (Array.isArray(b.slots) ? b.slots : [])
+        .filter((s) => !!s && typeof s === "object" && inSites.has(s.site)
+        && /^\d{4}-\d{2}-\d{2}$/.test(s.date) && str(s.facility, 60) && str(s.court, 60)
+        && typeof s.start === "number" && typeof s.end === "number"
+        && s.start >= 0 && s.end <= 30 && s.start < s.end)
+        .slice(0, maxItems)
+        .map((s) => ({ date: s.date, site: s.site, facility: s.facility, court: s.court, start: s.start, end: s.end, ...(s.offline === true ? { offline: true } : {}) }));
+    const status = (Array.isArray(b.status) ? b.status : [])
+        .filter((r) => !!r && typeof r === "object" && inSites.has(r.s)
+        && /^\d{4}-\d{2}-\d{2}$/.test(r.d) && str(r.f, 60) && str(r.t, 10))
+        .slice(0, maxItems)
+        .map((r) => ({ d: r.d, s: r.s, f: r.f, t: r.t, ...(str(r.l, 40) ? { l: r.l } : {}) }));
+    const map = (o, ok) => {
+        const out = {};
+        if (o && typeof o === "object")
+            for (const [k, v] of Object.entries(o).slice(0, 5000))
+                if (str(k, 120) && inSites.has(k.split("|")[0]) && ok(v))
+                    out[k] = v;
+        return out;
+    };
+    return {
+        updatedAt: new Date().toISOString(), sites, slots, status,
+        contacts: map(b.contacts, (v) => !!v && typeof v === "object"),
+        courtCodes: map(b.courtCodes, (v) => str(v, 20)),
+        facilityUrls: map(b.facilityUrls, (v) => str(v, 300)),
+    };
+}
 const ACTIVE = new Set(["queued", "in_progress", "waiting", "requested", "pending"]);
 /** 直近の実行の状態から、新しく起動してよいかを決める(純粋関数) */
 function decideRefresh(last, nowMs, cooldownSec = 600) {
@@ -102,6 +139,33 @@ export default {
         ctx.waitUntil(runScheduled(env).then((m) => console.log(`時計 ${event.cron ?? ""}: ${m}`)));
     },
     async fetch(request, env) {
+        const path0 = new URL(request.url).pathname;
+        // --- ブラウザ以外(自宅PC・GitHub のビルド)用。Origin は見ない。CORS は "*"(公開データの読み書き) ---
+        // 自宅PCから、奈良市・生駒市の空きを受け取る(合言葉が必要)
+        if (request.method === "POST" && path0 === "/ingest") {
+            let body = null;
+            try {
+                body = await request.json();
+            }
+            catch { /* 壊れた本文 */ }
+            const pass = body && typeof body.passcode === "string" ? body.passcode : "";
+            if (!env.REFRESH_PASSCODE || !(await safeEqual(pass, env.REFRESH_PASSCODE))) {
+                await new Promise((r) => setTimeout(r, 800));
+                return json({ error: "bad_passcode" }, 401, "*");
+            }
+            if (!env.INGEST)
+                return json({ error: "kv_not_configured" }, 500, "*");
+            const data = validateIngest(body, ["奈良市", "生駒市"]);
+            if (!data)
+                return json({ error: "bad_data" }, 400, "*");
+            await env.INGEST.put("kashikan", JSON.stringify(data), { expirationTtl: 86400 }); // 24時間で自然に消える
+            return json({ ok: true, updatedAt: data.updatedAt, sites: data.sites, slots: data.slots.length }, 200, "*");
+        }
+        // ビルドが、取り込んだデータを読む(公開データなので、合言葉は不要)
+        if (request.method === "GET" && path0 === "/ingest-data") {
+            const raw = env.INGEST ? await env.INGEST.get("kashikan") : null;
+            return json(raw ? JSON.parse(raw) : null, 200, "*");
+        }
         const origin = request.headers.get("origin");
         // 画面を置いているサイト以外からは、受け付けない
         if (!isAllowedOrigin(origin, env.ALLOWED_ORIGIN))

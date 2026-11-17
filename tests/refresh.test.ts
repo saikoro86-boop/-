@@ -170,3 +170,63 @@ test("貼り付け用の worker.js: 単体で動き、default の fetch と sche
   const r = await w.fetch(new Request("https://w.example/refresh", { method: "OPTIONS", headers: { origin: "https://x.example" } }), env);
   assert.equal(r.status, 403);
 });
+
+// ---- 自宅PCからの取り込み(/ingest・/ingest-data)。KV は偽物に差し替える ----
+import { validateIngest } from "../worker/src/logic";
+
+function fakeKV() {
+  const m = new Map<string, string>();
+  return { get: async (k: string) => m.get(k) ?? null, put: async (k: string, v: string) => { m.set(k, v); }, _m: m };
+}
+const ingestBody = (over: Record<string, unknown> = {}) => ({
+  passcode: env.REFRESH_PASSCODE,
+  sites: ["奈良市", "生駒市"],
+  slots: [{ date: "2026-11-20", site: "奈良市", facility: "F", court: "A", start: 9, end: 12 }],
+  status: [{ d: "2026-11-21", s: "生駒市", f: "G", t: "full" }],
+  contacts: {}, courtCodes: {}, facilityUrls: {},
+  ...over,
+});
+const ingestReq = (body: unknown) => new Request("https://w.example/ingest", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+
+test("validateIngest: 対象エリア・型・範囲を検査し、許可外のエリアは落とす", () => {
+  const ok = validateIngest(ingestBody(), ["奈良市", "生駒市"]);
+  assert.ok(ok && ok.sites.length === 2 && ok.slots.length === 1 && ok.status.length === 1);
+  assert.ok(typeof ok.updatedAt === "string"); // 時刻はサーバーが付ける
+  // 許可外のエリアだけなら null
+  assert.equal(validateIngest(ingestBody({ sites: ["木津川市"] }), ["奈良市", "生駒市"]), null);
+  // おかしな枠は落ちる(日付が変・時間が逆)
+  const bad = validateIngest(ingestBody({ slots: [{ date: "x", site: "奈良市", facility: "F", court: "A", start: 9, end: 12 }, { date: "2026-11-20", site: "奈良市", facility: "F", court: "A", start: 12, end: 9 }] }), ["奈良市", "生駒市"]);
+  assert.equal(bad!.slots.length, 0);
+});
+
+test("/ingest: 合言葉が合えば KV に保存し、/ingest-data で読める", async () => {
+  const kv = fakeKV();
+  const r = await worker.fetch(ingestReq(ingestBody()), { ...env, INGEST: kv } as typeof env);
+  assert.equal(r.status, 200);
+  const j = (await r.json()) as { ok: boolean; sites: string[]; slots: number };
+  assert.equal(j.ok, true); assert.deepEqual(j.sites, ["奈良市", "生駒市"]); assert.equal(j.slots, 1);
+  assert.ok(kv._m.has("kashikan"));
+  // GET /ingest-data(合言葉なし)で、保存した中身が返る
+  const g = await worker.fetch(new Request("https://w.example/ingest-data"), { ...env, INGEST: kv } as typeof env);
+  const d = (await g.json()) as { sites: string[]; slots: unknown[] };
+  assert.deepEqual(d.sites, ["奈良市", "生駒市"]); assert.equal(d.slots.length, 1);
+});
+
+test("/ingest: 合言葉が違えば 401。KV は書き換えない", async () => {
+  const kv = fakeKV();
+  const r = await worker.fetch(ingestReq(ingestBody({ passcode: "wrong" })), { ...env, INGEST: kv } as typeof env);
+  assert.equal(r.status, 401);
+  assert.equal(kv._m.size, 0);
+});
+
+test("/ingest: KV が無ければ 500(設定ミスが分かる)", async () => {
+  const r = await worker.fetch(ingestReq(ingestBody()), env);
+  assert.equal(r.status, 500);
+});
+
+test("/ingest-data: まだ何も無ければ null。ブラウザ用の Origin 制限はかからない(server-to-server)", async () => {
+  const kv = fakeKV();
+  const g = await worker.fetch(new Request("https://w.example/ingest-data", { headers: { origin: "https://evil.example" } }), { ...env, INGEST: kv } as typeof env);
+  assert.equal(g.status, 200);
+  assert.equal(await g.json(), null);
+});

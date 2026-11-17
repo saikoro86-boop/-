@@ -16,6 +16,51 @@ export interface Env {
   GH_REF: string; // 例: claude/puppeteer-form-automation-dd1dmz(メインのブランチ)
   ALLOWED_ORIGIN: string; // 例: https://saikoro86-boop.github.io
   COOLDOWN_SEC?: string; // 前回の実行から、次の依頼を受け付けるまでの秒数(既定 600)
+  INGEST?: KVLike; // 自宅PCから取り込んだ、奈良市・生駒市の空きを一時保存する KV(無ければ /ingest は使えない)
+}
+
+/** Cloudflare の KV のうち、使う分だけ(型のためだけに宣言。本物は Cloudflare が渡す) */
+export interface KVLike {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+}
+
+/** 自宅PCから届く、奈良市・生駒市の空き。合言葉で認証したあと、型と範囲を検査してから保存する */
+export function validateIngest(body: unknown, allowedSites: string[], maxItems = 20000): null | {
+  updatedAt: string; sites: string[];
+  slots: { date: string; site: string; facility: string; court: string; start: number; end: number; offline?: true }[];
+  status: { d: string; s: string; f: string; t: string; l?: string }[];
+  contacts: Record<string, unknown>; courtCodes: Record<string, string>; facilityUrls: Record<string, string>;
+} {
+  const b = body as Record<string, unknown>;
+  if (!b || typeof b !== "object") return null;
+  const str = (v: unknown, n: number) => typeof v === "string" && v.length > 0 && v.length <= n;
+  const sites = (Array.isArray(b.sites) ? b.sites : []).filter((x) => allowedSites.includes(x as string)) as string[];
+  if (!sites.length) return null;
+  const inSites = new Set(sites);
+  const slots = (Array.isArray(b.slots) ? b.slots : [])
+    .filter((s): s is Record<string, unknown> => !!s && typeof s === "object" && inSites.has((s as Record<string, unknown>).site as string)
+      && /^\d{4}-\d{2}-\d{2}$/.test((s as Record<string, unknown>).date as string) && str((s as Record<string, unknown>).facility, 60) && str((s as Record<string, unknown>).court, 60)
+      && typeof (s as Record<string, unknown>).start === "number" && typeof (s as Record<string, unknown>).end === "number"
+      && (s as Record<string, unknown>).start as number >= 0 && (s as Record<string, unknown>).end as number <= 30 && (s as Record<string, unknown>).start as number < ((s as Record<string, unknown>).end as number))
+    .slice(0, maxItems)
+    .map((s) => ({ date: s.date as string, site: s.site as string, facility: s.facility as string, court: s.court as string, start: s.start as number, end: s.end as number, ...(s.offline === true ? { offline: true as const } : {}) }));
+  const status = (Array.isArray(b.status) ? b.status : [])
+    .filter((r): r is Record<string, unknown> => !!r && typeof r === "object" && inSites.has((r as Record<string, unknown>).s as string)
+      && /^\d{4}-\d{2}-\d{2}$/.test((r as Record<string, unknown>).d as string) && str((r as Record<string, unknown>).f, 60) && str((r as Record<string, unknown>).t, 10))
+    .slice(0, maxItems)
+    .map((r) => ({ d: r.d as string, s: r.s as string, f: r.f as string, t: r.t as string, ...(str(r.l, 40) ? { l: r.l as string } : {}) }));
+  const map = <T>(o: unknown, ok: (v: unknown) => v is T): Record<string, T> => {
+    const out: Record<string, T> = {};
+    if (o && typeof o === "object") for (const [k, v] of Object.entries(o as Record<string, unknown>).slice(0, 5000)) if (str(k, 120) && inSites.has(k.split("|")[0]) && ok(v)) out[k] = v;
+    return out;
+  };
+  return {
+    updatedAt: new Date().toISOString(), sites, slots, status,
+    contacts: map(b.contacts, (v): v is unknown => !!v && typeof v === "object"),
+    courtCodes: map(b.courtCodes, (v): v is string => str(v, 20)),
+    facilityUrls: map(b.facilityUrls, (v): v is string => str(v, 300)),
+  };
 }
 
 export interface RunInfo {

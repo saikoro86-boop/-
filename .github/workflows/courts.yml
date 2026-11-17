@@ -53,6 +53,8 @@ jobs:
         env:
           # 前回公開したデータ。新しく空いた枠(🆕)を見つけるのに使う
           PREV_URL: https://${{ github.repository_owner }}.github.io/${{ vars.SITE_REPO }}/data2.json
+          # 自宅PCから取り込んだ、奈良市・生駒市の空き(中継役の /ingest-data)。未設定なら取り込みなし
+          INGEST_URL: ${{ vars.REFRESH_URL }}/ingest-data
 
       - name: 取り込み用ブックマークレットを生成(公開URL向け)
         run: npm run bookmarklet
