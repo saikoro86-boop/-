@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { kashikanFacilityState, mergeStates, nsaDayState } from "../src/courts/status";
+import { kashikanFacilityState, mergeStates, nsaDayState, NSA_NEAR_LABEL } from "../src/courts/status";
 
 const court = (...marks: string[]) => ({ facility: "F", court: "A", slots: marks.map((mark, i) => ({ start: 9 + i, end: 10 + i, mark })) });
 
@@ -17,11 +17,22 @@ test("貸館方式: 休館は closed、「-」は受付期間外(ラベル付き
   assert.equal(kashikanFacilityState([court("", "")], ["●"]), undefined);
 });
 
-test("奈良スーパーアプリ: 枠が全部予約済みなら full、範囲外は unpub、範囲内で枠なしは closed", () => {
-  assert.equal(nsaDayState({ hasOpen: true, hasSlots: true, inRange: true }), "open");
-  assert.equal(nsaDayState({ hasOpen: false, hasSlots: true, inRange: true }), "full");
-  assert.equal(nsaDayState({ hasOpen: false, hasSlots: false, inRange: true }), "closed");
-  assert.equal(nsaDayState({ hasOpen: false, hasSlots: false, inRange: false }), "unpub");
+test("奈良スーパーアプリ: 空きあり open / 全部予約済み full / 期間内で枠なしは休館日など", () => {
+  const r = { firstSlot: "2026-11-24", lastSlot: "2026-11-30" };
+  assert.deepEqual(nsaDayState({ hasOpen: true, hasSlots: true, date: "2026-11-25", ...r }), { state: "open" });
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: true, date: "2026-11-25", ...r }), { state: "full" });
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: false, date: "2026-11-25", ...r }), { state: "closed", label: "休館日など" });
+});
+
+test("奈良スーパーアプリ: 直前で枠が消えた日は「まだ公開されていない」にしない。月末より先は、まだ公開されていない", () => {
+  const r = { firstSlot: "2026-11-24", lastSlot: "2026-11-30" };
+  // 11/17 の実測: 明日香村などは、7日先(11/24)からしか枠が出ていない。11/17〜23 は、直前のため消えた日
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: false, date: "2026-11-17", ...r }), { state: "closed", label: NSA_NEAR_LABEL });
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: false, date: "2026-11-23", ...r }), { state: "closed", label: NSA_NEAR_LABEL });
+  // 枠は月末までしか出ない。12月の日は、まだ公開されていない
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: false, date: "2026-12-01", ...r }), { state: "unpub" });
+  // 枠が1つもない建物
+  assert.deepEqual(nsaDayState({ hasOpen: false, hasSlots: false, date: "2026-11-20" }), { state: "unpub" });
 });
 
 test("複数の建物の状態は、空きに近いほうを優先する", () => {
