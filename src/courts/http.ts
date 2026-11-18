@@ -24,14 +24,18 @@ export class HttpError extends Error {
   }
 }
 
+/** 応答は届いたが、期待した形ではなかったときの例外。同じ応答が返るだけなので、やり直さない */
+export class UnexpectedResponseError extends Error {}
+
 /**
  * 先方に「来ないで」と断られた応答か(401・403・429)。
  * サイトの防御は回避しない方針なので、やり直さず、そのサイトの取得を早めにやめる
  */
 export const isBlocked = (e: unknown): boolean => e instanceof HttpError && [401, 403, 429].includes(e.status);
 
-/** やり直す意味がある失敗か。通信の失敗・時間切れ・先方の一時的な不調(5xx、408)だけ。4xx は、同じ結果になるだけなのでやり直さない */
-export const isRetryable = (e: unknown): boolean => !(e instanceof HttpError) || e.status >= 500 || e.status === 408;
+/** やり直す意味がある失敗か。通信の失敗・時間切れ・先方の一時的な不調(5xx、408)だけ。4xx と、応答の形の違いは、同じ結果になるだけなのでやり直さない */
+export const isRetryable = (e: unknown): boolean =>
+  e instanceof UnexpectedResponseError ? false : !(e instanceof HttpError) || e.status >= 500 || e.status === 408;
 
 /** 時間制限つきの fetch。応答コードが 200 台以外なら、URL とコードを添えて例外(HttpError)にする */
 export async function fetchChecked(url: string, init: RequestInit = {}, timeoutMs = TIMEOUT_MS): Promise<Response> {

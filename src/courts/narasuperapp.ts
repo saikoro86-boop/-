@@ -22,7 +22,7 @@ export const NSA_ENDPOINT =
 /** `getResultList` を呼ぶ Apex クラス(画面が使っているもの) */
 const APEX_CLASS = "@udd/01p5i00000X9eij";
 
-import { fetchChecked, USER_AGENT } from "./http";
+import { fetchChecked, UnexpectedResponseError, USER_AGENT } from "./http";
 import { normName as norm } from "./keys";
 
 export interface NaraSuperAppRequest {
@@ -89,7 +89,7 @@ async function callApex<T>(request: object, isOk: (json: T) => boolean, what: st
     body: JSON.stringify(request),
   });
   const json = (await res.json()) as T;
-  if (!isOk(json)) throw new Error(`奈良スーパーアプリ: ${what}の応答が想定と違います`);
+  if (!isOk(json)) throw new UnexpectedResponseError(`奈良スーパーアプリ: ${what}の応答が想定と違います`);
   return json;
 }
 

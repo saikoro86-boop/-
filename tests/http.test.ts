@@ -36,7 +36,7 @@ test("withRetry: 回数を使い切ったら、最後の例外を投げる", asy
 });
 
 // ---- 先方に断られたとき(403 など)は、やり直さず、早めにやめる ----
-import { BlockCounter, HttpError, isBlocked, isRetryable } from "../src/courts/http";
+import { BlockCounter, HttpError, UnexpectedResponseError, isBlocked, isRetryable } from "../src/courts/http";
 
 test("withRetry: 403 は、やり直さない(同じ結果になるだけで、先方の負荷になる)", async () => {
   let n = 0;
@@ -69,4 +69,17 @@ test("BlockCounter: 断られた応答が2回続いたら「やめる」。間�
   assert.equal(c.failed(new HttpError("u", 403)), false);
   assert.equal(c.failed(new Error("timeout")), false); // 通信の失敗は、断られたのとは違う
   assert.equal(c.failed(new HttpError("u", 403)), false);
+});
+
+test("withRetry: 応答の形が想定と違うときは、やり直さない(同じ応答が返るだけで、先方に負荷をかけるため)", async () => {
+  let n = 0;
+  await assert.rejects(
+    withRetry("x", async () => {
+      n++;
+      throw new UnexpectedResponseError("形が違います");
+    }, 3, 0),
+    UnexpectedResponseError,
+  );
+  assert.equal(n, 1);
+  assert.equal(isRetryable(new UnexpectedResponseError("x")), false);
 });
