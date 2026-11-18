@@ -2,42 +2,19 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>テニスチーム</title>
-<style>
-:root { --bg:#f6f7f4; --card:#fff; --text:#1c2420; --sub:#5d6b63; --line:#dde3dc; --accent:#1f7a4d; --on-accent:#fff; --danger:#b3261e; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg:#121714; --card:#1b231e; --text:#e8efe9; --sub:#9aa89f; --line:#2c3830; --accent:#4cc38a; --on-accent:#08140d; --danger:#ff8a80; }
-}
-* { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system,"Hiragino Sans",sans-serif; }
-header { padding:12px 16px 0; }
-h1 { font-size:18px; margin:0 0 8px; display:flex; justify-content:space-between; align-items:center; }
-nav { display:flex; gap:6px; overflow-x:auto; padding:0 16px 8px; position:sticky; top:0; background:var(--bg); }
-nav a { flex:none; min-height:36px; padding:6px 12px; border-radius:18px; border:1px solid var(--line); color:var(--text); text-decoration:none; font-size:14px; display:flex; align-items:center; }
-nav a.on { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-main { padding:8px 16px 48px; max-width:720px; margin:0 auto; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin:10px 0; overflow-wrap:anywhere; }
-.card h3 { margin:0 0 4px; font-size:16px; }
-.row { font-size:14px; color:var(--sub); white-space:pre-wrap; }
-.row b { color:var(--text); font-weight:600; }
-img.thumb { max-width:100%; border-radius:8px; margin-top:8px; }
-a { color:var(--accent); }
-label { display:block; font-size:13px; color:var(--sub); margin:10px 0 2px; }
-input, select, textarea, button { font:inherit; width:100%; min-height:40px; padding:8px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); }
-textarea { min-height:90px; }
-button { width:auto; min-height:36px; padding:6px 14px; cursor:pointer; }
-button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
-button.danger { color:var(--danger); }
-.actions { display:flex; gap:8px; margin-top:8px; }
-.msg { color:var(--danger); font-size:14px; min-height:20px; }
-details { margin:10px 0; } summary { cursor:pointer; min-height:36px; display:flex; align-items:center; font-weight:600; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Noto+Sans+JP:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><h1><span>🎾 テニスチーム</span><button id="logout" hidden>ログアウト</button></h1></header>
-<nav id="nav" hidden></nav>
-<main id="main">読み込み中…</main>
+<header><div class="brand"><span class="ball"></span>TEAM</div><h1 id="title"></h1><button class="ghost" id="logout" hidden>ログアウト</button></header>
+<div class="wrap"><main id="main">読み込み中…</main></div>
+<nav class="tabbar" id="nav" hidden><div class="tabbar-in" id="navin"></div></nav>
+<button class="fab" id="fab" hidden></button>
+<div class="sheet" id="sheet" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
