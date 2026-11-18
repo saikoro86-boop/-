@@ -32,8 +32,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ヘッダー */
 header { max-width: 720px; margin: 0 auto; padding: 16px 0 8px; display: flex; align-items: center; gap: 10px; }
 .brand { display: flex; align-items: center; gap: 6px; font: 800 13px var(--font-d); letter-spacing: .18em; color: var(--sub); }
-.ball { width: 14px; height: 14px; border-radius: 50%; background: var(--ball); position: relative; box-shadow: inset 0 0 0 1px rgba(12, 21, 51, .25); }
-.ball::after { content: ""; position: absolute; inset: 2px -4px; border: 1.5px solid rgba(12, 21, 51, .45); border-radius: 50%; clip-path: inset(0 6px); }
+.brand .ball { width: 14px; height: 14px; border-radius: 50%; background: var(--ball); position: relative; box-shadow: inset 0 0 0 1px rgba(12, 21, 51, .25); }
+.brand .ball::after { content: ""; position: absolute; inset: 2px -4px; border: 1.5px solid rgba(12, 21, 51, .45); border-radius: 50%; clip-path: inset(0 6px); }
 h1 { margin: 0; flex: 1; font: 800 28px/1.1 var(--font-d); letter-spacing: .02em; text-align: right; }
 .ghost { min-height: 36px; padding: 4px 12px; border-radius: 18px; border: 1px solid var(--line); background: transparent; color: var(--sub); font-size: 13px; cursor: pointer; }
 
@@ -160,3 +160,22 @@ textarea { min-height: 96px; } input:focus, select:focus, textarea:focus, button
 img.thumb { display: block; max-width: 100%; border-radius: 12px; margin-top: 8px; }
 .login { margin-top: 40px; } .login h2 { font: 800 30px var(--font-d); margin: 0 0 6px; }
 @media (prefers-reduced-motion: no-preference) { .card, .tile { transition: transform .12s; } .tile:active, .card:active { transform: scale(.985); } }
+
+/* お知らせ・問題・出欠など(第2弾) */
+.avatar { overflow: hidden; } .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chip.new { background: var(--lose); color: #fff; }
+.notice { border-left: 6px solid var(--link); } .notice.pin { border-left-color: var(--ball); }
+.reads { margin-top: 10px; font-size: 13px; } .reads summary { min-height: 36px; display: flex; align-items: center; font-weight: 700; cursor: pointer; }
+.decide.coach { background: var(--ball); color: var(--on-ball); } .decide.coach b { color: var(--on-ball); opacity: .75; }
+.att { margin-top: 10px; } .att .pill { flex: 1; padding: 4px 6px; }
+.daily { border: 2px solid var(--ball); } .daily-head { display: flex; justify-content: space-between; align-items: center; font: 800 18px var(--font-d); letter-spacing: .06em; }
+.qtext { font-size: 16px; font-weight: 700; margin: 8px 0 10px; }
+.choice { display: block; width: 100%; min-height: 48px; margin: 8px 0; padding: 10px 14px; text-align: left; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--text); font-weight: 700; cursor: pointer; }
+.choice:disabled { opacity: 1; cursor: default; } .choice.ok { border-color: var(--win); background: color-mix(in srgb, var(--win) 18%, var(--card)); } .choice.ng { border-color: var(--lose); background: color-mix(in srgb, var(--lose) 16%, var(--card)); }
+.result { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--chip); } .result.ok b { color: var(--win); } .result.ng b { color: var(--lose); } .result p { margin: 4px 0 0; }
+.choices-list { margin: 8px 0 0; padding-left: 22px; font-size: 14px; } .choices-list li.ok { color: var(--win); font-weight: 800; }
+.progress { height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; margin-top: 8px; } .progress span { display: block; height: 100%; background: var(--ball); }
+.code { margin: 14px 0; padding: 16px; border-radius: 16px; background: var(--chip); text-align: center; font: 800 40px var(--font-d); letter-spacing: .2em; user-select: all; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px; } label.check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px; border: 1.5px solid var(--line); border-radius: 20px; font-size: 14px; color: var(--text); margin: 6px 0 0; }
+label.check input { width: 20px; height: 20px; min-height: 0; }
+button.tile { border: 0; text-align: left; font-family: inherit; cursor: pointer; } button.tile:disabled { opacity: .45; cursor: default; }
