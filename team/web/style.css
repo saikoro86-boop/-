@@ -175,7 +175,7 @@ img.thumb { display: block; max-width: 100%; border-radius: 12px; margin-top: 8p
 .result { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--chip); } .result.ok b { color: var(--win); } .result.ng b { color: var(--lose); } .result p { margin: 4px 0 0; }
 .choices-list { margin: 8px 0 0; padding-left: 22px; font-size: 14px; } .choices-list li.ok { color: var(--win); font-weight: 800; }
 .progress { height: 8px; border-radius: 4px; background: var(--chip); overflow: hidden; margin-top: 8px; } .progress span { display: block; height: 100%; background: var(--ball); }
-.code { margin: 14px 0; padding: 16px; border-radius: 16px; background: var(--chip); text-align: center; font: 800 40px var(--font-d); letter-spacing: .2em; user-select: all; }
+.code { margin: 14px 0; padding: 16px; border-radius: 16px; background: var(--chip); text-align: center; font: 800 32px var(--font-d); letter-spacing: .14em; user-select: all; overflow-wrap: anywhere; }
 .checks { display: flex; flex-wrap: wrap; gap: 8px; } label.check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px; border: 1.5px solid var(--line); border-radius: 20px; font-size: 14px; color: var(--text); margin: 6px 0 0; }
 label.check input { width: 20px; height: 20px; min-height: 0; }
 button.tile { border: 0; text-align: left; font-family: inherit; cursor: pointer; } button.tile:disabled { opacity: .45; cursor: default; }

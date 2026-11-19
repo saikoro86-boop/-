@@ -104,6 +104,7 @@ function el(tag, props = {}, ...kids) {
 const txt = (t) => document.createTextNode(String(t));
 const safeUrl = (u) => /^https?:\/\//i.test(u || '') ? u : null;
 const playerOf = (id) => state.players.find((p) => p.id === id);
+const members = () => state.players.filter((p) => p.role !== 'coach' && p.active !== false); // 在籍中の選手(監督・退部者は除く)
 const teamName = (id) => state.teams.find((t) => t.id === id)?.name || '';
 const hash = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
 const todayJst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -169,7 +170,18 @@ function showLogin(message) {
   } });
   $('main').replaceChildren(el('div', { class: 'login' }, el('img', { class: 'login-logo', src: 'logo.jpg', alt: 'LTA' }), el('h2', { textContent: 'LTA に入る' }), el('p', { class: 'login-name', textContent: 'レゼルテニスアカデミー' }),
     el('p', { class: 'muted', textContent: 'メンバー専用です。監督からLINEで届いたコードを入れてください。1回入れると、このスマホが覚えてくれます。' }),
-    code, el('div', { class: 'actions' }, btn), msg));
+    code, el('div', { class: 'actions' }, btn), msg, el('button', { class: 'ghost', type: 'button', textContent: '監督はこちら(メールでログイン)', onclick: () => showCoachLogin() })));
+}
+// 監督だけメールのリンクで入る(shouldCreateUser:false … 登録済みのアドレス以外は入れない)
+function showCoachLogin() {
+  const email = el('input', { type: 'email', id: 'email', placeholder: 'メールアドレス', autocomplete: 'email' }), msg = el('p', { class: 'msg' });
+  const btn = el('button', { class: 'btn ball', textContent: 'ログイン用リンクを送る', onclick: async () => {
+    msg.textContent = '送信中…';
+    const { error } = await sb.auth.signInWithOtp({ email: email.value.trim(), options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+    msg.textContent = error ? '送れませんでした。登録されたメールアドレスか確認してください。' : 'メールを送りました。届いたリンクを開いてください。';
+  } });
+  $('main').replaceChildren(el('div', { class: 'login' }, el('h2', { textContent: '監督ログイン' }), email, el('div', { class: 'actions' }, btn), msg,
+    el('button', { class: 'ghost', type: 'button', textContent: '← コードで入る', onclick: () => showLogin() })));
 }
 
 // ---------- 追加・編集(下から出る画面) ----------
@@ -212,6 +224,10 @@ function openSheet(sec, row) {
     const { error } = await sb.from(sec.table).delete().eq('id', row.id);
     if (error) msg.textContent = '削除できませんでした'; else { closeSheet(); render(); }
   } }));
+  if (row && sec.table === 'profiles' && isCoach() && row.id !== state.me.id) {
+    actions.append(el('button', { class: 'btn', type: 'button', textContent: 'コードを再発行', onclick: () => adminPlayer('reissue', row, msg) }));
+    if (row.active !== false) actions.append(el('button', { class: 'btn danger', type: 'button', textContent: '退部にする', onclick: () => { if (confirm('退部にしますか?(ログインできなくなります。記録は残ります)')) adminPlayer('retire', row, msg); } }));
+  }
   form.append(msg, actions);
   form.addEventListener('submit', async (e) => {
     e.preventDefault(); msg.textContent = '保存中…';
@@ -243,6 +259,22 @@ function openSheet(sec, row) {
   });
   showSheet((row ? '編集: ' : '追加: ') + sec.label, form);
 }
+// 発行したコードを1回だけ表示する(保存されるのはハッシュだけなので、あとからは見られない)
+function showCode(name, code) {
+  const copy = el('button', { class: 'btn', type: 'button', textContent: 'コピー', onclick: async () => {
+    try { await navigator.clipboard.writeText(code); copy.textContent = 'コピーしました'; } catch (_) { copy.textContent = '長押しでコピーしてください'; }
+  } });
+  showSheet('コードができました', el('p', { class: 'muted', textContent: `${name} さんのコードです。この画面を閉じると二度と表示されません。LINEで本人だけに渡してください。` }),
+    el('div', { class: 'code', textContent: code }), el('div', { class: 'actions' }, copy, el('button', { class: 'btn ball', type: 'button', textContent: '閉じる', onclick: () => { closeSheet(); render(); } })));
+}
+// コードの再発行・退部(監督だけ。サーバー側の処理でも監督かどうかを確かめる)
+async function adminPlayer(action, p, msg) {
+  msg.textContent = '処理中…';
+  const { data, error } = await sb.functions.invoke('player-admin', { body: { action, player_id: p.id } });
+  if (error) { msg.textContent = '実行できませんでした'; return; }
+  await loadRefs();
+  if (action === 'reissue' && data?.code) showCode(p.name, data.code); else { closeSheet(); render(); }
+}
 // 選手の追加: 名前を入れるとコードが1回だけ表示される(サーバー側の処理で作る)
 function openAddPlayer() {
   const name = el('input', { type: 'text', id: 'np-name', required: true });
@@ -252,14 +284,10 @@ function openAddPlayer() {
     el('div', { class: 'actions' }, el('button', { class: 'btn ball', type: 'submit', textContent: 'コードを発行する' })));
   form.addEventListener('submit', async (e) => {
     e.preventDefault(); msg.textContent = '作成中…';
-    const { data, error } = await sb.functions.invoke('create-player', { body: { name: name.value.trim(), team_id: team.value ? Number(team.value) : null } });
+    const { data, error } = await sb.functions.invoke('player-admin', { body: { action: 'create', name: name.value.trim(), team_id: team.value ? Number(team.value) : null } });
     if (error || !data?.code) { msg.textContent = '作れませんでした'; return; }
     await loadRefs();
-    const copy = el('button', { class: 'btn', type: 'button', textContent: 'コピー', onclick: async () => {
-      try { await navigator.clipboard.writeText(data.code); copy.textContent = 'コピーしました'; } catch (_) { copy.textContent = '長押しでコピーしてください'; }
-    } });
-    showSheet('コードができました', el('p', { class: 'muted', textContent: `${name.value.trim()} さんのコードです。この画面を閉じると二度と表示されません。LINEで本人だけに渡してください。` }),
-      el('div', { class: 'code', textContent: data.code }), el('div', { class: 'actions' }, copy, el('button', { class: 'btn ball', type: 'button', textContent: '閉じる', onclick: () => { closeSheet(); render(); } })));
+    showCode(name.value.trim(), data.code);
   });
   showSheet('選手を追加', form);
 }
@@ -354,7 +382,7 @@ function testGroups(rows, sec) {
 
 // ---------- お知らせ(監督 → チーム) ----------
 const visibleTo = (a) => isCoach() || !a.team_ids?.length || a.team_ids.includes(state.me.team_id);
-const recipientsOf = (a) => state.players.filter((p) => p.role !== 'coach' && (!a.team_ids?.length || a.team_ids.includes(p.team_id)));
+const recipientsOf = (a) => members().filter((p) => (!a.team_ids?.length || a.team_ids.includes(p.team_id)));
 function noticeCard(a, reads, unread, sec) {
   const to = a.team_ids?.length ? a.team_ids.map(teamName).join('・') : '全員';
   const c = el('div', { class: 'card notice' + (a.pinned ? ' pin' : '') }, editBtn(sec, a),
@@ -393,7 +421,7 @@ function attendanceBlock(ev, att) {
   }
   if (ev.team_ids?.length && !ev.team_ids.includes(state.me.team_id)) return el('p', { class: 'muted', style: 'margin:10px 0 0', textContent: '対象外の予定です(出欠は不要)' });
   const mine = rows.find((r) => r.player_id === state.me.id);
-  const mates = state.players.filter((p) => p.role !== 'coach' && p.team_id === state.me.team_id), by = (s) => mates.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
+  const mates = members().filter((p) => p.team_id === state.me.team_id), by = (s) => mates.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
   const team = el('details', { class: 'reads' }, el('summary', { textContent: `チームの回答: 行く ${by('yes').length} ・ 遅れる ${by('late').length} ・ 行けない ${by('no').length}` }),
     ...ATT.map(([s, l]) => by(s).length ? el('div', {}, el('b', { class: 'muted', textContent: l + ': ' }), by(s).map((p) => chip(p.name))) : null));
   return el('div', {}, el('div', { class: 'chips att' }, ATT.map(([s, l]) => el('button', { class: 'pill' + (mine?.status === s ? ' on' : ''), type: 'button', textContent: l, onclick: async () => {
@@ -416,7 +444,7 @@ function askQuestion(qr, onAnswer) {
 }
 // 監督のホーム: 声をかけたほうがよい人・確認が必要なことを、人の名前つきで並べる
 function coachChecks(nt, at, events, notes, goals, matches) {
-  const players = state.players.filter((p) => p.role !== 'coach'), today = todayJst(), rows = [];
+  const players = members(), today = todayJst(), rows = [];
   const names = (ps) => (ps.length > 8 ? [...ps.slice(0, 8).map((p) => chip(p.name)), chip(`他${ps.length - 8}人`)] : ps.map((p) => chip(p.name)));
   const add = (label, ps) => { if (ps.length) rows.push(el('div', { class: 'check-row' }, el('b', { textContent: label }), el('div', {}, names(ps)))); };
   for (const a of nt.list.slice(0, 5)) {
@@ -483,15 +511,17 @@ async function viewMatches(main, sec) {
 async function viewPlayers(main, sec) {
   const { data } = await q('matches', 'played_on', false);
   if (isCoach()) main.append(el('button', { class: 'btn ball', type: 'button', style: 'margin-top:8px', textContent: '＋ 選手を追加(コード発行)', onclick: openAddPlayer }));
-  const list = state.players.filter((p) => p.role !== 'coach').sort((a, b) => (a.rank_order ?? 1e9) - (b.rank_order ?? 1e9));
+  const list = members().sort((a, b) => (a.rank_order ?? 1e9) - (b.rank_order ?? 1e9));
   const groups = state.teams.map((t) => [t.name, list.filter((p) => p.team_id === t.id)]);
   const rest = list.filter((p) => !state.teams.some((t) => t.id === p.team_id));
   if (rest.length) groups.push(['チーム未設定', rest]);
+  const gone = state.players.filter((p) => p.role !== 'coach' && p.active === false);
+  if (isCoach() && gone.length) groups.push(['退部した選手(監督だけに表示)', gone]);
   for (const [name, ps] of groups) if (ps.length) main.append(el('h2', { class: 'sec', textContent: name }), el('div', { class: 'grid' }, ps.map((p) => playerCard(p, data || [], sec))));
 }
 
 async function viewRanking(main) {
-  const list = state.players.filter((p) => p.rank_order != null && p.role !== 'coach').sort((a, b) => a.rank_order - b.rank_order);
+  const list = members().filter((p) => p.rank_order != null).sort((a, b) => a.rank_order - b.rank_order);
   if (!list.length) { main.append(empty('🏆', 'まだランクが決まっていません。監督が設定します。')); return; }
   const pod = list.slice(0, 3), order = [pod[1], pod[0], pod[2]].filter(Boolean);
   main.append(el('div', { class: 'podium' }, order.map((p) => {
