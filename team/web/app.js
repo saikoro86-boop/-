@@ -36,7 +36,7 @@ const SECTIONS = {
     { key: 'title', label: '予定の名前', type: 'text', required: true },
     { key: 'kind', label: '種類', type: 'select', options: ['練習', '大会'] },
     { key: 'starts_on', label: '日付', type: 'date' },
-    { key: 'team_ids', label: '対象のチーム(選ばないと全員)', type: 'teams' },
+    { key: 'team_ids', label: '出欠の対象チーム(選ばないと全員。予定は全員に見えます)', type: 'teams' },
     { key: 'place', label: '場所', type: 'text' },
     { key: 'url', label: 'URL', type: 'url' },
     { key: 'memo', label: 'メモ', type: 'textarea' }] },
@@ -305,7 +305,7 @@ function genericCard(key, row, sec) {
     const d = row.starts_on ? new Date(row.starts_on + 'T00:00:00Z') : null;
     c.classList.add('flex');
     c.append(el('div', { class: 'date' }, el('b', { textContent: d ? d.getUTCDate() : '–' }), el('span', { textContent: d ? `${d.getUTCMonth() + 1}月` : '未定' })),
-      el('div', { class: 'cards-pad' }, row.kind ? chip(row.kind, row.kind === '大会' ? 'ball' : '') : null, row.team_ids?.length ? chip(row.team_ids.map(teamName).join('・')) : null, el('h3', { textContent: t }), row.place ? el('div', { class: 'muted', textContent: '📍 ' + row.place }) : null,
+      el('div', { class: 'cards-pad' }, row.kind ? chip(row.kind, row.kind === '大会' ? 'ball' : '') : null, chip('対象: ' + (row.team_ids?.length ? row.team_ids.map(teamName).join('・') : '全員')), el('h3', { textContent: t }), row.place ? el('div', { class: 'muted', textContent: '📍 ' + row.place }) : null,
         row.memo ? el('p', { class: 'pre muted', textContent: row.memo }) : null, link(row.url, '詳しいページを開く')));
     return c;
   }
@@ -391,6 +391,7 @@ function attendanceBlock(ev, att) {
       ...ATT.map(([s, l]) => by(s).length ? el('div', {}, el('b', { class: 'muted', textContent: l + ': ' }), by(s).map((p) => chip(p.name))) : null),
       none.length ? el('div', {}, el('b', { class: 'muted', textContent: '未回答: ' }), none.map((p) => chip(p.name))) : null);
   }
+  if (ev.team_ids?.length && !ev.team_ids.includes(state.me.team_id)) return el('p', { class: 'muted', style: 'margin:10px 0 0', textContent: '対象外の予定です(出欠は不要)' });
   const mine = rows.find((r) => r.player_id === state.me.id);
   const mates = state.players.filter((p) => p.role !== 'coach' && p.team_id === state.me.team_id), by = (s) => mates.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
   const team = el('details', { class: 'reads' }, el('summary', { textContent: `チームの回答: 行く ${by('yes').length} ・ 遅れる ${by('late').length} ・ 行けない ${by('no').length}` }),
@@ -452,7 +453,8 @@ async function viewHome(main) {
         el('div', {}, el('div', { class: 'big', textContent: s.n }), el('div', { class: 'big-l', textContent: '試合' }))), s.form.length ? dots(s.form) : null))));
   const pending = isCoach() ? [['news', 'ニュース', n.data], ['videos', '動画', vd.data]].map(([k, l, d]) => [k, l, (d || []).filter((x) => !x.approved).length]).filter((x) => x[2]) : [];
   if (pending.length) main.append(el('div', { class: 'card' }, el('b', { textContent: '承認待ちがあります' }), el('div', {}, pending.map(([k, l, c]) => el('a', { class: 'chip new', href: '#' + k, textContent: `${l} ${c}件` })))));
-  const next = (e.data || []).filter(visibleTo).find((x) => x.starts_on && x.starts_on >= today);
+  const upcoming = (e.data || []).filter((x) => x.starts_on && x.starts_on >= today);
+  const next = upcoming.find((x) => isCoach() || !x.team_ids?.length || x.team_ids.includes(state.me.team_id)) || upcoming[0]; // 自分が対象の予定を優先
   if (next) {
     const days = dayNum(next.starts_on) - dayNum(today);
     main.append(el('h2', { class: 'sec' }, txt('次の予定'), el('a', { href: '#events', textContent: 'すべて →' })),
@@ -518,7 +520,7 @@ async function viewAnnouncements(main, sec) {
 
 async function viewEvents(main, sec) {
   const [{ data }, at] = await Promise.all([q('events', 'starts_on', true), sb.from('attendance').select('*')]);
-  const rows = (data || []).filter(visibleTo);
+  const rows = data || [];
   if (!rows.length) { main.append(empty('📅', 'まだ予定がありません。')); return; }
   rows.forEach((r) => { const c = genericCard('events', r, sec), a = attendanceBlock(r, at.data || []); if (a) c.querySelector('.cards-pad').append(a); main.append(c); });
 }
