@@ -39,12 +39,12 @@ const SECTIONS = {
     { key: 'place', label: '場所', type: 'text' },
     { key: 'url', label: 'URL', type: 'url' },
     { key: 'memo', label: 'メモ', type: 'textarea' }] },
-  news: { label: 'ニュース', table: 'news', title: 'title', order: ['created_at', false], icon: '📰', hint: 'テニスの話題', fab: '＋ ニュースを追加', fields: [
+  news: { label: 'ニュース', table: 'news', title: 'title', order: ['created_at', false], approval: true, icon: '📰', hint: 'テニスの話題', fab: '＋ ニュースを追加', fields: [
     { key: 'title', label: 'タイトル', type: 'text', required: true },
     { key: 'url', label: 'URL', type: 'url' },
     { key: 'source', label: '出どころ', type: 'text' },
     { key: 'memo', label: 'ひとこと', type: 'textarea' }] },
-  videos: { label: '動画', table: 'videos', title: 'title', order: ['created_at', false], icon: '🎬', hint: '参考になる動画', fab: '＋ 動画を追加', fields: [
+  videos: { label: '動画', table: 'videos', title: 'title', order: ['created_at', false], approval: true, icon: '🎬', hint: '参考になる動画', fab: '＋ 動画を追加', fields: [
     { key: 'title', label: 'タイトル', type: 'text', required: true },
     { key: 'url', label: 'URL', type: 'url' },
     { key: 'tags', label: 'タグ(例: サーブ, バックハンド)', type: 'text' },
@@ -146,7 +146,12 @@ function ring(pct, size = 88) {
 const empty = (icon, msg) => el('div', { class: 'empty' }, el('b', { textContent: icon }), msg);
 const q = (table, col, asc) => sb.from(table).select('*').order(col, { ascending: asc, nullsFirst: false });
 // 本人と監督だけが見られるもの(ノート・目標)を、画面側でも絞る
-const visibleRows = (sec, rows) => (sec.private && !isCoach() ? rows.filter((r) => r.created_by === state.me.id || r.player_id === state.me.id) : rows);
+const visibleRows = (sec, rows) => {
+  if (sec.private && !isCoach()) return rows.filter((r) => r.created_by === state.me.id || r.player_id === state.me.id);
+  // 選手が共有したものは、監督が承認するまで本人と監督だけが見られる
+  if (sec.approval && !isCoach()) return rows.filter((r) => r.approved || r.created_by === state.me.id);
+  return rows;
+};
 
 // ---------- ログイン(監督が渡した個人コード) ----------
 function showLogin(message) {
@@ -226,6 +231,7 @@ function openSheet(sec, row) {
       }
     }
     if (sec.selfField && !payload[sec.selfField]) payload[sec.selfField] = state.me.id; // 本人の分として保存する
+    if (sec.approval) { if (!row) payload.approved = isCoach(); else if (!isCoach()) payload.approved = false; } // 選手の追加・編集は、監督の承認待ちにする
     if (sec.table === 'quiz_questions') {
       const n = (payload.choices || '').split('\n').filter((x) => x.trim()).length;
       if (!(payload.answer >= 1 && payload.answer <= n)) { msg.textContent = `正解の番号は 1〜${n} にしてください`; return; }
@@ -315,6 +321,12 @@ function genericCard(key, row, sec) {
   const wrap = el('div', { class: 'cards-pad' }, when ? el('div', { class: 'muted', textContent: fmtDate(when) }) : null,
     lead ? el('h3', {}, lead) : el('h3', { textContent: key === 'goals' ? `${(row.month || '').replace('-', '年')}月の目標` : t }));
   if (owner) wrap.append(el('div', { class: 'pl' }, avatar(owner, 'sm'), txt(owner.name)));
+  if (sec?.approval && !row.approved) {
+    wrap.prepend(chip(isCoach() ? '承認待ち' : '承認待ち(監督が確認中)', 'new'));
+    if (isCoach()) wrap.append(el('div', { class: 'actions' },
+      el('button', { class: 'btn ball', type: 'button', textContent: '承認して公開', onclick: async () => { await sb.from(sec.table).update({ approved: true }).eq('id', row.id); render(); } }),
+      el('button', { class: 'btn danger', type: 'button', textContent: '却下', onclick: async () => { await sb.from(sec.table).delete().eq('id', row.id); render(); } })));
+  }
   if (row.source) wrap.append(chip(row.source));
   for (const tag of (row.tags || '').split(/[,、]/).map((x) => x.trim()).filter(Boolean)) wrap.append(chip('#' + tag, 'ball'));
   for (const k of ['memo', 'body', 'goal']) if (row[k]) wrap.append(el('p', { class: 'pre ' + (k === 'memo' ? 'muted' : ''), textContent: row[k] }));
@@ -379,10 +391,13 @@ function attendanceBlock(ev, att) {
       none.length ? el('div', {}, el('b', { class: 'muted', textContent: '未回答: ' }), none.map((p) => chip(p.name))) : null);
   }
   const mine = rows.find((r) => r.player_id === state.me.id);
-  return el('div', { class: 'chips att' }, ATT.map(([s, l]) => el('button', { class: 'pill' + (mine?.status === s ? ' on' : ''), type: 'button', textContent: l, onclick: async () => {
+  const mates = state.players.filter((p) => p.role !== 'coach' && p.team_id === state.me.team_id), by = (s) => mates.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
+  const team = el('details', { class: 'reads' }, el('summary', { textContent: `チームの回答: 行く ${by('yes').length} ・ 遅れる ${by('late').length} ・ 行けない ${by('no').length}` }),
+    ...ATT.map(([s, l]) => by(s).length ? el('div', {}, el('b', { class: 'muted', textContent: l + ': ' }), by(s).map((p) => chip(p.name))) : null));
+  return el('div', {}, el('div', { class: 'chips att' }, ATT.map(([s, l]) => el('button', { class: 'pill' + (mine?.status === s ? ' on' : ''), type: 'button', textContent: l, onclick: async () => {
     await (mine ? sb.from('attendance').update({ status: s }).eq('id', mine.id) : sb.from('attendance').insert({ event_id: ev.id, player_id: state.me.id, status: s }));
     render();
-  } })));
+  } }))), team);
 }
 
 // ---------- 問題(今日の一問・テスト共通) ----------
@@ -397,28 +412,10 @@ function askQuestion(qr, onAnswer) {
   box.append(chip(qr.level, qr.level === 'ルール' ? '' : 'ball'), el('p', { class: 'pre qtext', textContent: qr.question }), ...btns);
   return box;
 }
-function streakOf(answers) {
-  const days = new Set(answers.map((a) => a.answered_on)); let d = dayNum(todayJst()), n = 0;
-  if (!days.has(new Date(d * 864e5).toISOString().slice(0, 10))) d -= 1;
-  while (days.has(new Date(d * 864e5).toISOString().slice(0, 10))) { n++; d--; }
-  return n;
-}
-function dailyCard(questions, answers) {
-  if (!questions.length) return null;
-  const today = todayJst(), qr = [...questions].sort((a, b) => a.id - b.id)[dayNum(today) % questions.length];
-  const mine = answers.filter((a) => a.player_id === state.me.id), done = mine.find((a) => a.answered_on === today);
-  const card = el('div', { class: 'card daily' }, el('div', { class: 'daily-head' }, el('b', { textContent: '今日の一問' }), chip(`🔥 ${streakOf(mine)}日連続`, 'ball')));
-  if (done) { card.append(el('p', { class: 'muted', textContent: done.correct ? '今日は正解でした。また明日!' : '今日はもう答えました。解説を読んでおこう。' }), el('p', { class: 'pre qtext', textContent: qr.question }));
-    if (qr.explanation) card.append(el('div', { class: 'decide' }, el('b', { textContent: '答えと解説' }), txt(`${(qr.choices || '').split('\n')[qr.answer - 1] || ''}。${qr.explanation}`)));
-    return card; }
-  card.append(askQuestion(qr, (ok) => { sb.from('quiz_answers').insert({ player_id: state.me.id, question_id: qr.id, answered_on: today, correct: ok }); return el('button', { class: 'btn', type: 'button', textContent: '閉じる', onclick: () => render() }); }));
-  return card;
-}
-
 // ---------- 各画面 ----------
 async function viewHome(main) {
-  const [m, e, mt, n, nt, qz, qa, at] = await Promise.all([q('matches', 'played_on', false), q('events', 'starts_on', true), q('meetings', 'held_on', false), q('news', 'created_at', false),
-    loadNotices(), q('quiz_questions', 'id', true), sb.from('quiz_answers').select('*'), sb.from('attendance').select('*')]);
+  const [m, e, mt, n, nt, at, vd] = await Promise.all([q('matches', 'played_on', false), q('events', 'starts_on', true), q('meetings', 'held_on', false), q('news', 'created_at', false),
+    loadNotices(), sb.from('attendance').select('*'), q('videos', 'created_at', false)]);
   const matches = m.data || [], today = todayJst();
   if (nt.list.length) {
     main.append(el('h2', { class: 'sec' }, txt('お知らせ'), el('a', { href: '#announcements', textContent: 'すべて →' })));
@@ -432,7 +429,8 @@ async function viewHome(main) {
         el('div', {}, el('div', { class: 'big', textContent: s.w }), el('div', { class: 'big-l', textContent: '勝ち' })),
         el('div', {}, el('div', { class: 'big', textContent: s.l }), el('div', { class: 'big-l', textContent: '負け' })),
         el('div', {}, el('div', { class: 'big', textContent: s.n }), el('div', { class: 'big-l', textContent: '試合' }))), s.form.length ? dots(s.form) : null))));
-  if (!isCoach()) { const d = dailyCard(qz.data || [], qa.data || []); if (d) main.append(d); }
+  const pending = isCoach() ? [['news', 'ニュース', n.data], ['videos', '動画', vd.data]].map(([k, l, d]) => [k, l, (d || []).filter((x) => !x.approved).length]).filter((x) => x[2]) : [];
+  if (pending.length) main.append(el('div', { class: 'card' }, el('b', { textContent: '承認待ちがあります' }), el('div', {}, pending.map(([k, l, c]) => el('a', { class: 'chip new', href: '#' + k, textContent: `${l} ${c}件` })))));
   const next = (e.data || []).find((x) => x.starts_on && x.starts_on >= today);
   if (next) {
     const days = dayNum(next.starts_on) - dayNum(today);
@@ -445,7 +443,7 @@ async function viewHome(main) {
   if (matches.length) matches.slice(0, 3).forEach((x) => main.append(matchCard(x))); else main.append(empty('🎾', 'まだ試合の記録がありません。'));
   const last = (mt.data || [])[0];
   if (last) main.append(el('h2', { class: 'sec' }, txt('前回のミーティング'), el('a', { href: '#meetings', textContent: 'すべて →' })), genericCard('meetings', last, null));
-  const nw = (n.data || [])[0];
+  const nw = (n.data || []).find((x) => x.approved);
   if (nw) main.append(el('h2', { class: 'sec' }, txt('新しいニュース'), el('a', { href: '#news', textContent: 'すべて →' })), genericCard('news', nw, null));
 }
 

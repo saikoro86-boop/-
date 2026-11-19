@@ -179,3 +179,4 @@ img.thumb { display: block; max-width: 100%; border-radius: 12px; margin-top: 8p
 .checks { display: flex; flex-wrap: wrap; gap: 8px; } label.check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px; border: 1.5px solid var(--line); border-radius: 20px; font-size: 14px; color: var(--text); margin: 6px 0 0; }
 label.check input { width: 20px; height: 20px; min-height: 0; }
 button.tile { border: 0; text-align: left; font-family: inherit; cursor: pointer; } button.tile:disabled { opacity: .45; cursor: default; }
+.att .pill { white-space: nowrap; font-size: 13px; padding: 4px 2px; }
