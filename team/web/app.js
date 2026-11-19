@@ -413,15 +413,35 @@ function askQuestion(qr, onAnswer) {
   box.append(chip(qr.level, qr.level === 'ルール' ? '' : 'ball'), el('p', { class: 'pre qtext', textContent: qr.question }), ...btns);
   return box;
 }
+// 監督のホーム: 声をかけたほうがよい人・確認が必要なことを、人の名前つきで並べる
+function coachChecks(nt, at, events, notes, goals, matches) {
+  const players = state.players.filter((p) => p.role !== 'coach'), today = todayJst(), rows = [];
+  const names = (ps) => (ps.length > 8 ? [...ps.slice(0, 8).map((p) => chip(p.name)), chip(`他${ps.length - 8}人`)] : ps.map((p) => chip(p.name)));
+  const add = (label, ps) => { if (ps.length) rows.push(el('div', { class: 'check-row' }, el('b', { textContent: label }), el('div', {}, names(ps)))); };
+  for (const a of nt.list.slice(0, 5)) {
+    const done = new Set(nt.reads.filter((r) => r.announcement_id === a.id).map((r) => r.player_id));
+    add(`お知らせ「${a.body.slice(0, 14)}${a.body.length > 14 ? '…' : ''}」が未読`, recipientsOf(a).filter((p) => !done.has(p.id)));
+  }
+  for (const ev of events.filter((x) => x.starts_on && x.starts_on >= today).slice(0, 2))
+    add(`出欠が未回答: ${ev.title}`, recipientsOf(ev).filter((p) => !at.some((r) => r.event_id === ev.id && r.player_id === p.id)));
+  add('今月の目標が未記入', players.filter((p) => !goals.some((g) => g.player_id === p.id && g.month === today.slice(0, 7))));
+  add('ノートが14日以上ありません', players.filter((p) => !notes.some((n) => n.created_by === p.id && dayNum((n.noted_on || n.created_at || '0000-01-01').slice(0, 10)) >= dayNum(today) - 14)));
+  add('試合記録が30日以上ありません', players.filter((p) => !matches.some((m) => m.player_id === p.id && dayNum(m.played_on) >= dayNum(today) - 30)));
+  return el('div', { class: 'card' }, el('h3', { textContent: '確認が必要なこと' }), rows.length ? rows : el('p', { class: 'muted', textContent: 'いまのところ、ありません ✓' }));
+}
+
 // ---------- 各画面 ----------
 async function viewHome(main) {
-  const [m, e, mt, n, nt, at, vd] = await Promise.all([q('matches', 'played_on', false), q('events', 'starts_on', true), q('meetings', 'held_on', false), q('news', 'created_at', false),
-    loadNotices(), sb.from('attendance').select('*'), q('videos', 'created_at', false)]);
+  const none = Promise.resolve({ data: [] });
+  const [m, e, mt, n, nt, at, vd, nts, gls] = await Promise.all([q('matches', 'played_on', false), q('events', 'starts_on', true), q('meetings', 'held_on', false), q('news', 'created_at', false),
+    loadNotices(), sb.from('attendance').select('*'), q('videos', 'created_at', false),
+    isCoach() ? q('notes', 'created_at', false) : none, isCoach() ? q('goals', 'month', false) : none]);
   const matches = m.data || [], today = todayJst();
   if (nt.list.length) {
     main.append(el('h2', { class: 'sec' }, txt('お知らせ'), el('a', { href: '#announcements', textContent: 'すべて →' })));
     nt.list.slice(0, 2).forEach((a) => main.append(noticeCard(a, nt.reads, nt.unread.has(a.id), null)));
   }
+  if (isCoach()) main.append(el('h2', { class: 'sec', textContent: '監督のチェック' }), coachChecks(nt, at.data || [], (e.data || []).filter(visibleTo), nts.data || [], gls.data || [], matches));
   const mine = matches.filter((x) => x.player_id === state.me.id), personal = mine.length > 0, s = stats(personal ? mine : matches);
   main.append(el('div', { class: 'hero' }, el('small', { textContent: personal ? 'あなたの戦績' : 'チームの戦績' }),
     el('h2', { textContent: `${state.me.name}さん、おつかれさま` }),
