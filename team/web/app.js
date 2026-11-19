@@ -167,7 +167,7 @@ function showLogin(message) {
     await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
     start();
   } });
-  $('main').replaceChildren(el('div', { class: 'login' }, el('h2', { textContent: 'TEAM に入る' }),
+  $('main').replaceChildren(el('div', { class: 'login' }, el('img', { class: 'login-logo', src: 'logo.jpg', alt: 'LTA' }), el('h2', { textContent: 'LTA に入る' }), el('p', { class: 'login-name', textContent: 'レゼルテニスアカデミー' }),
     el('p', { class: 'muted', textContent: 'メンバー専用です。監督からLINEで届いたコードを入れてください。1回入れると、このスマホが覚えてくれます。' }),
     code, el('div', { class: 'actions' }, btn), msg));
 }
@@ -598,6 +598,6 @@ async function start() {
   render();
 }
 
-$('logout').addEventListener('click', async () => { await sb.auth.signOut(); location.hash = ''; showLogin(); });
+$('logout').addEventListener('click', async () => { await sb.auth.signOut(); state.session = null; state.me = null; location.hash = ''; showLogin(); }); // 先に session を空にして、古い情報で描き直されないようにする
 window.addEventListener('hashchange', () => { closeSheet(); state.quiz = null; if (state.session) { scrollTo(0, 0); render(); } });
 start();

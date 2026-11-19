@@ -1,24 +1,24 @@
 /* テニスチーム: コートの青 × ボールの黄緑。学生が毎日開きたくなる、スポーツアプリ風。
    黄緑(--ball)は「塗り」にだけ使い、文字は必ず濃紺(--on-ball)にする(明るい背景でも読めるように) */
 :root {
-  --bg: #f1f4fb; --card: #ffffff; --text: #0c1533; --sub: #5a6585; --line: #e1e6f3;
-  --link: #2043c9; --ball: #d4f03c; --on-ball: #0c1533;
-  --hero-a: #1c46c8; --hero-b: #0a1a4a; --win: #14935a; --lose: #d6383f; --draw: #8a93ad;
-  --chip: #e8edfb; --shadow: 0 6px 18px rgba(18, 36, 96, .10);
+  --bg: #f1f5f1; --card: #ffffff; --text: #0f1c14; --sub: #56665b; --line: #dfe8e0;
+  --link: #1d6b3c; --ball: #d4f03c; --on-ball: #0f1c14;
+  --hero-a: #2c6b3f; --hero-b: #14301d; --win: #14935a; --lose: #d6383f; --draw: #8a93ad;
+  --chip: #e5eee6; --shadow: 0 6px 18px rgba(18, 56, 30, .10);
   --font-d: "Barlow Condensed", "Noto Sans JP", sans-serif;
   --font-b: "Noto Sans JP", -apple-system, "Hiragino Sans", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #080f24; --card: #121c3a; --text: #eef2ff; --sub: #9aa7cc; --line: #23305a;
-    --link: #8fb0ff; --hero-a: #2554e0; --hero-b: #0b1a52; --win: #38d98f; --lose: #ff7a80; --draw: #8a93ad;
-    --chip: #1c2a54; --shadow: 0 6px 18px rgba(0, 0, 0, .35); color-scheme: dark;
+    --bg: #0a140d; --card: #13231a; --text: #eef5ef; --sub: #9db3a3; --line: #233a2a;
+    --link: #7fd9a0; --hero-a: #2f7a47; --hero-b: #0f2a18; --win: #38d98f; --lose: #ff7a80; --draw: #8a93ad;
+    --chip: #1d3225; --shadow: 0 6px 18px rgba(0, 0, 0, .35); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #080f24; --card: #121c3a; --text: #eef2ff; --sub: #9aa7cc; --line: #23305a;
-  --link: #8fb0ff; --hero-a: #2554e0; --hero-b: #0b1a52; --win: #38d98f; --lose: #ff7a80; --draw: #8a93ad;
-  --chip: #1c2a54; --shadow: 0 6px 18px rgba(0, 0, 0, .35); color-scheme: dark;
+  --bg: #0a140d; --card: #13231a; --text: #eef5ef; --sub: #9db3a3; --line: #233a2a;
+  --link: #7fd9a0; --hero-a: #2f7a47; --hero-b: #0f2a18; --win: #38d98f; --lose: #ff7a80; --draw: #8a93ad;
+  --chip: #1d3225; --shadow: 0 6px 18px rgba(0, 0, 0, .35); color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -125,7 +125,7 @@ h2.sec a { font: 700 13px var(--font-b); text-decoration: none; letter-spacing: 
 .tile { display: flex; flex-direction: column; gap: 6px; min-height: 96px; padding: 14px; border-radius: 18px; text-decoration: none; color: #fff; box-shadow: var(--shadow); font-weight: 800; font-size: 16px; }
 .tile i { font-style: normal; font-size: 28px; line-height: 1; }
 .tile small { font-weight: 500; font-size: 12px; opacity: .9; }
-.t0 { background: linear-gradient(135deg, #2f6bff, #1536a8); } .t1 { background: linear-gradient(135deg, #e8556d, #a8203b); }
+.t0 { background: linear-gradient(135deg, #2f8a52, #14502c); } .t1 { background: linear-gradient(135deg, #e8556d, #a8203b); }
 .t2 { background: linear-gradient(135deg, #13a77c, #0a6b52); } .t3 { background: linear-gradient(135deg, #ef8a17, #b05a05); }
 .t4 { background: linear-gradient(135deg, #8a4fe0, #5424a8); } .t5 { background: linear-gradient(135deg, #0e9bb8, #07647a); }
 .t6 { background: linear-gradient(135deg, #d4549e, #8e1f65); }
@@ -181,3 +181,10 @@ label.check input { width: 20px; height: 20px; min-height: 0; }
 button.tile { border: 0; text-align: left; font-family: inherit; cursor: pointer; } button.tile:disabled { opacity: .45; cursor: default; }
 .att .pill { white-space: nowrap; font-size: 13px; padding: 4px 2px; }
 .check-row { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; } .check-row:first-of-type { border-top: 0; } .check-row b { display: block; margin-bottom: 2px; }
+
+/* LTA のロゴ */
+.brand { font-size: 16px; letter-spacing: .12em; color: var(--text); }
+.logo { width: 40px; height: 40px; border-radius: 10px; display: block; }
+.login-logo { width: 148px; height: 148px; border-radius: 28px; display: block; margin: 0 auto 16px; box-shadow: var(--shadow); }
+.login { text-align: center; } .login .actions { justify-content: center; } .login input { text-align: center; letter-spacing: .15em; }
+.login-name { font: 800 14px var(--font-b); letter-spacing: .08em; color: var(--sub); margin: 0 0 18px; }
