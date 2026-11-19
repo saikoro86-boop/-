@@ -36,6 +36,7 @@ const SECTIONS = {
     { key: 'title', label: '予定の名前', type: 'text', required: true },
     { key: 'kind', label: '種類', type: 'select', options: ['練習', '大会'] },
     { key: 'starts_on', label: '日付', type: 'date' },
+    { key: 'team_ids', label: '対象のチーム(選ばないと全員)', type: 'teams' },
     { key: 'place', label: '場所', type: 'text' },
     { key: 'url', label: 'URL', type: 'url' },
     { key: 'memo', label: 'メモ', type: 'textarea' }] },
@@ -304,7 +305,7 @@ function genericCard(key, row, sec) {
     const d = row.starts_on ? new Date(row.starts_on + 'T00:00:00Z') : null;
     c.classList.add('flex');
     c.append(el('div', { class: 'date' }, el('b', { textContent: d ? d.getUTCDate() : '–' }), el('span', { textContent: d ? `${d.getUTCMonth() + 1}月` : '未定' })),
-      el('div', { class: 'cards-pad' }, row.kind ? chip(row.kind, row.kind === '大会' ? 'ball' : '') : null, el('h3', { textContent: t }), row.place ? el('div', { class: 'muted', textContent: '📍 ' + row.place }) : null,
+      el('div', { class: 'cards-pad' }, row.kind ? chip(row.kind, row.kind === '大会' ? 'ball' : '') : null, row.team_ids?.length ? chip(row.team_ids.map(teamName).join('・')) : null, el('h3', { textContent: t }), row.place ? el('div', { class: 'muted', textContent: '📍 ' + row.place }) : null,
         row.memo ? el('p', { class: 'pre muted', textContent: row.memo }) : null, link(row.url, '詳しいページを開く')));
     return c;
   }
@@ -384,7 +385,7 @@ function attendanceBlock(ev, att) {
   if (ev.starts_on && ev.starts_on < todayJst()) return null;
   const rows = att.filter((a) => a.event_id === ev.id);
   if (isCoach()) {
-    const players = state.players.filter((p) => p.role !== 'coach'), by = (s) => players.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
+    const players = recipientsOf(ev), by = (s) => players.filter((p) => rows.some((r) => r.player_id === p.id && r.status === s));
     const none = players.filter((p) => !rows.some((r) => r.player_id === p.id));
     return el('details', { class: 'reads' }, el('summary', { textContent: `行く ${by('yes').length} ・ 遅れる ${by('late').length} ・ 行けない ${by('no').length} ・ 未回答 ${none.length}` }),
       ...ATT.map(([s, l]) => by(s).length ? el('div', {}, el('b', { class: 'muted', textContent: l + ': ' }), by(s).map((p) => chip(p.name))) : null),
@@ -431,7 +432,7 @@ async function viewHome(main) {
         el('div', {}, el('div', { class: 'big', textContent: s.n }), el('div', { class: 'big-l', textContent: '試合' }))), s.form.length ? dots(s.form) : null))));
   const pending = isCoach() ? [['news', 'ニュース', n.data], ['videos', '動画', vd.data]].map(([k, l, d]) => [k, l, (d || []).filter((x) => !x.approved).length]).filter((x) => x[2]) : [];
   if (pending.length) main.append(el('div', { class: 'card' }, el('b', { textContent: '承認待ちがあります' }), el('div', {}, pending.map(([k, l, c]) => el('a', { class: 'chip new', href: '#' + k, textContent: `${l} ${c}件` })))));
-  const next = (e.data || []).find((x) => x.starts_on && x.starts_on >= today);
+  const next = (e.data || []).filter(visibleTo).find((x) => x.starts_on && x.starts_on >= today);
   if (next) {
     const days = dayNum(next.starts_on) - dayNum(today);
     main.append(el('h2', { class: 'sec' }, txt('次の予定'), el('a', { href: '#events', textContent: 'すべて →' })),
@@ -497,7 +498,7 @@ async function viewAnnouncements(main, sec) {
 
 async function viewEvents(main, sec) {
   const [{ data }, at] = await Promise.all([q('events', 'starts_on', true), sb.from('attendance').select('*')]);
-  const rows = data || [];
+  const rows = (data || []).filter(visibleTo);
   if (!rows.length) { main.append(empty('📅', 'まだ予定がありません。')); return; }
   rows.forEach((r) => { const c = genericCard('events', r, sec), a = attendanceBlock(r, at.data || []); if (a) c.querySelector('.cards-pad').append(a); main.append(c); });
 }
