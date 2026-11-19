@@ -15,6 +15,7 @@ import { loadConfigs } from "./config";
 import { Collected, type CollectContext } from "./collect/collected";
 import { collectKashikan } from "./collect/kashikan";
 import { buildIngestPayload } from "./ingest";
+import { TIMEOUT_MS, USER_AGENT } from "./http";
 
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
 
@@ -48,8 +49,10 @@ async function main() {
 
   const res = await fetch(`${base}/ingest`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "user-agent": USER_AGENT },
     body: JSON.stringify({ passcode: pass, ...payload }),
+    // 中継役が応答しないまま、自宅PCの実行が止まり続けないように、他の通信と同じ時間制限を付ける
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const text = await res.text();
   if (res.status !== 200) {
