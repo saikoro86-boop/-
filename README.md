@@ -224,19 +224,18 @@ GitHub の定期実行(`courts.yml` の `schedule`)は、混んでいると遅�
 
 **中継役の準備**(`worker/README.md` の手順F):KV namespace を1つ作って Worker に `INGEST` として結び、`/ingest`・`/ingest-data` を使えるようにする。認証は既存の `REFRESH_PASSCODE` を流用。GitHub の Variables `REFRESH_URL` が設定済みなら、ビルドは `REFRESH_URL + /ingest-data` を自動で読む(`courts.yml` の `INGEST_URL`)。
 
-**自宅PCの準備(Windows・タスクスケジューラ)**:
-1. [Node.js](https://nodejs.org/) の LTS(22以降)を入れる。
-2. このリポジトリを `git clone` し、`npm ci` する(取得プログラムを動かすため)。
-3. 次の内容で `run-fetch.bat` を作る(`WORKER_URL` は中継役の住所、`PASS` は合言葉。この .bat は自分のPCだけに置き、共有しない):
-   ```bat
-   @echo off
-   cd /d C:\path\to\repo
-   set WORKER_URL=https://xxxx.workers.dev
-   set REFRESH_PASSCODE=あなたの合言葉
-   call npm run fetch:local >> fetch.log 2>&1
-   ```
-4. タスクスケジューラ →「基本タスクの作成」→ トリガー「毎日」→「3時間おき」に繰り返し(詳細設定で「繰り返し間隔 3時間」)→ 操作「プログラムの開始」で `run-fetch.bat` を指定。「最上位の特権で実行」は不要。「ユーザーがログオンしているかどうかにかかわらず実行」にすると、画面を開いていなくても動く。
-5. 一度「実行」して、`fetch.log` に「送信しました: 奈良市・生駒市 …」と出れば成功。「すべてのエリアで断られました」と出たら、自宅の回線でも 403(=回線を問わず止められている)。そのときは知らせてください。
+**自宅PCの準備(Windows・おすすめ: 1ファイル版)**:リポジトリの取得や `npm ci` は要りません。**Node(22以降)と、ファイル2つ**だけです。
+1. [Node.js](https://nodejs.org/ja) の LTS(22以降)を入れる。PowerShell で `node -v` が `v22` 以上なら OK。
+2. 開発側で `npm run bundle:local` を実行すると、`local-dist/` に **`fetch-local.js`**(必要な部品・設定を全部まとめた1つの JS)と **`run-fetch.bat`**(実行用)ができる。この2つを、自宅PCの好きなフォルダ(例 `C:\tennis`)に置く。
+3. `run-fetch.bat` をメモ帳で開き、`set REFRESH_PASSCODE=CHANGE-ME` の `CHANGE-ME` を、Cloudflare に設定した**合言葉**に書き換えて保存(このファイルは自分のPCだけに置き、共有しない)。`WORKER_URL` は、中継役の住所が入っている。
+4. `run-fetch.bat` を**ダブルクリック**。結果が画面に出て、止まる。
+   - 成功: `送信しました: 奈良市・生駒市 / 空き ◯ 件`。GitHub の次の更新(3時間おき、または画面の「取得し直す」ボタン)で、公開サイトに戻る。
+   - 自宅でも断られた: `すべてのエリアで断られました`。回線を問わず止められているので、そこで止める。
+   - 結果は `fetch.log`(最後の1回分)にも残る。
+5. うまくいったら、タスクスケジューラ →「基本タスクの作成」→ トリガー「毎日」(詳細設定で「繰り返し間隔 3時間」)→ 操作「プログラムの開始」で `run-fetch.bat`、**引数に `auto`**(終了時に止まらなくなる)。「ユーザーがログオンしているかどうかにかかわらず実行する」にすると、画面を開いていなくても動く。
+6. `fetch-local.js` は、取得の部分(`src/courts/` など)や `config/courts.json` を変えたら、作り直して置き換える。
+
+**(別の方法)リポジトリごと置く場合**: ZIP などで入手して `npm ci --ignore-scripts`(`--ignore-scripts` を付けないと、使わないブラウザ約150MBまで落とす)、`WORKER_URL`・`REFRESH_PASSCODE` を設定して `npm run fetch:local`。
 
 > Mac で動かすなら、`launchd` か `cron` で同じ `npm run fetch:local`(環境変数 `WORKER_URL`・`REFRESH_PASSCODE` を付けて)を3時間おきに実行します。
 

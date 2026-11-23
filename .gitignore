@@ -5,3 +5,4 @@ user_data/
 *.log
 drafts/
 public/data2.json
+local-dist/

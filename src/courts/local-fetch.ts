@@ -11,12 +11,15 @@
  *   - ブラウザ偽装・串(プロキシ)・VPN は使わない。
  *   - 自宅PCでも 403/429 で断られたら、そのエリアは送らない(良いデータを上書きしない)。全部断られたら、何も送らず終了。
  */
-import { loadConfigs } from "./config";
+import { loadConfigs, parseCourtsConfig } from "./config";
 import { Collected, type CollectContext } from "./collect/collected";
 import { collectKashikan } from "./collect/kashikan";
 import { buildIngestPayload } from "./ingest";
 
 const jst = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
+
+/** 1ファイル版(bundle)では、ビルド時に courts.json の中身が、この定数に文字列として埋め込まれる */
+declare const __COURTS_JSON__: string | undefined;
 
 async function main() {
   const base = process.env.WORKER_URL?.replace(/\/+$/, "");
@@ -26,7 +29,7 @@ async function main() {
     process.exit(1);
   }
 
-  const cfg = loadConfigs().courts;
+  const cfg = typeof __COURTS_JSON__ !== "undefined" ? parseCourtsConfig(JSON.parse(__COURTS_JSON__)) : loadConfigs().courts;
   const today = new Date();
   const dates = Array.from({ length: cfg.days }, (_, i) => jst(new Date(today.getTime() + i * 86400e3)));
   const ctx: CollectContext = { dates, first: dates[0], last: dates[dates.length - 1], purpose: cfg.purpose };
