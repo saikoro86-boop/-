@@ -43,10 +43,11 @@
    ```bash
    supabase login
    supabase link --project-ref <プロジェクトのID>
-   supabase secrets set CODE_PEPPER=$(openssl rand -hex 32)
+   supabase secrets set CODE_PEPPER=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
    supabase functions deploy player-admin
    supabase functions deploy code-login
    ```
+   (Windows の PowerShell では、1行目の代わりに `$p = node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` のあと `supabase secrets set CODE_PEPPER=$p` と打つ。値は画面に出さない。`supabase` は、グローバルに入れず `npx supabase` で動かすのが無難。)
    `CODE_PEPPER` は、個人コードをハッシュにするときに混ぜる秘密です。**どこにも書き写さず**、Supabase の中だけに置いてください(変えると、発行済みのコードが全部使えなくなります)。
 7. Authentication → URL Configuration の Site URL に、公開するページの URL を入れる(監督のログインメールのリンク先)。
 8. `web/config.js` に Project URL と anon キーを入れる(**service_role キーは絶対に入れない**)。
