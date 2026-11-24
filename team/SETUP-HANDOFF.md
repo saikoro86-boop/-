@@ -41,6 +41,12 @@ PC のターミナルで、`lta-team` などの空のフォルダに移動し、
 - この PC は Windows の PowerShell です。`npm` は実行ポリシーで止まるので、`npm.cmd` と打ってください。管理者の PowerShell は使いません。
 - Supabase CLI は、グローバルに入れず、`npx supabase ...` で動かしてください。Docker を求められたら、`supabase functions deploy` に `--use-api` を付ける方法を試してください(この方法が使えるかは、あなたが確かめてください)。
 
+## 最新の状況(更新)
+- Supabase のプロジェクトは、監督(私)が作成済みです。名前は `lta-team`、リージョンは東京、プロジェクトの ID は `papupnebwllcneknuqdh` です。
+- `schema.sql` は更新済みです(新しい表に自動で権限が付かない設定を想定して、権限を明記)。最新を `git pull` してから使ってください。
+- 画面の鍵は、新しい形式の「Publishable key(`sb_publishable_...`)」です。サーバー側の処理は `--no-verify-jwt` 付きで置く想定です(README 参照)。**この組み合わせで本当に動くかは、確かめていません。**動かなければ、Supabase の「Legacy API keys」タブの anon キーを使う方法も、試してください。
+- Supabase CLI の `supabase login` の、ブラウザでの許可は、私がやります。
+
 ## 設置後の確認(必ず実施)
 下の4つを、実際に動かして確かめてください。ここがまだ確認できていません。
 1. 監督で入り、「選手を追加」でコードが出る。
