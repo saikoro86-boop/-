@@ -312,3 +312,14 @@ create policy uploads_insert on storage.objects for insert to authenticated
 drop policy if exists uploads_delete on storage.objects;
 create policy uploads_delete on storage.objects for delete to authenticated
   using (bucket_id = 'uploads' and ((storage.foldername(name))[1] = auth.uid()::text or is_coach()));
+
+-- ===== API からの権限(明示する) =====
+-- 新しい表に自動で権限を付けない設定でも動くように、必要な権限をここで渡す。
+-- 画面(ログインした人 = authenticated)には、表の読み書きだけ。実際に何が見える・書けるかは、上の RLS が決める。
+-- ログインしていない人(anon)には、何も渡さない。
+grant usage on schema public to authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+-- 個人コードとログイン試行は、サーバー側の処理(service_role)だけが触る。画面からは触れない
+revoke all on login_codes, login_attempts from authenticated, anon;
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to authenticated, service_role;

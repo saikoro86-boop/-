@@ -5,7 +5,7 @@ import fs from 'node:fs';
 const db = new PGlite();
 // Supabase の土台を最小限に再現(auth / storage / ロール)
 await db.exec(`
-create role authenticated nologin; create role anon nologin;
+create role authenticated nologin; create role anon nologin; create role service_role nologin;
 create schema auth; create schema storage;
 create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb default '{}');
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
@@ -17,9 +17,8 @@ create function storage.foldername(name text) returns text[] language sql as $$ 
 const schema = fs.readFileSync((process.argv[2] ?? new URL('../schema.sql', import.meta.url).pathname), 'utf8');
 await db.exec(schema);
 await db.exec(schema); // 2回実行しても壊れない(何度でも実行できる)
-await db.exec(`grant usage on schema public, auth, storage to authenticated;
-grant all on all tables in schema public to authenticated; grant all on all tables in schema storage to authenticated;
-grant usage, select on all sequences in schema public to authenticated; grant execute on all functions in schema public to authenticated;
+// auth / storage 側の最小限の権限だけ土台で渡す。public の権限は schema.sql が渡す(新しい表に自動で権限が付かない設定を想定)
+await db.exec(`grant usage on schema auth, storage to authenticated; grant all on all tables in schema storage to authenticated;
 grant execute on function auth.uid() to authenticated, anon; grant execute on function storage.foldername(text) to authenticated;`);
 
 const ids = {}; // 監督・記録係・Aチーム選手2人・Bチーム選手・退部者
@@ -33,6 +32,16 @@ const as = async (key, sql, params) => { await db.exec(`set role authenticated; 
 const t = (name, cond, extra = '') => { if (cond) pass++; else { fail++; console.log('FAIL:', name, extra); } };
 const sup = (sql) => db.exec(sql);
 
+// --- 権限の付与(新しい表に自動で権限が付かない設定を想定) ---
+{
+  await db.exec(`set role anon; set test.uid=''`);
+  let anonDenied = false; try { await db.query(`select * from teams`); } catch { anonDenied = true; }
+  await db.exec(`reset role`);
+  t('ログインしていない人(anon)は表に触れない', anonDenied);
+  const direct = await as('coach', `select * from login_codes`);
+  t('監督でも、画面から login_codes に触れない(権限なし)', !direct.ok);
+}
+
 // --- 役割と自己昇格 ---
 t('選手は自分を監督にできない', !(await as('a1', `update profiles set role='coach' where id='${ids.a1}'`)).ok);
 t('選手は自分のランクを変えられない', !(await as('a1', `update profiles set rank_order=1 where id='${ids.a1}'`)).ok);
@@ -45,8 +54,9 @@ t('退部者の名前は監督には見える', (await as('coach', `select id fr
 
 // --- ログインコードは画面から読めない ---
 await sup(`insert into login_codes (code_hash, profile_id) values ('h', '${ids.a1}')`);
-t('選手は login_codes を読めない', (await as('a1', `select * from login_codes`)).rows.length === 0);
-t('監督も login_codes を読めない', (await as('coach', `select * from login_codes`)).rows.length === 0);
+t('選手は login_codes を読めない(権限がない)', !(await as('a1', `select * from login_codes`)).ok);
+t('監督も login_codes を読めない(権限がない)', !(await as('coach', `select * from login_codes`)).ok);
+t('login_attempts も画面から触れない', !(await as('a1', `select * from login_attempts`)).ok);
 t('login_codes に書けない', !(await as('coach', `insert into login_codes (code_hash, profile_id) values ('z','${ids.a1}')`)).ok);
 
 // --- 試合記録: 監督だけ ---
