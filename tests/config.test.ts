@@ -53,3 +53,25 @@ test("JSON として壊れていれば、そう伝える", () => {
   writeFileSync(join(dir, "places.json"), "{ ここが壊れている");
   assert.throws(() => loadConfigs(dir), /places\.json: JSON として読めません/);
 });
+test("公式ページの URL が http(s) でなければ止める", () => {
+  const dir = broken("official.json", (j) => { const k = Object.keys(j.urls)[0]; j.urls[k] = "ftp://example.com"; });
+  assert.throws(() => loadConfigs(dir), /official\.json.*http\(s\)/s);
+});
+test("コートの種類(路面)が決まった値でなければ止める", () => {
+  const dir = broken("courtinfo.json", (j) => { const k = Object.keys(j.info)[0]; j.info[k].surfaces = ["grass"]; });
+  assert.throws(() => loadConfigs(dir), /courtinfo\.json/);
+});
+test("料金の別資料の裏付けが空なら止める", () => {
+  const dir = broken("fees.json", (j) => { j.fees[0].crossCheck.sources = []; });
+  assert.throws(() => loadConfigs(dir), /fees\.json.*crossCheck/s);
+});
+test("検査していない項目(メモなど)は、そのまま通す", () => {
+  const dir = broken("courts.json", (j) => { j.memo = "メモ"; j.sites[0].memo = "メモ"; });
+  const c = loadConfigs(dir) as any;
+  assert.equal(c.courts.memo, "メモ");
+  assert.equal(c.courts.sites[0].memo, "メモ");
+});
+test("設定ファイルが見つからなければ、例外になる", () => {
+  const dir = mkdtempSync(join(tmpdir(), "cfg-empty-"));
+  assert.throws(() => loadConfigs(dir), /courts\.json/);
+});
