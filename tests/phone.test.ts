@@ -42,11 +42,15 @@ test("奈良市: 施設ごとに、公式ページ掲載の窓口が当たる(�
   assert.equal(tel("奈良市西部生涯スポーツセンターコート"), "0742-47-4118");
   assert.equal(tel("富雄南公民館"), "0742-48-3066"); // 「富雄」より先に「富雄南」が当たる
   assert.equal(tel("富雄公民館"), "0742-43-5386");
-  // 施設自身の番号が確認できないものは、窓口の番号で代用し、未確認と表示する
-  assert.equal(tel("奈良市平城第一コート"), "0742-34-4862"); // 担当課: スポーツ振興課
-  assert.equal(findContact(c, "奈良市平城第一コート")?.unconfirmed, true);
-  assert.equal(tel("奈良市佐保山コート"), "0742-34-4862"); // 平城と同じ担当課。施設自身の番号は未確認
-  assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, true);
+  // 指定管理者(一般財団法人奈良市総合財団)の公式サイト https://nspf.jp/contact.html の記載(2026-11-27 確認)。
+  // 窓口は、施設ごとではなく事務所ごと: 平城第一・第二=平城第二コート事務所、佐保山=青山コート事務所、黒谷=西部体育館事務所
+  assert.equal(tel("奈良市平城第一コート"), "0742-71-5662");
+  assert.equal(tel("奈良市平城第二コート"), "0742-71-5662");
+  assert.equal(tel("奈良市佐保山コート"), "0742-26-2996");
+  assert.equal(findContact(c, "奈良市平城第一コート")?.unconfirmed, undefined); // もう「未確認」ではない
+  assert.equal(findContact(c, "奈良市佐保山コート")?.unconfirmed, undefined);
+  assert.equal(findContact(c, "奈良市黒谷コート")?.hours, "9:00〜18:00");       // 体育館事務所は 18:00 まで
+  assert.equal(findContact(c, "奈良市西部生涯スポーツセンターコート")?.hours, "9:00〜17:00");
   assert.equal(findContact(c, "奈良市青山コート")?.unconfirmed, undefined); // 青山は、青山自身の番号だけ(他施設の窓口にはしない)
   assert.equal(tel("二名公民館"), "0742-46-9113");
   assert.equal(tel("京西公民館"), "0742-44-2669");
