@@ -54,6 +54,7 @@ node --require ts-node/register --test tests/fees.test.ts
 | 場所 | 中身 |
 |---|---|
 | `src/courts/` | 取得・整形・公開データの組み立て。`build.ts`(全体の流れだけ: 設定を読む → 集める → 組み立てる → 書き出す)、`collect/`(サイトの種類ごとの取得: `kashikan.ts`・`nsa.ts`、結果の入れ物 `collected.ts`)、`publish.ts`(公開データの形 `PublishedCommon` と前回データの取得)、`config.ts`(設定の読み込みと検査)、`http.ts`(時間制限・やり直し・待ち)、`guard.ts`(公開を見送る判断)、`keys.ts`(施設の鍵と名前のそろえ方)。低レベルの取得・解析は `kashikan.ts`(奈良市・生駒市)、`kashikan-page.ts`(奈良市・生駒市の、取り込み用の解析だけ)、`narasuperapp.ts`、`kizugawa.ts`(木津川市・HTML の解析だけ)。ほかに `status.ts`(空きなしの理由)、`compact.ts`(配信用の圧縮と 🆕)、`weather.ts`、`phone.ts`、`cli.ts` |
+| `src/localbundle/` | 自宅PC用の1ファイル版(`npm run bundle:local` → `local-dist/fetch-local.js` と `run-fetch.bat`。`local-dist/` はコミットしない)。esbuild で、`local-fetch.ts` と部品・`courts.json` を、Node だけで動く1ファイルにまとめる。合言葉は含めない。`tests/local-bundle.test.ts` が、生成物を実際に動かして確かめる(正直な名乗り・断られたら送らない) |
 | `src/bookmarklet/` | 取り込み用ブックマークレットの生成(木津川市・奈良市・生駒市)。`build.ts` の `SOURCES` に並べたファイルを、import を外してつなげる。**ブックマークレットで使う関数を別のファイルに移したら、`SOURCES` にも足す**(`tests/bookmarklet.test.ts` が、生成物を実際に動かして確かめる) |
 | `config/` | 手で管理するデータ。`courts.json`(対象サイト・電話番号)、`fees.json`(料金)、`official.json`(公式ページ)、`places.json`・`coords.json`(場所)、`courtinfo.json`(コートの種類) |
 | `public/` | 公開される画面。`index.html`(画面の組み立て)、`app-logic.js`(画面に触らない処理: 日付・時間・距離・枠のまとめ・カレンダーの文。`tests/app-logic.test.ts` でテスト)、`sw.js`、`manifest.webmanifest`、`icons/` |

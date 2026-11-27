@@ -107,6 +107,16 @@ const placesConfig = z.looseObject({
   places: z.array(z.looseObject({ site: str, match: str, dest: str, source: str })),
 });
 
+/** courts.json の中身(JSON を読んだあとのもの)を検査して返す。1ファイル版(local-fetch)が、埋め込んだ設定を検査するのに使う */
+export function parseCourtsConfig(json: unknown, label = "courts.json"): CourtsConfig {
+  const r = courtsConfig.safeParse(json);
+  if (!r.success) {
+    const where = r.error.issues.slice(0, 5).map((i) => `  ${i.path.join(".") || "(全体)"}: ${i.message}`).join("\n");
+    throw new Error(`${label}: 設定に誤りがあります\n${where}`);
+  }
+  return r.data;
+}
+
 export interface Configs {
   courts: CourtsConfig;
   fees: FeesConfig;

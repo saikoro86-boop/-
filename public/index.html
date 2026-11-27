@@ -751,7 +751,7 @@ function renderInner() {
         const label = `${hm(s.start)}–${hm(s.end)}`;
         const cls = "t" + (s.offline ? " off" : "") + (s.fresh ? " fresh" : "");
         const text = (s.fresh ? "🆕" : "") + (s.offline ? label + " ☎" : label);
-        const title = s.offline ? `${court} ${label}(ネット予約は受付外・電話や窓口で予約)` : `${court} ${label} の予約サイトを開く`;
+        const title = s.offline ? `${court} ${label}(ネット予約は受付外。窓口で予約)` : `${court} ${label} の予約サイトを開く`;
         if (s.offline) { // ネット予約の受付外: 予約サイトではなく、このカードの電話番号へ
           const b = document.createElement("button"); b.type = "button"; b.className = cls; b.textContent = text;
           b.title = `${court} ${label}(ネット予約は受付外。押すと電話番号へ)`; b.setAttribute("aria-label", (s.fresh ? "新しい空き " : "") + b.title);
@@ -774,7 +774,8 @@ function renderInner() {
     if ([...f.courts.values()].some(ss => ss.some(x => x.offline))) {
       const box = document.createElement("div"); box.className = "offnote";
       const msg = document.createElement("div");
-      msg.textContent = "点線(☎)の枠は空きですが、ネット予約の受付外です。電話や窓口でお申し込みください。";
+      // 奈良市は、指定管理者の公式サイトに「電話での予約はできません(空き状況の問い合わせは電話で可)」とある。生駒市は未確認なので、言い切らない
+      msg.textContent = "点線(☎)の枠は空きですが、ネット予約の受付外です。窓口(来館)でお申し込みください。" + (f.site === "奈良市" ? "電話では予約できません(空きの確認はできます)。" : "電話は、空きの確認などにお使いください。");
       box.appendChild(msg);
       const ct = contactFor(f.site, f.facility);
       if (ct && ct.tel) {

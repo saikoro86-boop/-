@@ -12,6 +12,7 @@
     "courts": "ts-node src/courts/cli.ts",
     "courts:build": "ts-node src/courts/build.ts",
     "fetch:local": "ts-node src/courts/local-fetch.ts",
+    "bundle:local": "ts-node src/localbundle/build.ts",
     "bookmarklet": "ts-node src/bookmarklet/build.ts",
     "worker:build": "ts-node worker/build.ts"
   },
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "esbuild": "0.24.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
