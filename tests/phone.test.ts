@@ -67,3 +67,13 @@ test("生駒市: 全施設に個別の番号がある(TAC井出山はテニス�
   for (const f of facilities) assert.ok(findContact(ik.contacts, f), f);
   assert.equal(findContact(ik.contacts, "TAC井出山スポーツパーク（井出山体育施設）")?.tel, "0743-76-6091");
 });
+
+test("config の連絡先は、後ろの項目が前の項目に隠されない(先に一致する短い名前が、長い名前を奪わない)", () => {
+  const cfg = JSON.parse(readFileSync(__dirname + "/../config/courts.json", "utf-8"));
+  for (const s of cfg.sites) {
+    const cs: { match: string }[] = s.contacts ?? [];
+    cs.forEach((c, i) => {
+      for (const prev of cs.slice(0, i)) assert.ok(!c.match.includes(prev.match), `${s.name}: 「${prev.match}」が「${c.match}」より先にある`);
+    });
+  }
+});
