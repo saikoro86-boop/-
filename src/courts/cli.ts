@@ -32,4 +32,8 @@ async function main() {
     if (!n) console.log("  空きなし");
   }
 }
-main();
+// 失敗を握りつぶさず、メッセージを出して異常終了にする(未処理の例外のまま終わらせない)
+main().catch((e) => {
+  console.error("取得に失敗しました:", e instanceof Error ? e.message : e);
+  process.exit(1);
+});
