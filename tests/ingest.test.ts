@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Collected } from "../src/courts/collect/collected";
-import { buildIngestPayload, mergeIngest, type IngestData } from "../src/courts/ingest";
+import { buildIngestPayload, fetchIngest, mergeIngest, type IngestData } from "../src/courts/ingest";
 
 const slot = (site: string, date: string, start = 9, end = 10, extra: object = {}) =>
   ({ date, site, facility: `${site}施設`, court: "A", start, end, ...extra });
@@ -105,4 +105,51 @@ test("mergeIngest: 時刻が不正・未来なら混ぜない", () => {
   assert.match(mergeIngest(acc, ingestData("こわれた"), ["奈良市"], Date.now()), /不正/);
   const future = Date.parse("2026-11-17T06:00:00Z");
   assert.match(mergeIngest(acc, ingestData("2026-11-17T07:00:00Z"), ["奈良市"], future), /古い/); // 未来(age<0)も使わない
+});
+
+/** fetch を差し替えて fetchIngest を動かす(終わったら元に戻す)。呼ばれた URL を返す */
+async function withFetch<T>(impl: (url: string) => Response | Promise<Response>, fn: () => Promise<T>) {
+  const orig = globalThis.fetch;
+  const urls: string[] = [];
+  globalThis.fetch = (async (u: string | URL | Request) => {
+    urls.push(String(u));
+    return impl(String(u));
+  }) as typeof fetch;
+  const origLog = console.log;
+  console.log = () => {};
+  try {
+    return { result: await fn(), urls };
+  } finally {
+    globalThis.fetch = orig;
+    console.log = origLog;
+  }
+}
+
+test("fetchIngest: URL が無い・http(s) でないときは、通信せず null", async () => {
+  const { result, urls } = await withFetch(() => new Response("{}"), async () => [
+    await fetchIngest(undefined),
+    await fetchIngest(""),
+    await fetchIngest("file:///etc/passwd"),
+  ]);
+  assert.deepEqual(result, [null, null, null]);
+  assert.equal(urls.length, 0);
+});
+
+test("fetchIngest: 形が正しければ返す。sites か updatedAt が欠けていれば null", async () => {
+  const good = { sites: ["奈良市"], slots: [], status: [], contacts: {}, courtCodes: {}, facilityUrls: {}, updatedAt: "2026-11-28T00:00:00Z" };
+  const a = await withFetch(() => new Response(JSON.stringify(good)), () => fetchIngest("https://relay.example/ingest-data"));
+  assert.deepEqual(a.result, good);
+  for (const bad of [null, { updatedAt: good.updatedAt }, { sites: "奈良市", updatedAt: good.updatedAt }, { sites: [] }]) {
+    const b = await withFetch(() => new Response(JSON.stringify(bad)), () => fetchIngest("https://relay.example/ingest-data"));
+    assert.equal(b.result, null);
+  }
+});
+
+test("fetchIngest: 通信失敗・404・JSON でない応答でも落とさず null(取り込み無しで続ける)", async () => {
+  const notFound = await withFetch(() => new Response("", { status: 404 }), () => fetchIngest("https://relay.example/x"));
+  assert.equal(notFound.result, null);
+  const notJson = await withFetch(() => new Response("<html>"), () => fetchIngest("https://relay.example/x"));
+  assert.equal(notJson.result, null);
+  const down = await withFetch(() => { throw new TypeError("fetch failed"); }, () => fetchIngest("https://relay.example/x"));
+  assert.equal(down.result, null);
 });
